@@ -4,7 +4,7 @@ module lune;
 
 import vulkan_hpp;
 
-namespace Lune
+namespace lune
 {
 	vk::Bool32 debugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT severity,
 							 vk::DebugUtilsMessageTypeFlagsEXT type,

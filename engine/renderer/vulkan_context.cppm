@@ -4,12 +4,14 @@ export module lune:vulkan_context;
 
 import vulkan_hpp;
 
-namespace Lune
+namespace lune
 {
 	class VulkanContext
 	{
 		vk::raii::Context m_context;
 		vk::raii::Instance m_instance = nullptr;
+		vk::raii::DebugUtilsMessengerEXT m_debugMessenger = nullptr;
+		vk::raii::PhysicalDevice m_physicalDevice = nullptr;
 		const std::vector<const char*> m_validationLayers = {"VK_LAYER_KHRONOS_validation"};
 
 	public:
@@ -22,7 +24,9 @@ namespace Lune
 		}
 
 	private:
+		void setupDebugMessenger();
 		[[nodiscard]] bool checkValidationLayerSupport() const;
 		[[nodiscard]] static std::vector<const char*> getRequiredExtensions();
+		void pickPhysicalDevice();
 	};
-} // namespace Lune
+} // namespace lune

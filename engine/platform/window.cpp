@@ -6,7 +6,7 @@ module lune;
 
 import vulkan_hpp;
 
-namespace Lune
+namespace lune
 {
 	void Window::init()
 	{
@@ -33,4 +33,4 @@ namespace Lune
 		}
 		glfwTerminate();
 	}
-} // namespace Lune
+} // namespace lune

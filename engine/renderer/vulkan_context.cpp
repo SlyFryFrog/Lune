@@ -16,11 +16,13 @@ constexpr bool enableValidationLayers = false;
 constexpr bool enableValidationLayers = true;
 #endif
 
-namespace Lune
+namespace lune
 {
 	void VulkanContext::init()
 	{
 		createInstance();
+		setupDebugMessenger();
+		pickPhysicalDevice();
 	}
 
 	void VulkanContext::createInstance()
@@ -72,6 +74,26 @@ namespace Lune
 		m_instance = vk::raii::Instance(m_context, createInfo);
 	}
 
+	void VulkanContext::setupDebugMessenger()
+	{
+		if (!enableValidationLayers)
+		{
+			return;
+		}
+
+		vk::DebugUtilsMessengerCreateInfoEXT debugCreateInfo{
+			.messageSeverity = vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose |
+				vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning |
+				vk::DebugUtilsMessageSeverityFlagBitsEXT::eError,
+			.messageType = vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral |
+				vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation |
+				vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance,
+			.pfnUserCallback = &debugCallback,
+		};
+
+		m_debugMessenger = m_instance.createDebugUtilsMessengerEXT(debugCreateInfo);
+	}
+
 	bool VulkanContext::checkValidationLayerSupport() const
 	{
 		auto layerProperties = vk::enumerateInstanceLayerProperties();
@@ -99,5 +121,10 @@ namespace Lune
 		}
 
 		return extensions;
+	}
+
+	void VulkanContext::pickPhysicalDevice()
+	{
+
 	}
 } // namespace Lune

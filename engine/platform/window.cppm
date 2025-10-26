@@ -6,7 +6,7 @@ export module lune:window;
 
 import vulkan_hpp;
 
-namespace Lune
+namespace lune
 {
 	class Window
 	{
@@ -25,35 +25,35 @@ namespace Lune
 
 		void init();
 
-		bool is_done() const
+		bool isDone() const
 		{
 			return glfwWindowShouldClose(m_window);
 		}
 
-		void set_is_done(const bool value) const
+		void setIsDone(const bool value) const
 		{
 			glfwSetWindowShouldClose(m_window, value);
 		}
 
-		void poll_events()
+		void pollEvents()
 		{
 			glfwPollEvents();
 		}
 
 		void cleanup();
 
-		GLFWwindow* get_native_window() const
+		GLFWwindow* getNativeWindow() const
 		{
 			return m_window;
 		}
 
-		uint32_t get_width() const
+		uint32_t getWidth() const
 		{
 			return m_width;
 		}
-		uint32_t get_height() const
+		uint32_t getHeight() const
 		{
 			return m_height;
 		}
 	};
-} // namespace Lune
+} // namespace lune
