@@ -5,55 +5,102 @@ module;
 export module lune:window;
 
 import vulkan_hpp;
+import :input_manager;
 
 namespace lune
 {
-	class Window
+	export struct WindowCreateInfo
 	{
-		GLFWwindow* m_window{nullptr};
-		std::string m_title{"Untitled Window"};
-		uint32_t m_width{800};
-		uint32_t m_height{600};
+		int width = 800;
+		int height = 600;
+		std::string title = "Window";
+		bool resizable = true;
+	};
+
+
+	export class Window
+	{
+		GLFWwindow* m_handle = nullptr;
+		int m_width = 0;
+		int m_height = 0;
+		std::string m_title;
 
 	public:
-		Window() = default;
+		explicit Window() = default;
+		~Window();
 
-		~Window()
+		Window(const Window&) = delete;
+		Window& operator=(const Window&) = delete;
+
+		// Movable
+		Window(Window&& other) noexcept;
+		Window& operator=(Window&& other) noexcept;
+
+		[[nodiscard]] GLFWwindow* handle() const
 		{
-			cleanup();
+			return m_handle;
 		}
 
-		void init();
+		void show() const;
+		void resize(int width, int height) const;
+		[[nodiscard]] bool shouldClose() const;
+		void setShouldClose(bool shouldClose) const;
 
-		bool isDone() const
-		{
-			return glfwWindowShouldClose(m_window);
-		}
+		static void pollEvents();
 
-		void setIsDone(const bool value) const
-		{
-			glfwSetWindowShouldClose(m_window, value);
-		}
-
-		void pollEvents()
-		{
-			glfwPollEvents();
-		}
-
-		void cleanup();
-
-		GLFWwindow* getNativeWindow() const
-		{
-			return m_window;
-		}
-
-		uint32_t getWidth() const
-		{
-			return m_width;
-		}
-		uint32_t getHeight() const
-		{
-			return m_height;
-		}
+		void create(const WindowCreateInfo& info);
+		void destroy();
 	};
+
+
+	namespace raii
+	{
+		export class Window
+		{
+			lune::Window m_rawWindow;
+
+		public:
+			explicit Window(const WindowCreateInfo& createInfo)
+			{
+				m_rawWindow.create(createInfo);
+			}
+
+			~Window()
+			{
+				if (m_rawWindow.handle())
+					m_rawWindow.destroy();
+			}
+
+			Window(const Window&) = delete;
+			Window& operator=(const Window&) = delete;
+
+			Window(Window&& other) noexcept;
+			Window& operator=(Window&& other) noexcept;
+
+			[[nodiscard]] GLFWwindow* handle() const
+			{
+				return m_rawWindow.handle();
+			}
+
+			void show() const
+			{
+				m_rawWindow.show();
+			}
+
+			void resize(const int width, const int height) const
+			{
+				m_rawWindow.resize(width, height);
+			}
+
+			[[nodiscard]] bool shouldClose() const
+			{
+				return m_rawWindow.shouldClose();
+			}
+
+			void setShouldClose(const bool shouldClose) const
+			{
+				m_rawWindow.setShouldClose(shouldClose);
+			}
+		};
+	} // namespace raii
 } // namespace lune

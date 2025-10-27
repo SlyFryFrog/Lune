@@ -1,36 +1,111 @@
 module;
 #include <GLFW/glfw3.h>
+#include <iostream>
 #include <stdexcept>
 #include <string>
 module lune;
 
 import vulkan_hpp;
+import :input_manager;
 
 namespace lune
 {
-	void Window::init()
+	static bool glfwInitialized = false;
+
+	Window::~Window()
 	{
-		if (!glfwInit())
+		destroy();
+	}
+
+	void Window::create(const WindowCreateInfo& info)
+	{
+		if (!glfwInitialized)
 		{
-			throw std::runtime_error("Failed to initialize GLFW");
+			if (!glfwInit())
+				throw std::runtime_error("Failed to initialize GLFW!");
+			glfwInitialized = true;
 		}
 
+		destroy();
+
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-		m_window = glfwCreateWindow(m_width, m_height, m_title.c_str(), nullptr, nullptr);
-		if (!m_window)
+		glfwWindowHint(GLFW_RESIZABLE, info.resizable ? GLFW_TRUE : GLFW_FALSE);
+
+		m_handle = glfwCreateWindow(info.width, info.height, info.title.c_str(), nullptr, nullptr);
+		if (!m_handle)
+			throw std::runtime_error("Failed to create GLFW window!");
+
+		m_width = info.width;
+		m_height = info.height;
+		m_title = info.title;
+
+		// Set callbacks
+		glfwSetKeyCallback(m_handle, InputManager::_processInputCallback);
+		glfwSetCursorPosCallback(m_handle, InputManager::_processMouseCallback);
+	}
+
+	void Window::destroy()
+	{
+		if (m_handle)
 		{
-			glfwTerminate();
-			throw std::runtime_error("Failed to create GLFW window");
+			glfwDestroyWindow(m_handle);
+			m_handle = nullptr;
 		}
 	}
 
-	void Window::cleanup()
+	Window::Window(Window&& other) noexcept :
+		m_handle(other.m_handle),
+		m_width(other.m_width),
+		m_height(other.m_height),
+		m_title(std::move(other.m_title))
 	{
-		if (m_window)
+		other.m_handle = nullptr;
+	}
+
+	Window& Window::operator=(Window&& other) noexcept
+	{
+		if (this != &other)
 		{
-			glfwDestroyWindow(m_window);
-			m_window = nullptr;
+			destroy();
+			m_handle = other.m_handle;
+			m_width = other.m_width;
+			m_height = other.m_height;
+			m_title = std::move(other.m_title);
+			other.m_handle = nullptr;
 		}
-		glfwTerminate();
+		return *this;
+	}
+
+	void Window::show() const
+	{
+		if (m_handle)
+		{
+			glfwShowWindow(m_handle);
+		}
+	}
+
+	void Window::resize(const int width, const int height) const
+	{
+		if (m_handle)
+		{
+			glfwSetWindowSize(m_handle, width, height);
+			std::cout << "Resized window \"" << m_title << "\" to " << width << "x" << height
+					  << "\n";
+		}
+	}
+
+	bool Window::shouldClose() const
+	{
+		return m_handle && glfwWindowShouldClose(m_handle);
+	}
+
+	void Window::setShouldClose(const bool shouldClose) const
+	{
+		glfwSetWindowShouldClose(m_handle, shouldClose);
+	}
+
+	void Window::pollEvents()
+	{
+		glfwPollEvents();
 	}
 } // namespace lune

@@ -66,9 +66,6 @@ namespace lune
 		m_deltaY = deltaY;
 	}
 
-	/**
-	 * @brief Processes and updates Input states and events.
-	 */
 	void InputManager::_process()
 	{
 		// Handle all events in the queue by iterating through the queue and popping all events.

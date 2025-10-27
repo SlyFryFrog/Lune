@@ -6,7 +6,7 @@ import vulkan_hpp;
 
 namespace lune
 {
-	class VulkanContext
+	export class VulkanContext
 	{
 		vk::raii::Context m_context;
 		vk::raii::Instance m_instance = nullptr;
