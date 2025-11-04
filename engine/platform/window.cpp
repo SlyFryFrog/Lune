@@ -5,7 +5,6 @@ module;
 #include <string>
 module lune;
 
-import vulkan_hpp;
 import :input_manager;
 
 namespace lune
@@ -38,10 +37,12 @@ namespace lune
 		m_width = info.width;
 		m_height = info.height;
 		m_title = info.title;
+		m_mode = info.mode;
 
 		// Set callbacks
 		glfwSetKeyCallback(m_handle, InputManager::_processInputCallback);
 		glfwSetCursorPosCallback(m_handle, InputManager::_processMouseCallback);
+		glfwSetMouseButtonCallback(m_handle, InputManager::_processMouseButtonCallback);
 	}
 
 	void Window::destroy()
@@ -102,6 +103,27 @@ namespace lune
 	void Window::setShouldClose(const bool shouldClose) const
 	{
 		glfwSetWindowShouldClose(m_handle, shouldClose);
+	}
+
+	void Window::setTitle(const std::string& title)
+	{
+		m_title = title;
+		glfwSetWindowTitle(m_handle, title.c_str());
+	}
+
+	std::string Window::getTitle() const
+	{
+		return m_title;
+	}
+
+	void Window::setResizable(const bool resizable)
+	{
+		glfwWindowHint(GLFW_RESIZABLE, resizable);
+	}
+
+	WindowMode Window::getWindowMode() const
+	{
+		return m_mode;
 	}
 
 	void Window::pollEvents()

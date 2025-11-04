@@ -1,4 +1,3 @@
-module;
 export module lune:input_event;
 
 import :input_map;

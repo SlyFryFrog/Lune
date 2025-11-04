@@ -4,7 +4,10 @@
     {
       "name": "abstract",
       "hidden": true,
-      "generator": "Ninja"
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "clang++"
+      }
     },
     {
       "inherits": "abstract",

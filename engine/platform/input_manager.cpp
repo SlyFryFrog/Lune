@@ -4,7 +4,6 @@ module;
 #include <initializer_list>
 #include <map>
 #include <memory>
-#include <print>
 #include <queue>
 module lune;
 
@@ -18,32 +17,7 @@ namespace lune
 	void InputManager::_processInputCallback(GLFWwindow* window, const int key, const int scancode,
 											 const int action, const int mods)
 	{
-		// Ignore repeated events as they are updated in _process() when called externally
-		if (action == GLFW_REPEAT)
-		{
-			return;
-		}
-
-		const Key libKey = static_cast<Key>(key);
-		InputState state;
-
-		if (action == GLFW_PRESS && !m_events.contains(libKey))
-		{
-			state = JUST_PRESSED;
-		}
-		else if (action == GLFW_RELEASE)
-		{
-			state = JUST_RELEASED;
-		}
-
-		const auto event = std::make_shared<InputEvent>(libKey, state);
-
-		// Add to recent queue if just pressed
-		// Used for handling combinations of keys being pressed
-		m_recentQueue.push(event);
-
-		m_eventQueue.push(event);
-		m_events[libKey] = event;
+		processKeyEvent(key, action);
 	}
 
 	void InputManager::_processMouseCallback(GLFWwindow* window, const double xposIn,
@@ -64,6 +38,13 @@ namespace lune
 
 		m_deltaX = deltaX;
 		m_deltaY = deltaY;
+	}
+
+	void InputManager::_processMouseButtonCallback(GLFWwindow* window, const int key,
+												   const int action,
+												   const int mods)
+	{
+		processKeyEvent(key, action);
 	}
 
 	void InputManager::_process()
@@ -242,5 +223,35 @@ namespace lune
 
 		// Update queue
 		m_recentQueue = tempQueue;
+	}
+
+	void InputManager::processKeyEvent(const int key, const int action)
+	{
+		// Ignore repeated events as they are updated in _process() when called externally
+		if (action == GLFW_REPEAT)
+		{
+			return;
+		}
+
+		const auto libKey = static_cast<Key>(key);
+		InputState state;
+
+		if (action == GLFW_PRESS && !m_events.contains(libKey))
+		{
+			state = JUST_PRESSED;
+		}
+		else if (action == GLFW_RELEASE)
+		{
+			state = JUST_RELEASED;
+		}
+
+		const auto event = std::make_shared<InputEvent>(libKey, state);
+
+		// Add to recent queue if just pressed
+		// Used for handling combinations of keys being pressed
+		m_recentQueue.push(event);
+
+		m_eventQueue.push(event);
+		m_events[libKey] = event;
 	}
 } // namespace lune

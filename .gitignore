@@ -112,3 +112,7 @@ vcpkg_installed/
 # --- Coverage Reports ---
 coverage/
 lcov-report/
+
+# --- Fetched Context ---
+vendor/metal-cpp/
+

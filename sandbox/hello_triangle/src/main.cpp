@@ -7,11 +7,20 @@ int main()
 	const lune::WindowCreateInfo windowCreateInfo = {
 		.width = 1280,
 		.height = 720,
-		.title = "Hello Triangle",
+		.title = "Lune: Hello Triangle"
 	};
 
-	const lune::raii::Window window(windowCreateInfo);
+	lune::raii::Window window(windowCreateInfo);
 	window.show();
+
+	lune::GraphicsContext* context = &lune::GraphicsContext::instance();
+
+	if (!context)
+	{
+		std::cerr << "Failed to create graphics context\n";
+		return 1;
+	}
+
 
 	while (!window.shouldClose())
 	{
@@ -19,8 +28,8 @@ int main()
 		{
 			window.setShouldClose(true);
 		}
-
 		lune::Window::pollEvents();
+		context->render();
 	}
 
 	return 0;

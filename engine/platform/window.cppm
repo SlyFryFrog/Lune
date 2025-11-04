@@ -1,29 +1,47 @@
 module;
+#ifdef USE_VULKAN
 #define GLFW_INCLUDE_VULKAN
+#endif
 #include <GLFW/glfw3.h>
 #include <string>
 export module lune:window;
 
-import vulkan_hpp;
 import :input_manager;
 
 namespace lune
 {
+	export enum WindowMode {
+		FULLSCREEN,
+		WINDOWED,
+		WINDOWED_FULLSCREEN,
+	};
+
+
 	export struct WindowCreateInfo
 	{
 		int width = 800;
 		int height = 600;
-		std::string title = "Window";
+		std::string title = "Untitled Window";
 		bool resizable = true;
+		WindowMode mode = WindowMode::WINDOWED;
 	};
 
+	struct WindowState
+	{
+		int xpos;
+		int ypos;
+		int width;
+		int height;
+	};
 
 	export class Window
 	{
 		GLFWwindow* m_handle = nullptr;
-		int m_width = 0;
-		int m_height = 0;
-		std::string m_title;
+		int m_width{};
+		int m_height{};
+		std::string m_title{};
+		WindowMode m_mode{};
+		WindowState m_preFullscreenState{};
 
 	public:
 		explicit Window() = default;
@@ -32,19 +50,36 @@ namespace lune
 		Window(const Window&) = delete;
 		Window& operator=(const Window&) = delete;
 
-		// Movable
 		Window(Window&& other) noexcept;
 		Window& operator=(Window&& other) noexcept;
 
+		/**
+		 * Returns the native GLFWwindow instance for more control.
+		 *
+		 * @return Native window instance.
+		 */
 		[[nodiscard]] GLFWwindow* handle() const
 		{
 			return m_handle;
 		}
 
+		/**
+		 * Displays the window.
+		 */
 		void show() const;
+
 		void resize(int width, int height) const;
+
 		[[nodiscard]] bool shouldClose() const;
 		void setShouldClose(bool shouldClose) const;
+
+		void setTitle(const std::string& title);
+		[[nodiscard]] std::string getTitle() const;
+
+		static void setResizable(bool resizable);
+		void setWindowMode(WindowMode mode);
+
+		[[nodiscard]] WindowMode getWindowMode() const;
 
 		static void pollEvents();
 
@@ -100,6 +135,11 @@ namespace lune
 			void setShouldClose(const bool shouldClose) const
 			{
 				m_rawWindow.setShouldClose(shouldClose);
+			}
+
+			void setWindowMode(const WindowMode& mode)
+			{
+				// Todo
 			}
 		};
 	} // namespace raii

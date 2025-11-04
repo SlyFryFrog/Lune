@@ -61,6 +61,8 @@ namespace lune
 		 */
 		static void _processMouseCallback(GLFWwindow* window, double xposIn, double yposIn);
 
+		static void _processMouseButtonCallback(GLFWwindow* window, int key, int action, int mods);
+
 		/**
 		 * @brief Processes and updates input states and events.
 		 *
@@ -164,5 +166,7 @@ namespace lune
 		 * This method is called internally to clean up outdated events.
 		 */
 		static void clearRecentQueue();
+
+		static void processKeyEvent(int key, int action);
 	};
 } // namespace lune

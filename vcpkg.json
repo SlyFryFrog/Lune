@@ -15,9 +15,6 @@
     "name" : "vcpkg-cmake",
     "version>=" : "2025-08-07"
   }, {
-    "name" : "glslang",
-    "version>=" : "15.1.0"
-  }, {
     "name" : "shader-slang",
     "version>=" : "2025.14.3"
   } ]

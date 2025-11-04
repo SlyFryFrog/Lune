@@ -4,10 +4,10 @@ module lune;
 
 import vulkan_hpp;
 
-namespace lune
+namespace lune::vulkan
 {
 	vk::Bool32 debugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT severity,
-							 vk::DebugUtilsMessageTypeFlagsEXT type,
+							 const vk::DebugUtilsMessageTypeFlagsEXT type,
 							 const vk::DebugUtilsMessengerCallbackDataEXT* pCallbackData, void*)
 	{
 		std::cerr << "Validation layer: type " << to_string(type)
@@ -15,4 +15,4 @@ namespace lune
 
 		return vk::False;
 	}
-} // namespace Lune
+}
