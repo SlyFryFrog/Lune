@@ -26,7 +26,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 ###########
 # Options #
 ###########
-option(ENABLE_CPP20_MODULE "Enable C++20 modules" ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
 

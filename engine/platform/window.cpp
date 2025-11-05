@@ -1,11 +1,21 @@
 module;
+#define GLFW_INCLUDE_NONE
+#define GLFW_EXPOSE_NATIVE_COCOA
 #include <GLFW/glfw3.h>
+#include <GLFW/glfw3native.h>
+
+#include <Foundation/Foundation.hpp>
+#include <Metal/Metal.hpp>
+#include <QuartzCore/QuartzCore.hpp>
+#include <AppKit/AppKit.hpp>
+
 #include <iostream>
 #include <stdexcept>
 #include <string>
 module lune;
 
 import :input_manager;
+import :metal;
 
 namespace lune
 {
@@ -91,7 +101,7 @@ namespace lune
 		{
 			glfwSetWindowSize(m_handle, width, height);
 			std::cout << "Resized window \"" << m_title << "\" to " << width << "x" << height
-					  << "\n";
+				<< "\n";
 		}
 	}
 
@@ -129,5 +139,45 @@ namespace lune
 	void Window::pollEvents()
 	{
 		glfwPollEvents();
+	}
+
+	void Window::attachMetalToGLFW()
+	{
+		auto nswindow = reinterpret_cast<NS::Window*>(glfwGetCocoaWindow(m_handle));
+		auto device = lune::metal::MetalContext::instance().device();
+		auto commandQueue = device->newCommandQueue();
+		auto layer = CA::MetalLayer::layer();
+		layer->setDevice(device);
+
+		auto nsview = nswindow->contentView();
+		nsview->setLayer(layer);
+		nsview->setWantsLayer(true);
+		nsview->setOpaque(true);
+
+		auto color = MTL::ClearColor::Make(0, 1, 0, 1);
+		while (!glfwWindowShouldClose(m_handle))
+		{
+			lune::Window::pollEvents();
+
+			auto autoReleasePool = NS::AutoreleasePool::alloc()->init();
+
+			color.red = color.red > 1.0 ? 0.0 : color.red + 0.01;
+
+			auto surface = layer->nextDrawable();
+			auto pass = MTL::RenderPassDescriptor::renderPassDescriptor();
+			auto passColorAttachment0 = pass->colorAttachments()->object(0);
+			passColorAttachment0->setClearColor(color);
+			passColorAttachment0->setLoadAction(MTL::LoadActionClear);
+			passColorAttachment0->setStoreAction(MTL::StoreActionStore);
+			passColorAttachment0->setTexture(surface->texture());
+
+			auto commandBuffer = commandQueue->commandBuffer();
+			auto encoder = commandBuffer->renderCommandEncoder(pass);
+			encoder->endEncoding();
+			commandBuffer->presentDrawable(surface);
+			commandBuffer->commit();
+
+			autoReleasePool->release();
+		}
 	}
 } // namespace lune

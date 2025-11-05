@@ -1,4 +1,6 @@
 function(setup_vulkan_for_target target_name)
+    option(ENABLE_CPP20_MODULE "Enable C++20 modules" ON)
+
     find_package(Vulkan REQUIRED)
 
     # Vulkan C++ module

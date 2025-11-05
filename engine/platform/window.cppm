@@ -1,8 +1,15 @@
 module;
-#ifdef USE_VULKAN
-#define GLFW_INCLUDE_VULKAN
-#endif
+#define GLFW_INCLUDE_NONE
+
+#ifdef USE_METAL
 #include <GLFW/glfw3.h>
+#define GLFW_EXPOSE_NATIVE_COCOA
+#include <GLFW/glfw3native.h>
+#else
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
+#endif
+
 #include <string>
 export module lune:window;
 
@@ -10,7 +17,8 @@ import :input_manager;
 
 namespace lune
 {
-	export enum WindowMode {
+	export enum WindowMode
+	{
 		FULLSCREEN,
 		WINDOWED,
 		WINDOWED_FULLSCREEN,
@@ -83,6 +91,8 @@ namespace lune
 
 		static void pollEvents();
 
+		void attachMetalToGLFW();
+
 		void create(const WindowCreateInfo& info);
 		void destroy();
 	};
@@ -141,6 +151,11 @@ namespace lune
 			{
 				// Todo
 			}
+
+			void attachMetalToGLFW()
+			{
+				m_rawWindow.attachMetalToGLFW();
+			}
 		};
 	} // namespace raii
-} // namespace lune
+}     // namespace lune

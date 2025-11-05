@@ -1,5 +1,9 @@
 #include <iostream>
+
 import lune;
+
+
+void attachMetalToGLFW(lune::raii::Window& window);
 
 
 int main()
@@ -7,19 +11,27 @@ int main()
 	const lune::WindowCreateInfo windowCreateInfo = {
 		.width = 1280,
 		.height = 720,
-		.title = "Lune: Hello Triangle"
+		.title = "Lune: Hello Triangle",
+		.resizable = false,
 	};
 
 	lune::raii::Window window(windowCreateInfo);
 	window.show();
 
-	lune::GraphicsContext* context = &lune::GraphicsContext::instance();
+	window.attachMetalToGLFW();
 
-	if (!context)
-	{
-		std::cerr << "Failed to create graphics context\n";
-		return 1;
-	}
+	// lune::GraphicsContext* context = &lune::GraphicsContext::instance();
+	//
+	// if (!context)
+	// {
+	// 	std::cerr << "Failed to create graphics context\n";
+	// 	return 1;
+	// }
+
+	lune::metal::MetalContext& context = lune::metal::MetalContext::instance();
+	context.createMetalLayer(800, 600);
+	context.setupVertexBuffer();
+	context.setupPipeline();
 
 
 	while (!window.shouldClose())
@@ -28,8 +40,10 @@ int main()
 		{
 			window.setShouldClose(true);
 		}
+
+		context.draw();
+
 		lune::Window::pollEvents();
-		context->render();
 	}
 
 	return 0;
