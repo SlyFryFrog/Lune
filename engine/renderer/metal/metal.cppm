@@ -14,10 +14,13 @@ import :graphics_context;
 
 namespace lune::metal
 {
-	struct Vertex
+	export class MetalLayer
 	{
-		simd::float4 position;
-		simd::float4 color;
+	public:
+		virtual ~MetalLayer() = default;
+		virtual void setup() = 0;
+
+		virtual void render() = 0;
 	};
 
 	export class MetalContext final : public GraphicsContext
@@ -29,6 +32,9 @@ namespace lune::metal
 		NS::SharedPtr<MTL::Library> m_library{nullptr};
 		NS::SharedPtr<MTL::RenderPipelineState> m_pipelineState{nullptr};
 		NS::SharedPtr<MTL::Buffer> m_vertexBuffer{nullptr};
+		NS::SharedPtr<MTL::RenderCommandEncoder> m_currentEncoder{nullptr};
+
+		std::vector<std::shared_ptr<MetalLayer>> m_layers;
 
 	private:
 		MetalContext();
@@ -55,19 +61,46 @@ namespace lune::metal
 			return m_metalLayer.get();
 		}
 
+		[[nodiscard]] MTL::RenderPipelineState* renderPipelineState() const
+		{
+			return m_pipelineState.get();
+		}
+
+		[[nodiscard]] std::vector<std::shared_ptr<MetalLayer>> layers() const
+		{
+			return m_layers;
+		}
+
+		[[nodiscard]] MTL::RenderCommandEncoder* currentRenderEncoder() const
+		{
+			return m_currentEncoder.get();
+		}
+
+		void setCurrentEncoder(MTL::RenderCommandEncoder* encoder)
+		{
+			m_currentEncoder = NS::TransferPtr(encoder);
+		}
+
 		void createDevice();
 
 		CA::MetalLayer* createMetalLayer(double width, double height);
 
-		void setupVertexBuffer();
+		void render() override;
 
-		void setupPipeline();
-
-		void draw();
-
-		void render() override
+		template <typename T, typename... Args>
+		T& addLayer(Args&&... args)
 		{
-			draw();
+			auto layer = std::make_shared<T>(std::forward<Args>(args)...);
+			T& ref = *layer;
+			m_layers.push_back(std::move(layer));
+			ref.setup();
+			return ref;
+		}
+
+		void removeLayer(const size_t index)
+		{
+			if (index < m_layers.size())
+				m_layers.erase(m_layers.begin() + index);
 		}
 	};
 }

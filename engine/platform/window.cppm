@@ -1,14 +1,6 @@
 module;
 #define GLFW_INCLUDE_NONE
-
-#ifdef USE_METAL
 #include <GLFW/glfw3.h>
-#define GLFW_EXPOSE_NATIVE_COCOA
-#include <GLFW/glfw3native.h>
-#else
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-#endif
 
 #include <string>
 export module lune:window;
@@ -91,7 +83,7 @@ namespace lune
 
 		static void pollEvents();
 
-		void attachMetalToGLFW();
+		void attachMetalToGLFW() const;
 
 		void create(const WindowCreateInfo& info);
 		void destroy();

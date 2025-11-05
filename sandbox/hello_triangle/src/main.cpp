@@ -1,9 +1,23 @@
 #include <iostream>
 
+#include <Metal/MTLRenderPass.hpp>
+
 import lune;
 
+class CustomLayer final : public lune::metal::MetalLayer
+{
+public:
+	CustomLayer() = default;
+	~CustomLayer() override = default;
 
-void attachMetalToGLFW(lune::raii::Window& window);
+	void setup() override
+	{
+	}
+
+	void render() override
+	{
+	}
+};
 
 
 int main()
@@ -20,18 +34,8 @@ int main()
 
 	window.attachMetalToGLFW();
 
-	// lune::GraphicsContext* context = &lune::GraphicsContext::instance();
-	//
-	// if (!context)
-	// {
-	// 	std::cerr << "Failed to create graphics context\n";
-	// 	return 1;
-	// }
-
 	lune::metal::MetalContext& context = lune::metal::MetalContext::instance();
-	context.createMetalLayer(800, 600);
-	context.setupVertexBuffer();
-	context.setupPipeline();
+	context.addLayer<CustomLayer>();
 
 
 	while (!window.shouldClose())
@@ -41,7 +45,7 @@ int main()
 			window.setShouldClose(true);
 		}
 
-		context.draw();
+		context.render();
 
 		lune::Window::pollEvents();
 	}
