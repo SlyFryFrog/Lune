@@ -1,7 +1,6 @@
 module;
-#define GLFW_INCLUDE_NONE
+#define GLFW_INCLUDE_NONE	// We're not using OpenGL, therefore we disable it
 #include <GLFW/glfw3.h>
-
 #include <string>
 export module lune:window;
 
@@ -26,6 +25,7 @@ namespace lune
 		WindowMode mode = WindowMode::WINDOWED;
 	};
 
+
 	struct WindowState
 	{
 		int xpos;
@@ -33,6 +33,7 @@ namespace lune
 		int width;
 		int height;
 	};
+
 
 	export class Window
 	{
@@ -83,10 +84,15 @@ namespace lune
 
 		static void pollEvents();
 
-		void attachMetalToGLFW() const;
-
 		void create(const WindowCreateInfo& info);
 		void destroy();
+
+	private:
+#ifdef USE_METAL
+		void attachMetalToGLFW() const;
+#else
+		void attachVulkanToGLFW() const;
+#endif
 	};
 
 
@@ -142,11 +148,6 @@ namespace lune
 			void setWindowMode(const WindowMode& mode)
 			{
 				// Todo
-			}
-
-			void attachMetalToGLFW()
-			{
-				m_rawWindow.attachMetalToGLFW();
 			}
 		};
 	} // namespace raii

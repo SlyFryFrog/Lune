@@ -4,6 +4,9 @@ module;
 #define GLFW_EXPOSE_NATIVE_COCOA
 #include <GLFW/glfw3native.h>
 #include <AppKit/AppKit.hpp>
+#include <Foundation/Foundation.hpp>
+#include <Metal/Metal.hpp>
+#include <QuartzCore/QuartzCore.hpp>
 #endif
 
 #include <iostream>
@@ -54,6 +57,10 @@ namespace lune
 		glfwSetKeyCallback(m_handle, InputManager::_processInputCallback);
 		glfwSetCursorPosCallback(m_handle, InputManager::_processMouseCallback);
 		glfwSetMouseButtonCallback(m_handle, InputManager::_processMouseButtonCallback);
+
+#ifdef USE_METAL
+		attachMetalToGLFW();
+#endif
 	}
 
 	void Window::destroy()
@@ -142,16 +149,15 @@ namespace lune
 		glfwPollEvents();
 	}
 
+#ifdef USE_METAL
 	void Window::attachMetalToGLFW() const
 	{
-#ifdef USE_METAL
 		NS::Window* nswindow = reinterpret_cast<NS::Window*>(glfwGetCocoaWindow(m_handle));
 		NS::View* nsview = nswindow->contentView();
-		nsview->setLayer(metal::MetalContext::instance().createMetalLayer(m_width, m_height));
+
+		nsview->setLayer(metal::MetalDemo::instance().m_layer);
 		nsview->setWantsLayer(true);
 		nsview->setOpaque(true);
-#else
-		std::cout << "Can't attach GLFW window to Metal, we're not using Metal!\n";
-#endif
 	}
-} // namespace lune
+#endif
+}
