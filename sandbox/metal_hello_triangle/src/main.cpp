@@ -6,6 +6,22 @@
 
 import lune;
 
+class CustomLayer final : public lune::metal::MetalLayer
+{
+	std::vector<NS::SharedPtr<MTL::Buffer>> makeTriangleDataBuffers(NS::UInteger count);
+	NS::SharedPtr<MTL4::ArgumentTable> makeArgumentTable();
+	NS::SharedPtr<MTL::Buffer> makeResidencySet();
+	std::vector<NS::SharedPtr<MTL4::CommandBuffer>> makeCommandAllocators(NS::UInteger count);
+
+public:
+	CustomLayer() = default;
+	~CustomLayer() override = default;
+
+	void setup() override;
+	void render() override;
+};
+
+
 int main()
 {
 	const lune::WindowCreateInfo windowCreateInfo = {
@@ -18,7 +34,7 @@ int main()
 	lune::raii::Window window(windowCreateInfo);
 	window.show();
 
-	lune::GraphicsContext& context = lune::GraphicsContext::instance();
+	lune::metal::MetalContext& context = lune::metal::MetalContext::instance();
 
 	while (!window.shouldClose())
 	{
@@ -27,7 +43,7 @@ int main()
 			window.setShouldClose(true);
 		}
 
-		context.render();
+		context.draw();
 
 		lune::Window::pollEvents();
 	}

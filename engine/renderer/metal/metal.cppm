@@ -7,8 +7,7 @@ module;
 #include <Foundation/Foundation.hpp>
 #include <Metal/Metal.hpp>
 #include <QuartzCore/QuartzCore.hpp>
-#include <glm/glm.hpp>
-#include <iostream>
+#include <unordered_map>
 #include <memory>
 #include <simd/vector_types.h>
 export module lune:metal;
@@ -19,17 +18,25 @@ namespace lune::metal
 {
 	constexpr int kMaxFramesInFlight = 3;
 
-
 	struct TriangleData
 	{
 		vector_float3 positions[3];
 	};
 
 	TriangleData triangle = {{
-		{0.0f, 0.5f, 0.0f},	  // Top vertex
+		{0.0f, 0.5f, 0.0f},   // Top vertex
 		{-0.5f, -0.5f, 0.0f}, // Bottom-left vertex
-		{0.5f, -0.5f, 0.0f}	  // Bottom-right vertex
+		{0.5f, -0.5f, 0.0f}   // Bottom-right vertex
 	}};
+
+	struct MetalShader
+	{
+		NS::SharedPtr<NS::String> source;
+		NS::SharedPtr<MTL::Library> library;
+		NS::SharedPtr<NS::Dictionary> compileOptions;
+		std::unordered_map<std::string, NS::SharedPtr<MTL::Function>> functions;
+	};
+
 
 	export class MetalLayer
 	{
@@ -52,6 +59,7 @@ namespace lune::metal
 		NS::SharedPtr<MTL::Buffer> m_triangleVertexBuffer{};
 		NS::SharedPtr<MTL::RenderCommandEncoder> m_commandEncoder{};
 
+		std::unordered_map<std::string, MetalShader> m_shaders;
 		std::vector<std::shared_ptr<MetalLayer>> m_layers;
 
 	private:
@@ -102,7 +110,7 @@ namespace lune::metal
 		void createDevice();
 
 		void createDefaultLibrary();
-		void createLibrary();
+		void createLibrary(const std::string& path);
 		void createCommandQueue();
 		void createTriangle();
 		void createRenderPipeline();
@@ -110,6 +118,10 @@ namespace lune::metal
 		void encodeRenderCommand(MTL::RenderCommandEncoder* renderEncoder) const;
 		void sendRenderCommand();
 		void draw();
+
+		void loadShader(const std::string& name, const std::string& path, bool isPrecompiled = false);
+		MTL::Function* getFunction(const std::string& shaderName, const std::string& functionName);
+		void reloadShaders();
 
 		CA::MetalLayer* createMetalLayer(double width, double height);
 
@@ -130,38 +142,5 @@ namespace lune::metal
 			if (index < m_layers.size())
 				m_layers.erase(m_layers.begin() + index);
 		}
-	};
-
-	export class MetalDemo
-	{
-		MetalDemo();
-
-		~MetalDemo();
-
-	public:
-		MTL::Device* m_device{};
-		MTL::CommandQueue* m_commandQueue{};
-		MTL::CommandBuffer* m_commandBuffer{};
-		MTL::Library* m_library{};
-		CA::MetalDrawable* m_drawable{};
-		CA::MetalLayer* m_layer{};
-		MTL::RenderPipelineState* m_renderPSO{};
-		MTL::Buffer* m_triangleVertexBuffer{};
-
-		static MetalDemo& instance()
-		{
-			static MetalDemo s_instance;
-			return s_instance;
-		}
-
-		void createDevice();
-		void createDefaultLibrary();
-		void createCommandQueue();
-		void createTriangle();
-		void createRenderPipeline();
-
-		void encodeRenderCommand(MTL::RenderCommandEncoder* renderEncoder) const;
-		void sendRenderCommand();
-		void draw();
 	};
 } // namespace lune::metal

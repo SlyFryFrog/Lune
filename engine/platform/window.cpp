@@ -155,7 +155,7 @@ namespace lune
 		NS::Window* nswindow = reinterpret_cast<NS::Window*>(glfwGetCocoaWindow(m_handle));
 		NS::View* nsview = nswindow->contentView();
 
-		nsview->setLayer(metal::MetalDemo::instance().m_layer);
+		nsview->setLayer(metal::MetalContext::instance().metalLayer());
 		nsview->setWantsLayer(true);
 		nsview->setOpaque(true);
 	}

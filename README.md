@@ -10,7 +10,7 @@ cleaner code.
 
 - ✓* Platform independent input and window management system. Need to implement connection to rendering engines.
 - ✗ Support for Slang (for cross-platform shaders).
-- ✗ Metal Shading Language (MSL) for macOS.
+- ✓* Metal Shading Language (MSL) for macOS.
 - ✗ Load and render 3D meshes (e.g., OBJ, glTF).
 - ✗ A simple rendering API that works the same way on both Metal and Vulkan.
 - ✗ Shader hot-reloading for faster development.
