@@ -8,6 +8,8 @@ export import :input_manager;
 export import :input_event;
 export import :input_map;
 export import :graphics_context;
+export import :objc_interop;
+export import :utils;
 
 // Only build with the required backend renderer
 #ifdef USE_METAL

@@ -2,7 +2,6 @@ function(setup_metal_for_target target_name)
     if (APPLE)
         # Define the Metal-CPP directory
         set(METAL_CPP_DIR "${CMAKE_SOURCE_DIR}/vendor/metal-cpp")
-        set(METAL_CPP_EXT_DIR "${CMAKE_SOURCE_DIR}/vendor/metal-cpp-extensions")
 
         # Download and extract Metal-CPP if it doesn't exist
         if (NOT EXISTS "${METAL_CPP_DIR}/Metal/Metal.hpp")
@@ -50,10 +49,8 @@ function(setup_metal_for_target target_name)
         set(METAL_LIBRARIES
                 ${COCOA_LIBRARY}
                 ${METAL_LIBRARY}
-                ${METAL_KIT_LIBRARY}
                 ${QUARTZ_CORE_LIBRARY}
                 ${METAL_FX_LIBRARY}
-                ${APP_KIT_LIBRARY}
         )
         target_link_libraries(${target_name} PRIVATE ${METAL_LIBRARIES})
 

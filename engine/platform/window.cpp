@@ -3,9 +3,6 @@ module;
 #include <GLFW/glfw3.h>
 #define GLFW_EXPOSE_NATIVE_COCOA
 #include <GLFW/glfw3native.h>
-#include <AppKit/AppKit.hpp>
-#include <Foundation/Foundation.hpp>
-#include <Metal/Metal.hpp>
 #include <QuartzCore/QuartzCore.hpp>
 #endif
 
@@ -16,6 +13,7 @@ module lune;
 
 #ifdef USE_METAL
 import :metal_context;
+import :objc_interop;
 #endif
 
 
@@ -54,9 +52,11 @@ namespace lune
 		m_mode = info.mode;
 
 		// Set callbacks
+		glfwSetWindowUserPointer(m_handle, this);
 		glfwSetKeyCallback(m_handle, InputManager::_processInputCallback);
 		glfwSetCursorPosCallback(m_handle, InputManager::_processMouseCallback);
 		glfwSetMouseButtonCallback(m_handle, InputManager::_processMouseButtonCallback);
+		glfwSetFramebufferSizeCallback(m_handle, _onFrameBufferSizeCallback);
 
 #ifdef USE_METAL
 		attachMetalToGLFW();
@@ -70,6 +70,12 @@ namespace lune
 			glfwDestroyWindow(m_handle);
 			m_handle = nullptr;
 		}
+	}
+
+	void Window::_onFrameBufferSizeCallback(GLFWwindow* handle, const int width, const int height)
+	{
+		const auto window = static_cast<Window*>(glfwGetWindowUserPointer(handle));
+		window->m_metalLayer->setDrawableSize(CGSizeMake(width, height));
 	}
 
 	Window::Window(Window&& other) noexcept :
@@ -155,18 +161,21 @@ namespace lune
 	}
 
 #ifdef USE_METAL
-	void Window::attachMetalToGLFW() const
+	void Window::attachMetalToGLFW()
 	{
-		const NS::Window* nswindow = reinterpret_cast<NS::Window*>(glfwGetCocoaWindow(m_handle));
-		NS::View* nsview = nswindow->contentView();
+		const id nsWindow = glfwGetCocoaWindow(m_handle);
+		const id nsView = objcCall<id>(nsWindow, "contentView");
 
 		auto& metalCtx = metal::MetalContext::instance();
-		const NS::SharedPtr<CA::MetalLayer> metalLayer = NS::TransferPtr(CA::MetalLayer::layer());
-		metalLayer->setDevice(metalCtx.device());
-		metalLayer->setPixelFormat(MTL::PixelFormatBGRA8Unorm);
-		metalLayer->setFramebufferOnly(false);
-		metalCtx.addMetalLayer(metalLayer);
-		nsview->setLayer(metalLayer.get());
+		m_metalLayer = NS::TransferPtr(CA::MetalLayer::layer());
+		m_metalLayer->setDevice(metalCtx.device());
+		m_metalLayer->setPixelFormat(MTL::PixelFormatBGRA8Unorm);
+		m_metalLayer->setFramebufferOnly(false);
+		m_metalLayer->setDrawableSize(CGSizeMake(m_width, m_height));
+
+		metalCtx.addMetalLayer(m_metalLayer);
+
+		objcCall<void>(nsView, "setLayer:", m_metalLayer.get());
 	}
 #endif
 }

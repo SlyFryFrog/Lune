@@ -2,6 +2,9 @@ module;
 #define GLFW_INCLUDE_NONE	// We're not using OpenGL, therefore we disable it
 #include <GLFW/glfw3.h>
 #include <string>
+
+#include "Foundation/NSSharedPtr.hpp"
+#include "QuartzCore/CAMetalLayer.hpp"
 export module lune:window;
 
 import :input_manager;
@@ -43,6 +46,10 @@ namespace lune
 		std::string m_title{};
 		WindowMode m_mode{};
 		WindowState m_preFullscreenState{};
+
+#ifdef USE_METAL
+		NS::SharedPtr<CA::MetalLayer> m_metalLayer;
+#endif
 
 	public:
 		explicit Window() = default;
@@ -87,11 +94,14 @@ namespace lune
 		void create(const WindowCreateInfo& info);
 		void destroy();
 
+
+		static void _onFrameBufferSizeCallback(GLFWwindow* handle, int width, int height);
+
 	private:
 #ifdef USE_METAL
-		void attachMetalToGLFW() const;
+		void attachMetalToGLFW();
 #else
-		void attachVulkanToGLFW() const;
+		void attachVulkanToGLFW();
 #endif
 	};
 
