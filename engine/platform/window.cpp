@@ -152,12 +152,14 @@ namespace lune
 #ifdef USE_METAL
 	void Window::attachMetalToGLFW() const
 	{
-		NS::Window* nswindow = reinterpret_cast<NS::Window*>(glfwGetCocoaWindow(m_handle));
+		const NS::Window* nswindow = reinterpret_cast<NS::Window*>(glfwGetCocoaWindow(m_handle));
 		NS::View* nsview = nswindow->contentView();
 
-		nsview->setLayer(metal::MetalContext::instance().metalLayer());
-		nsview->setWantsLayer(true);
-		nsview->setOpaque(true);
+		auto& metalCtx = metal::MetalContext::instance();
+		const auto metalLayer = metalCtx.createMetalLayer();
+		metalCtx.addMetalLayer(metalLayer);
+
+		nsview->setLayer(metalLayer.get());
 	}
 #endif
 }

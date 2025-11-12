@@ -7,9 +7,8 @@ module;
 #include <Foundation/Foundation.hpp>
 #include <Metal/Metal.hpp>
 #include <QuartzCore/QuartzCore.hpp>
-#include <unordered_map>
-#include <memory>
 #include <simd/vector_types.h>
+#include <vector>
 export module lune:metal;
 
 import :graphics_context;
@@ -29,24 +28,6 @@ namespace lune::metal
 		{0.5f, -0.5f, 0.0f}   // Bottom-right vertex
 	}};
 
-	struct MetalShader
-	{
-		NS::SharedPtr<NS::String> source;
-		NS::SharedPtr<MTL::Library> library;
-		NS::SharedPtr<NS::Dictionary> compileOptions;
-		std::unordered_map<std::string, NS::SharedPtr<MTL::Function>> functions;
-	};
-
-
-	export class MetalLayer
-	{
-	public:
-		virtual ~MetalLayer() = default;
-		virtual void setup() = 0;
-
-		virtual void render() = 0;
-	};
-
 	export class MetalContext final : public GraphicsContext
 	{
 		NS::SharedPtr<MTL::Device> m_device{};
@@ -54,13 +35,10 @@ namespace lune::metal
 		NS::SharedPtr<MTL::CommandBuffer> m_commandBuffer{};
 		NS::SharedPtr<MTL::Library> m_library{};
 		NS::SharedPtr<CA::MetalDrawable> m_drawable{};
-		NS::SharedPtr<CA::MetalLayer> m_layer{};
 		NS::SharedPtr<MTL::RenderPipelineState> m_pipelineState{};
 		NS::SharedPtr<MTL::Buffer> m_triangleVertexBuffer{};
 		NS::SharedPtr<MTL::RenderCommandEncoder> m_commandEncoder{};
-
-		std::unordered_map<std::string, MetalShader> m_shaders;
-		std::vector<std::shared_ptr<MetalLayer>> m_layers;
+		std::vector<NS::SharedPtr<CA::MetalLayer>> m_metalLayers;
 
 	private:
 		MetalContext();
@@ -82,19 +60,14 @@ namespace lune::metal
 			return m_commandQueue.get();
 		}
 
-		[[nodiscard]] CA::MetalLayer* metalLayer() const
-		{
-			return m_layer.get();
-		}
-
 		[[nodiscard]] MTL::RenderPipelineState* renderPipelineState() const
 		{
 			return m_pipelineState.get();
 		}
 
-		[[nodiscard]] std::vector<std::shared_ptr<MetalLayer>> layers() const
+		[[nodiscard]] std::vector<NS::SharedPtr<CA::MetalLayer>> metalLayers() const
 		{
-			return m_layers;
+			return m_metalLayers;
 		}
 
 		[[nodiscard]] MTL::RenderCommandEncoder* currentRenderEncoder() const
@@ -119,28 +92,29 @@ namespace lune::metal
 		void sendRenderCommand();
 		void draw();
 
-		void loadShader(const std::string& name, const std::string& path, bool isPrecompiled = false);
+		void loadShader(const std::string& name, const std::string& path,
+		                bool isPrecompiled = false);
 		MTL::Function* getFunction(const std::string& shaderName, const std::string& functionName);
 		void reloadShaders();
 
-		CA::MetalLayer* createMetalLayer(double width, double height);
+		[[nodiscard]] NS::SharedPtr<CA::MetalLayer> createMetalLayer() const;
 
 		void render() override;
 
-		template <typename T, typename... Args>
-		T& addLayer(Args&&... args)
+		void addMetalLayer(const NS::SharedPtr<CA::MetalLayer>& metalLayer)
 		{
-			auto layer = std::make_shared<T>(std::forward<Args>(args)...);
-			T& ref = *layer;
-			m_layers.push_back(std::move(layer));
-			ref.setup();
-			return ref;
+			m_metalLayers.push_back(metalLayer);
 		}
 
-		void removeLayer(const size_t index)
+		void removeMetalLayer(const NS::SharedPtr<CA::MetalLayer>& metalLayer)
 		{
-			if (index < m_layers.size())
-				m_layers.erase(m_layers.begin() + index);
+			std::erase_if(
+				m_metalLayers,
+				[&](const NS::SharedPtr<CA::MetalLayer>& ptr)
+				{
+					return ptr.get() == metalLayer.get();
+				}
+				);
 		}
 	};
 } // namespace lune::metal

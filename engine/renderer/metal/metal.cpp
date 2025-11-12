@@ -13,15 +13,9 @@ namespace lune::metal
 	MetalContext::MetalContext()
 	{
 		createDevice();
-
 		createTriangle();
 		createLibrary("/Users/marcus/dev/Lune/sandbox/metal_hello_triangle/shaders/basic.metal");
 		createCommandQueue();
-		m_layer = NS::TransferPtr(CA::MetalLayer::layer());
-		m_layer->setDevice(m_device.get());
-		m_layer->setPixelFormat(MTL::PixelFormatBGRA8Unorm);
-		m_layer->setFramebufferOnly(false);
-
 		createRenderPipeline();
 	}
 
@@ -51,14 +45,13 @@ namespace lune::metal
 
 	void MetalContext::createLibrary(const std::string& path)
 	{
-
+		// Try to load shader from file on disk
 		const auto shaderSource = File::read(path);
 		const auto source = NS::String::string(shaderSource.value_or("").c_str(),
 		                                       NS::UTF8StringEncoding);
 
 		NS::Error* error;
 		m_library = NS::TransferPtr(m_device->newLibrary(source, nullptr, &error));
-
 		if (!m_library)
 		{
 			throw std::runtime_error("Failed to create Metal library");
@@ -68,7 +61,6 @@ namespace lune::metal
 	void MetalContext::createCommandQueue()
 	{
 		m_commandQueue = NS::TransferPtr(m_device->newCommandQueue());
-
 		if (!m_commandQueue)
 		{
 			throw std::runtime_error("Failed to create Metal command queue");
@@ -101,8 +93,7 @@ namespace lune::metal
 		renderPipelineDescriptor->setVertexFunction(vertShader);
 		renderPipelineDescriptor->setFragmentFunction(fragShader);
 
-		const auto pixelFormat = m_layer->pixelFormat();
-		renderPipelineDescriptor->colorAttachments()->object(0)->setPixelFormat(pixelFormat);
+		renderPipelineDescriptor->colorAttachments()->object(0)->setPixelFormat(MTL::PixelFormatBGRA8Unorm);
 
 		NS::Error* error;
 		m_pipelineState = NS::TransferPtr(
@@ -148,57 +139,27 @@ namespace lune::metal
 
 	void MetalContext::draw()
 	{
-		m_drawable = NS::TransferPtr(m_layer->nextDrawable());
-		if (!m_drawable)
+		for (const auto& layer : m_metalLayers)
 		{
-			std::cout << "nextDrawable() returned nil\n";
-			return;
+			m_drawable = NS::TransferPtr(layer->nextDrawable());
+			if (m_drawable)
+			{
+				sendRenderCommand();
+			}
 		}
-
-		sendRenderCommand();
 	}
 
-	CA::MetalLayer* MetalContext::createMetalLayer(const double width, const double height)
+	NS::SharedPtr<CA::MetalLayer> MetalContext::createMetalLayer() const
 	{
-		m_layer = NS::TransferPtr(CA::MetalLayer::layer());
-		m_layer->setDevice(m_device.get());
-		m_layer->setPixelFormat(MTL::PixelFormatBGRA8Unorm);
-		m_layer->setFramebufferOnly(false);
-		m_layer->setDrawableSize(CGSize{width, height});
-		return m_layer.get();
+		auto metalLayer = NS::TransferPtr(CA::MetalLayer::layer());
+		metalLayer->setDevice(m_device.get());
+		metalLayer->setPixelFormat(MTL::PixelFormatBGRA8Unorm);
+		metalLayer->setFramebufferOnly(false);
+
+		return metalLayer;
 	}
 
 	void MetalContext::render()
 	{
-		if (!m_layer || !m_commandQueue)
-			return;
-
-		// Get the next drawable
-		const auto drawable = m_layer->nextDrawable();
-		if (!drawable)
-			return;
-
-		// Create a render pass descriptor
-		const auto renderPassDescriptor = MTL::RenderPassDescriptor::renderPassDescriptor();
-		const auto colorAttachment = renderPassDescriptor->colorAttachments()->object(0);
-		colorAttachment->setClearColor(MTL::ClearColor::Make(0.33, 0.33, 0.33, 1.0));
-		colorAttachment->setLoadAction(MTL::LoadActionClear);
-		colorAttachment->setStoreAction(MTL::StoreActionStore);
-		colorAttachment->setTexture(drawable->texture());
-
-		// Create a command buffer
-		const auto commandBuffer = m_commandQueue->commandBuffer();
-		const auto renderEncoder = commandBuffer->renderCommandEncoder(renderPassDescriptor);
-		setCurrentEncoder(renderEncoder);
-
-		// Render all layers
-		for (const auto& layer : m_layers)
-			layer->render();
-
-		renderEncoder->endEncoding();
-		commandBuffer->presentDrawable(drawable);
-		commandBuffer->commit();
-
-		setCurrentEncoder(nullptr);
 	}
 } // namespace lune::metal
