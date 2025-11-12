@@ -149,17 +149,23 @@ namespace lune::metal
 		}
 	}
 
-	NS::SharedPtr<CA::MetalLayer> MetalContext::createMetalLayer() const
-	{
-		auto metalLayer = NS::TransferPtr(CA::MetalLayer::layer());
-		metalLayer->setDevice(m_device.get());
-		metalLayer->setPixelFormat(MTL::PixelFormatBGRA8Unorm);
-		metalLayer->setFramebufferOnly(false);
-
-		return metalLayer;
-	}
-
 	void MetalContext::render()
 	{
+	}
+
+	void MetalContext::addMetalLayer(const NS::SharedPtr<CA::MetalLayer>& metalLayer)
+	{
+		m_metalLayers.push_back(metalLayer);
+	}
+
+	void MetalContext::removeMetalLayer(const NS::SharedPtr<CA::MetalLayer>& metalLayer)
+	{
+		std::erase_if(
+			m_metalLayers,
+			[&](const NS::SharedPtr<CA::MetalLayer>& ptr)
+			{
+				return ptr.get() == metalLayer.get();
+			}
+			);
 	}
 } // namespace lune::metal

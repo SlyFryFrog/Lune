@@ -15,7 +15,7 @@ module;
 module lune;
 
 #ifdef USE_METAL
-import :metal;
+import :metal_context;
 #endif
 
 
@@ -139,6 +139,11 @@ namespace lune
 		glfwWindowHint(GLFW_RESIZABLE, resizable);
 	}
 
+	void Window::setWindowMode(WindowMode mode)
+	{
+		// TODO
+	}
+
 	WindowMode Window::getWindowMode() const
 	{
 		return m_mode;
@@ -156,9 +161,11 @@ namespace lune
 		NS::View* nsview = nswindow->contentView();
 
 		auto& metalCtx = metal::MetalContext::instance();
-		const auto metalLayer = metalCtx.createMetalLayer();
+		const NS::SharedPtr<CA::MetalLayer> metalLayer = NS::TransferPtr(CA::MetalLayer::layer());
+		metalLayer->setDevice(metalCtx.device());
+		metalLayer->setPixelFormat(MTL::PixelFormatBGRA8Unorm);
+		metalLayer->setFramebufferOnly(false);
 		metalCtx.addMetalLayer(metalLayer);
-
 		nsview->setLayer(metalLayer.get());
 	}
 #endif

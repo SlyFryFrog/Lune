@@ -147,7 +147,7 @@ namespace lune
 
 			void setWindowMode(const WindowMode& mode)
 			{
-				// Todo
+				m_rawWindow.setWindowMode(mode);
 			}
 		};
 	} // namespace raii
