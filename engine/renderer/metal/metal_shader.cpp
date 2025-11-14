@@ -56,7 +56,7 @@ namespace lune::metal
 
 	void GraphicsShader::createRenderPipeline()
 	{
-		auto device = MetalContext::instance().device();
+		const auto device = MetalContext::instance().device();
 		MTL::RenderPipelineDescriptor* pipelineDescriptor =
 			MTL::RenderPipelineDescriptor::alloc()->init();
 		pipelineDescriptor->setVertexFunction(m_vertexFunction.get());

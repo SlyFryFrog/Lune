@@ -9,7 +9,7 @@ namespace lune::metal
 	export class Shader
 	{
 	protected:
-		NS::SharedPtr<MTL::Buffer> m_buffer{};
+		NS::SharedPtr<MTL::Buffer> m_vertexBuffer{};
 
 	public:
 		Shader() = default;
@@ -19,7 +19,7 @@ namespace lune::metal
 
 		[[nodiscard]] MTL::Buffer* buffer() const
 		{
-			return m_buffer.get();
+			return m_vertexBuffer.get();
 		}
 	};
 

@@ -1,4 +1,4 @@
-project(HelloTriangle LANGUAGES CXX)
+project(HelloWindow LANGUAGES CXX)
 
 include (${CMAKE_SOURCE_DIR}/cmake/MetalSetup.cmake)
 

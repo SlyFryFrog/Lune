@@ -56,7 +56,7 @@ namespace lune::metal
 		MTL::RenderCommandEncoder* renderCommandEncoder = m_commandBuffer->renderCommandEncoder(
 			renderPassDescriptor);
 
-		for (const auto& shader : m_graphicsShader)
+		for (const auto& shader : m_graphicsShaders)
 		{
 			shader->encodeRenderCommand(renderCommandEncoder);
 		}
@@ -104,6 +104,6 @@ namespace lune::metal
 
 	void MetalContext::addShader(const std::shared_ptr<GraphicsShader>& metalShader)
 	{
-		m_graphicsShader.push_back(metalShader);
+		m_graphicsShaders.push_back(metalShader);
 	}
 } // namespace lune::metal

@@ -10,17 +10,6 @@ import :metal_shader;
 
 namespace lune::metal
 {
-	struct TriangleData
-	{
-		vector_float3 positions[3];
-	};
-
-	TriangleData triangle = {{
-		{0.0f, 0.5f, 0.0f},   // Top vertex
-		{-0.5f, -0.5f, 0.0f}, // Bottom-left vertex
-		{0.5f, -0.5f, 0.0f}   // Bottom-right vertex
-	}};
-
 	export struct MetalContextCreateInfo
 	{
 		MTL::ClearColor clearColor = {0.0f, 0.0f, 0.0f, 0.0f};
@@ -36,7 +25,7 @@ namespace lune::metal
 		NS::SharedPtr<CA::MetalDrawable> m_drawable{};
 		NS::SharedPtr<MTL::RenderCommandEncoder> m_commandEncoder{};
 		std::vector<NS::SharedPtr<CA::MetalLayer>> m_metalLayers{};
-		std::vector<std::shared_ptr<GraphicsShader>> m_graphicsShader{};
+		std::vector<std::shared_ptr<GraphicsShader>> m_graphicsShaders{};
 		MetalContextCreateInfo m_createInfo{};
 
 	private:
