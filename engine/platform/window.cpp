@@ -21,8 +21,6 @@ import :input_manager;
 
 namespace lune
 {
-	static bool glfwInitialized = false;
-
 	Window::~Window()
 	{
 		destroy();
@@ -30,6 +28,7 @@ namespace lune
 
 	void Window::create(const WindowCreateInfo& info)
 	{
+		static bool glfwInitialized = false;
 		if (!glfwInitialized)
 		{
 			if (!glfwInit())
@@ -37,7 +36,9 @@ namespace lune
 			glfwInitialized = true;
 		}
 
-		destroy();
+		// Destroy old window if we double create
+		if (m_handle)
+			destroy();
 
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 		glfwWindowHint(GLFW_RESIZABLE, info.resizable ? GLFW_TRUE : GLFW_FALSE);
@@ -103,20 +104,12 @@ namespace lune
 
 	void Window::show() const
 	{
-		if (m_handle)
-		{
-			glfwShowWindow(m_handle);
-		}
+		glfwShowWindow(m_handle);
 	}
 
 	void Window::resize(const int width, const int height) const
 	{
-		if (m_handle)
-		{
-			glfwSetWindowSize(m_handle, width, height);
-			std::cout << "Resized window \"" << m_title << "\" to " << width << "x" << height
-				<< "\n";
-		}
+		glfwSetWindowSize(m_handle, width, height);
 	}
 
 	bool Window::shouldClose() const

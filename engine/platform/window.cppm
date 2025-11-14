@@ -3,8 +3,9 @@ module;
 #include <GLFW/glfw3.h>
 #include <string>
 
-#include "Foundation/NSSharedPtr.hpp"
-#include "QuartzCore/CAMetalLayer.hpp"
+#ifdef USE_METAL
+#include <QuartzCore/CAMetalLayer.hpp>
+#endif
 export module lune:window;
 
 import :input_manager;
@@ -29,15 +30,6 @@ namespace lune
 	};
 
 
-	struct WindowState
-	{
-		int xpos;
-		int ypos;
-		int width;
-		int height;
-	};
-
-
 	export class Window
 	{
 		GLFWwindow* m_handle = nullptr;
@@ -45,10 +37,9 @@ namespace lune
 		int m_height{};
 		std::string m_title{};
 		WindowMode m_mode{};
-		WindowState m_preFullscreenState{};
 
 #ifdef USE_METAL
-		NS::SharedPtr<CA::MetalLayer> m_metalLayer;
+		NS::SharedPtr<CA::MetalLayer> m_metalLayer{};
 #endif
 
 	public:
@@ -93,7 +84,6 @@ namespace lune
 
 		void create(const WindowCreateInfo& info);
 		void destroy();
-
 
 		static void _onFrameBufferSizeCallback(GLFWwindow* handle, int width, int height);
 

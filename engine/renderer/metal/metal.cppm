@@ -9,3 +9,4 @@ module;
 export module lune:metal;
 
 export import :metal_context;
+export import :metal_shader;

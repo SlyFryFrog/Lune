@@ -1,5 +1,4 @@
 module;
-#include <Foundation/Foundation.hpp>
 #include <Metal/Metal.hpp>
 #include <QuartzCore/QuartzCore.hpp>
 #include <simd/vector_types.h>
@@ -7,11 +6,10 @@ module;
 export module lune:metal_context;
 
 import :graphics_context;
+import :metal_shader;
 
 namespace lune::metal
 {
-	constexpr int kMaxFramesInFlight = 3;
-
 	struct TriangleData
 	{
 		vector_float3 positions[3];
@@ -23,17 +21,23 @@ namespace lune::metal
 		{0.5f, -0.5f, 0.0f}   // Bottom-right vertex
 	}};
 
+	export struct MetalContextCreateInfo
+	{
+		MTL::ClearColor clearColor = {0.0f, 0.0f, 0.0f, 0.0f};
+		MTL::PixelFormat colorPixelFormat = MTL::PixelFormat::PixelFormatBGRA8Unorm;
+		int maxFramesInFlight = 3;
+	};
+
 	export class MetalContext final : public GraphicsContext
 	{
 		NS::SharedPtr<MTL::Device> m_device{};
 		NS::SharedPtr<MTL::CommandQueue> m_commandQueue{};
 		NS::SharedPtr<MTL::CommandBuffer> m_commandBuffer{};
-		NS::SharedPtr<MTL::Library> m_library{};
 		NS::SharedPtr<CA::MetalDrawable> m_drawable{};
-		NS::SharedPtr<MTL::RenderPipelineState> m_pipelineState{};
-		NS::SharedPtr<MTL::Buffer> m_triangleVertexBuffer{};
 		NS::SharedPtr<MTL::RenderCommandEncoder> m_commandEncoder{};
-		std::vector<NS::SharedPtr<CA::MetalLayer>> m_metalLayers;
+		std::vector<NS::SharedPtr<CA::MetalLayer>> m_metalLayers{};
+		std::vector<std::shared_ptr<GraphicsShader>> m_graphicsShader{};
+		MetalContextCreateInfo m_createInfo{};
 
 	private:
 		MetalContext();
@@ -44,6 +48,7 @@ namespace lune::metal
 		MetalContext& operator=(const MetalContext&) = delete;
 
 		static MetalContext& instance();
+		void create(const MetalContextCreateInfo& info);
 
 		[[nodiscard]] MTL::Device* device() const
 		{
@@ -53,11 +58,6 @@ namespace lune::metal
 		[[nodiscard]] MTL::CommandQueue* commandQueue() const
 		{
 			return m_commandQueue.get();
-		}
-
-		[[nodiscard]] MTL::RenderPipelineState* renderPipelineState() const
-		{
-			return m_pipelineState.get();
 		}
 
 		[[nodiscard]] std::vector<NS::SharedPtr<CA::MetalLayer>> metalLayers() const
@@ -70,14 +70,14 @@ namespace lune::metal
 			return m_commandEncoder.get();
 		}
 
-		void createDevice();
-		void createDefaultLibrary();
-		void createLibrary(const std::string& path);
-		void createCommandQueue();
-		void createTriangle();
-		void createRenderPipeline();
+		[[nodiscard]] MetalContextCreateInfo& createInfo()
+		{
+			return m_createInfo;
+		}
 
-		void encodeRenderCommand(MTL::RenderCommandEncoder* renderEncoder) const;
+		void createDevice();
+		void createCommandQueue();
+
 		void sendRenderCommand();
 		void draw();
 		void render() override;
@@ -85,9 +85,6 @@ namespace lune::metal
 		void addMetalLayer(const NS::SharedPtr<CA::MetalLayer>& metalLayer);
 		void removeMetalLayer(const NS::SharedPtr<CA::MetalLayer>& metalLayer);
 
-		void loadShader(const std::string& name, const std::string& path,
-		                bool isPrecompiled = false);
-		MTL::Function* getFunction(const std::string& shaderName, const std::string& functionName);
-		void reloadShaders();
+		void addShader(const std::shared_ptr<GraphicsShader>& metalShader);
 	};
 } // namespace lune::metal

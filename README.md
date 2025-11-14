@@ -8,14 +8,14 @@ cleaner code.
 
 ## Feature Goals
 
-- ✓* Platform independent input and window management system. Need to implement connection to rendering engines.
-- ✗ Support for Slang (for cross-platform shaders).
-- ✓* Metal Shading Language (MSL) for macOS.
-- ✗ Load and render 3D meshes (e.g., OBJ, glTF).
-- ✗ A simple rendering API that works the same way on both Metal and Vulkan.
-- ✗ Shader hot-reloading for faster development.
-- ✗ Basic debugging tools (e.g., wireframe mode, GPU profiling).
-- ✗ ImGui support for in-engine UI and debugging.
+- [x] Platform independent input and window management system (w/ GLFW).
+- [x] Metal Shading Language (MSL) for macOS.
+- [ ] Support for Slang (for cross-platform shaders).
+- [ ] Load and render 3D meshes (e.g., OBJ, glTF).
+- [ ] A simple rendering API that works the same way on both Metal and Vulkan.
+- [ ] Shader hot-reloading for faster development.
+- [ ] Basic debugging tools (e.g., wireframe mode, GPU profiling).
+- [ ] ImGui support for in-engine UI and debugging.
 
 ## Requirements and Dependencies
 

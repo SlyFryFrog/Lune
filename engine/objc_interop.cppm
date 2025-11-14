@@ -5,7 +5,7 @@ export module lune:objc_interop;
 
 namespace lune
 {
-	template <typename Ret, typename... Args>
+	export template <typename Ret, typename... Args>
 	Ret objcCall(id obj, const char* selector, Args... args)
 	{
 		SEL sel = sel_registerName(selector);

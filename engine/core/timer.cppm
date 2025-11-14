@@ -13,9 +13,6 @@ namespace lune
 		std::chrono::time_point<std::chrono::high_resolution_clock> m_prevTime;
 
 	public:
-		Timer() = default;
-		~Timer() = default;
-
 		/**
 		 * @brief Resets the timer to the current time.
 		 *
