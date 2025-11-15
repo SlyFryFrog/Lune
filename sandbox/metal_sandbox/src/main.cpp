@@ -26,7 +26,7 @@ public:
 private:
 	void createVertices()
 	{
-		const simd::float3 vertices[] = {
+		constexpr simd::float3 vertices[] = {
 			{-0.5f, -0.5f, 0.0f}, {0.5f, -0.5f, 0.0f}, {0.0f, 0.5f, 0.0f}};
 
 		m_vertexBuffer = NS::TransferPtr(m_device->newBuffer(&vertices, sizeof(vertices),
@@ -50,7 +50,7 @@ int main()
 	context.create(metalContextCreateInfo);
 
 	// Add our custom shader to the renderer
-	const auto shader = std::make_shared<CustomShader>(context.device(), "shaders/basic.metal");
+	const auto shader = std::make_shared<CustomShader>(context.device(), "shaders/slang-basic.metal");
 
 	context.addShader(shader);
 
