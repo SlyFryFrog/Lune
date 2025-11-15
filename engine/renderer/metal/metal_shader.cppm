@@ -9,24 +9,20 @@ namespace lune::metal
 	export class Shader
 	{
 	protected:
-		NS::SharedPtr<MTL::Buffer> m_vertexBuffer{};
+		NS::SharedPtr<MTL::Device> m_device{};
 
 	public:
-		Shader() = default;
+		explicit Shader(const NS::SharedPtr<MTL::Device>& device);
 		virtual ~Shader() = default;
 
 		virtual void encodeRenderCommand(MTL::RenderCommandEncoder* renderCommandEncoder) = 0;
-
-		[[nodiscard]] MTL::Buffer* buffer() const
-		{
-			return m_vertexBuffer.get();
-		}
 	};
 
 
 	export class GraphicsShader : public Shader
 	{
 	protected:
+		NS::SharedPtr<MTL::Buffer> m_vertexBuffer{};
 		NS::SharedPtr<MTL::Function> m_vertexFunction;
 		NS::SharedPtr<MTL::Function> m_fragmentFunction;
 		NS::SharedPtr<MTL::RenderPipelineState> m_pipelineState;
@@ -35,14 +31,17 @@ namespace lune::metal
 		std::string m_fragmentMain;
 
 	public:
-		explicit GraphicsShader(
-			std::string  path,
-			std::string  vertexMain = "vertexMain",
-			std::string  fragmentMain = "fragmentMain"
-			);
+		explicit GraphicsShader(const NS::SharedPtr<MTL::Device>& device, const std::string& path,
+		                        const std::string& vertexMain = "vertexMain",
+		                        const std::string& fragmentMain = "fragmentMain");
 
 		void createLibrary();
 		void createRenderPipeline();
+
+		[[nodiscard]] MTL::Buffer* vertexBuffer() const
+		{
+			return m_vertexBuffer.get();
+		}
 
 		[[nodiscard]] MTL::RenderPipelineState* getPipelineState() const
 		{
@@ -58,13 +57,5 @@ namespace lune::metal
 		{
 			return m_fragmentFunction.get();
 		}
-	};
-
-
-	export class ShaderProgram
-	{
-	public:
-		ShaderProgram() = default;
-		~ShaderProgram() = default;
 	};
 }

@@ -161,7 +161,7 @@ namespace lune
 
 		auto& metalCtx = metal::MetalContext::instance();
 		m_metalLayer = NS::TransferPtr(CA::MetalLayer::layer());
-		m_metalLayer->setDevice(metalCtx.device());
+		m_metalLayer->setDevice(metalCtx.device().get());
 		m_metalLayer->setPixelFormat(MTL::PixelFormatBGRA8Unorm);
 		m_metalLayer->setFramebufferOnly(false);
 		m_metalLayer->setDrawableSize(CGSizeMake(m_width, m_height));

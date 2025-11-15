@@ -8,12 +8,16 @@ module lune;
 
 namespace lune::metal
 {
-	GraphicsShader::GraphicsShader(std::string path,
-	                               std::string vertexMain, std::string fragmentMain) :
-		Shader(),
-		m_path(std::move(path)),
-		m_vertexMain(std::move(vertexMain)),
-		m_fragmentMain(std::move(fragmentMain))
+	Shader::Shader(const NS::SharedPtr<MTL::Device>& device) : m_device(device)
+	{
+	}
+
+	GraphicsShader::GraphicsShader(const NS::SharedPtr<MTL::Device>& device, const std::string& path, const std::string& vertexMain,
+	                               const std::string& fragmentMain) :
+		Shader(device),
+		m_path(path),
+		m_vertexMain(vertexMain),
+		m_fragmentMain(fragmentMain)
 	{
 		createLibrary();
 		createRenderPipeline();
@@ -23,7 +27,7 @@ namespace lune::metal
 	{
 		MTL::Library* library{};
 		NS::Error* error;
-		MTL::Device* device = MetalContext::instance().device();
+		MTL::Device* device = MetalContext::instance().device().get();
 
 		if (m_path.ends_with(".metal")) // Runtime-compiled shader
 		{
@@ -70,10 +74,8 @@ namespace lune::metal
 			);
 		if (!m_pipelineState)
 		{
-			throw std::runtime_error(
-				std::string("Failed to create pipeline state: ") +
-				error->localizedDescription()->utf8String()
-				);
+			std::cerr << "Failed to create pipeline state: " << error->localizedDescription()->
+				utf8String() << "\n";
 		}
 		pipelineDescriptor->release();
 	}

@@ -2,7 +2,6 @@ module;
 #include <Metal/Metal.hpp>
 #include <QuartzCore/QuartzCore.hpp>
 #include <iostream>
-#include <simd/vector_types.h>
 module lune;
 
 import :file;
@@ -11,7 +10,7 @@ namespace lune::metal
 {
 	MetalContext::MetalContext()
 	{
-		createDevice();
+		createDefaultDevice();
 		createCommandQueue();
 	}
 
@@ -26,7 +25,7 @@ namespace lune::metal
 		m_createInfo = info;
 	}
 
-	void MetalContext::createDevice()
+	void MetalContext::createDefaultDevice()
 	{
 		m_device = NS::TransferPtr(MTL::CreateSystemDefaultDevice());
 		if (!m_device)
@@ -80,10 +79,6 @@ namespace lune::metal
 				sendRenderCommand();
 			}
 		}
-	}
-
-	void MetalContext::render()
-	{
 	}
 
 	void MetalContext::addMetalLayer(const NS::SharedPtr<CA::MetalLayer>& metalLayer)

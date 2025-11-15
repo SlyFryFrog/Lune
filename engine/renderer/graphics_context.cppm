@@ -14,6 +14,6 @@ namespace lune
 
 		static GraphicsContext& instance();
 
-		virtual void render() = 0;
+		virtual void draw() = 0;
 	};
 }

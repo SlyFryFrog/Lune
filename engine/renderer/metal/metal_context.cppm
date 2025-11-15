@@ -39,9 +39,9 @@ namespace lune::metal
 		static MetalContext& instance();
 		void create(const MetalContextCreateInfo& info);
 
-		[[nodiscard]] MTL::Device* device() const
+		[[nodiscard]] NS::SharedPtr<MTL::Device> device() const
 		{
-			return m_device.get();
+			return m_device;
 		}
 
 		[[nodiscard]] MTL::CommandQueue* commandQueue() const
@@ -64,12 +64,11 @@ namespace lune::metal
 			return m_createInfo;
 		}
 
-		void createDevice();
+		void createDefaultDevice();
 		void createCommandQueue();
 
 		void sendRenderCommand();
-		void draw();
-		void render() override;
+		void draw() override;
 
 		void addMetalLayer(const NS::SharedPtr<CA::MetalLayer>& metalLayer);
 		void removeMetalLayer(const NS::SharedPtr<CA::MetalLayer>& metalLayer);

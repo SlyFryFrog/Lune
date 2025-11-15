@@ -13,6 +13,10 @@ namespace lune
 	 */
 	export std::string getWorkingDirectory();
 
+	/**
+	 * @brief Sets the working directory to be the root path of the executable.
+	 * This is useful for when you want to use relative pathing.
+	 */
 	export void setWorkingDirectory();
 
 	/**

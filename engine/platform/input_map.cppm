@@ -4,14 +4,16 @@ export module lune:input_map;
 
 namespace lune
 {
-	export enum InputState : int {
+	export enum InputState : int
+	{
 		PRESSED,
 		JUST_PRESSED,
 		RELEASED,
 		JUST_RELEASED,
 	};
 
-	export enum Key : int {
+	export enum Key : int
+	{
 		KEY_0 = GLFW_KEY_0,
 		KEY_1 = GLFW_KEY_1,
 		KEY_2 = GLFW_KEY_2,

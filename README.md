@@ -19,9 +19,6 @@ cleaner code.
 
 ## Requirements and Dependencies
 
-The Metal backend uses a modified (unofficial) version of metal-cpp found in metal-cpp-extensions. These libraries in
-metal-cpp-extensions are necessary for interacting with the native window when using GLFW.
-
 | Tool        | macOS (26.0+)          | Linux (Ubuntu 24.04+)          |
 |-------------|------------------------|--------------------------------|
 | Ninja       | `brew install ninja`   | `sudo apt install ninja-build` |
@@ -62,9 +59,8 @@ import lune;
 class CustomShader final : public lune::metal::GraphicsShader
 {
 public:
-	CustomShader(const std::string& path, const std::string& vertexMain,
-	             const std::string& fragmentMain) :
-		GraphicsShader(path, vertexMain, fragmentMain)
+	explicit CustomShader(const NS::SharedPtr<MTL::Device>& device, const std::string& path) :
+		GraphicsShader(device, path)
 	{
 		createVertices();
 	}
@@ -79,24 +75,23 @@ public:
 		renderCommandEncoder->drawPrimitives(typeTriangle, vertexStart, vertexCount);
 	}
 
+private:
 	void createVertices()
 	{
-		const auto device = lune::metal::MetalContext::instance().device();
 		const simd::float3 vertices[] = {
 			{-0.5f, -0.5f, 0.0f}, {0.5f, -0.5f, 0.0f}, {0.0f, 0.5f, 0.0f}};
 
-		m_vertexBuffer = NS::TransferPtr(device->newBuffer(&vertices, sizeof(vertices),
-		                                             MTL::ResourceStorageModeShared));
+		m_vertexBuffer = NS::TransferPtr(m_device->newBuffer(&vertices, sizeof(vertices),
+		                                                     MTL::ResourceStorageModeShared));
 	}
 };
 
 
 int main()
 {
-	lune::setWorkingDirectory();	// So we can use local paths from executable
+	lune::setWorkingDirectory(); // So we can use local paths from executable
 
 	// Initialize our metal renderer
-	// This is optional, but it allows you to modify the defaults
 	const lune::metal::MetalContextCreateInfo metalContextCreateInfo = {
 		.clearColor = {0.33, 0.33, 0.66, 1.0},
 		.colorPixelFormat = MTL::PixelFormat::PixelFormatBGRA8Unorm,
@@ -107,9 +102,7 @@ int main()
 	context.create(metalContextCreateInfo);
 
 	// Add our custom shader to the renderer
-	const auto shader = std::make_shared<CustomShader>(
-		"shaders/basic.metal",
-		"vertexShader", "fragmentShader");
+	const auto shader = std::make_shared<CustomShader>(context.device(), "shaders/basic.metal");
 
 	context.addShader(shader);
 

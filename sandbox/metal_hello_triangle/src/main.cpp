@@ -7,9 +7,8 @@ import lune;
 class CustomShader final : public lune::metal::GraphicsShader
 {
 public:
-	CustomShader(const std::string& path, const std::string& vertexMain,
-	             const std::string& fragmentMain) :
-		GraphicsShader(path, vertexMain, fragmentMain)
+	explicit CustomShader(const NS::SharedPtr<MTL::Device>& device, const std::string& path) :
+		GraphicsShader(device, path)
 	{
 		createVertices();
 	}
@@ -24,21 +23,21 @@ public:
 		renderCommandEncoder->drawPrimitives(typeTriangle, vertexStart, vertexCount);
 	}
 
+private:
 	void createVertices()
 	{
-		const auto device = lune::metal::MetalContext::instance().device();
 		const simd::float3 vertices[] = {
 			{-0.5f, -0.5f, 0.0f}, {0.5f, -0.5f, 0.0f}, {0.0f, 0.5f, 0.0f}};
 
-		m_vertexBuffer = NS::TransferPtr(device->newBuffer(&vertices, sizeof(vertices),
-		                                             MTL::ResourceStorageModeShared));
+		m_vertexBuffer = NS::TransferPtr(m_device->newBuffer(&vertices, sizeof(vertices),
+		                                                     MTL::ResourceStorageModeShared));
 	}
 };
 
 
 int main()
 {
-	lune::setWorkingDirectory();	// So we can use local paths from executable
+	lune::setWorkingDirectory(); // So we can use local paths from executable
 
 	// Initialize our metal renderer
 	const lune::metal::MetalContextCreateInfo metalContextCreateInfo = {
@@ -51,9 +50,7 @@ int main()
 	context.create(metalContextCreateInfo);
 
 	// Add our custom shader to the renderer
-	const auto shader = std::make_shared<CustomShader>(
-		"shaders/basic.metal",
-		"vertexShader", "fragmentShader");
+	const auto shader = std::make_shared<CustomShader>(context.device(), "shaders/basic.metal");
 
 	context.addShader(shader);
 

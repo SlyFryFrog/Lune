@@ -50,7 +50,7 @@ namespace lune
 		 * @param mods Bit field describing which modifier keys were held down.
 		 */
 		static void _processInputCallback(GLFWwindow* window, int key, int scancode, int action,
-										  int mods);
+		                                  int mods);
 
 		/**
 		 * @brief Internally called by GLFW when the mouse moves.
@@ -61,6 +61,14 @@ namespace lune
 		 */
 		static void _processMouseCallback(GLFWwindow* window, double xposIn, double yposIn);
 
+		/**
+		 * @brief Internally called by GLFW when a mouse button is pressed.
+		 *
+		 * @param window The GLFW window instance.
+		 * @param key The key that was pressed or released.
+		 * @param action The action (press, release, repeat).
+		 * @param mods Bit field describing which modifier keys were held down.
+		 */
 		static void _processMouseButtonCallback(GLFWwindow* window, int key, int action, int mods);
 
 		/**
@@ -167,6 +175,12 @@ namespace lune
 		 */
 		static void clearRecentQueue();
 
+		/**
+		 * @brief Processes a new input given from GLFW and updates input-related maps.
+		 *
+		 * @param key Keycode being pressed.
+		 * @param action Action for the given key.
+		 */
 		static void processKeyEvent(int key, int action);
 	};
 } // namespace lune
