@@ -27,8 +27,6 @@ namespace lune::metal
 	{
 		MTL::Library* library{};
 		NS::Error* error;
-		MTL::Device* device = MetalContext::instance().device().get();
-
 		if (m_path.ends_with(".metal")) // Runtime-compiled shader
 		{
 			// Try to load shader from file on disk
@@ -36,12 +34,12 @@ namespace lune::metal
 			const auto nsSource = NS::String::string(shaderSource.value_or("").c_str(),
 			                                         NS::UTF8StringEncoding);
 
-			library = device->newLibrary(nsSource, nullptr, &error);
+			library = m_device->newLibrary(nsSource, nullptr, &error);
 		}
 		else if (m_path.ends_with(".metallib")) // Precompiled shader
 		{
 			const auto nsPath = NS::String::string(m_path.c_str(), NS::UTF8StringEncoding);
-			library = device->newLibrary(nsPath, &error);
+			library = m_device->newLibrary(nsPath, &error);
 		}
 
 		m_vertexFunction = NS::TransferPtr(

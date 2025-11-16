@@ -41,10 +41,6 @@ function(setup_metal_for_target target_name)
         find_library(METAL_KIT_LIBRARY MetalKit)
         find_library(QUARTZ_CORE_LIBRARY QuartzCore)
 
-        # Findd Metal extension frameworks
-        find_library(APP_KIT_LIBRARY AppKit)
-        find_library(METAL_FX_LIBRARY MetalFX)
-
         # Link Metal frameworks
         set(METAL_LIBRARIES
                 ${COCOA_LIBRARY}

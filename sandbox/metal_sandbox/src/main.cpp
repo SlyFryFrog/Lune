@@ -51,7 +51,6 @@ int main()
 
 	// Add our custom shader to the renderer
 	const auto shader = std::make_shared<CustomShader>(context.device(), "shaders/slang-basic.metal");
-
 	context.addShader(shader);
 
 	// Initialize our window
@@ -70,6 +69,13 @@ int main()
 	{
 		if (lune::InputManager::isJustPressed(lune::KEY_ESCAPE))
 			window.setShouldClose(true);
+
+		// Reloads shader
+		if (lune::InputManager::isJustPressed(lune::KEY_R))
+		{
+			shader->createRenderPipeline();
+			shader->createLibrary();
+		}
 
 		context.draw();
 

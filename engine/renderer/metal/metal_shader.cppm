@@ -16,6 +16,11 @@ namespace lune::metal
 		virtual ~Shader() = default;
 
 		virtual void encodeRenderCommand(MTL::RenderCommandEncoder* renderCommandEncoder) = 0;
+
+		NS::SharedPtr<MTL::Device> device()
+		{
+			return m_device;
+		}
 	};
 
 

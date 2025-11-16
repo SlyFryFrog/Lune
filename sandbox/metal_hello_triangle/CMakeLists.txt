@@ -42,7 +42,7 @@ target_include_directories(${PROJECT_NAME}
 setup_metal_for_target(${PROJECT_NAME})
 
 if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
-    foreach(shaders)
+    foreach(dir shaders)
         add_custom_command(
                 TARGET ${PROJECT_NAME} POST_BUILD
                 COMMAND ${CMAKE_COMMAND} -E remove_directory $<TARGET_FILE_DIR:${PROJECT_NAME}>/${dir}
