@@ -1,10 +1,10 @@
 module;
-#ifdef USE_METAL
 #include <GLFW/glfw3.h>
+#ifdef USE_METAL
 #define GLFW_EXPOSE_NATIVE_COCOA
-#include <GLFW/glfw3native.h>
 #include <QuartzCore/QuartzCore.hpp>
 #endif
+#include <GLFW/glfw3native.h>
 
 #include <iostream>
 #include <stdexcept>
@@ -161,13 +161,13 @@ namespace lune
 
 		auto& metalCtx = metal::MetalContext::instance();
 		m_metalLayer = NS::TransferPtr(CA::MetalLayer::layer());
-		m_metalLayer->setDevice(metalCtx.device().get());
+		m_metalLayer->setDevice(metalCtx.device());
 		m_metalLayer->setPixelFormat(MTL::PixelFormatBGRA8Unorm);
 		m_metalLayer->setFramebufferOnly(false);
 		m_metalLayer->setDrawableSize(CGSizeMake(m_width, m_height));
 
 		metalCtx.addMetalLayer(m_metalLayer);
-
+		objcCall<void>(nsView, "wantsLayer", YES);
 		objcCall<void>(nsView, "setLayer:", m_metalLayer.get());
 	}
 #endif

@@ -43,7 +43,7 @@ cleaner code.
 
 ## Examples
 
-### Drawing a Triangle in 80 Lines with Metal
+### Drawing a triangle in less than 80 lines with Metal
 
 Much of the setup regarding the renderer and windowing system is abstracted allowing you to focus on creating your
 custom render loops. To define your own render loop, we need to create our own shader class and implement
@@ -59,8 +59,8 @@ import lune;
 class CustomShader final : public lune::metal::GraphicsShader
 {
 public:
-	explicit CustomShader(const NS::SharedPtr<MTL::Device>& device, const std::string& path) :
-		GraphicsShader(device, path)
+	explicit CustomShader(const lune::metal::GraphicsShaderCreateInfo& createInfo) :
+		GraphicsShader(createInfo)
 	{
 		createVertices();
 	}
@@ -78,7 +78,7 @@ public:
 private:
 	void createVertices()
 	{
-		const simd::float3 vertices[] = {
+		constexpr simd::float3 vertices[] = {
 			{-0.5f, -0.5f, 0.0f}, {0.5f, -0.5f, 0.0f}, {0.0f, 0.5f, 0.0f}};
 
 		m_vertexBuffer = NS::TransferPtr(m_device->newBuffer(&vertices, sizeof(vertices),
@@ -91,26 +91,21 @@ int main()
 {
 	lune::setWorkingDirectory(); // So we can use local paths from executable
 
-	// Initialize our metal renderer
-	const lune::metal::MetalContextCreateInfo metalContextCreateInfo = {
-		.clearColor = {0.33, 0.33, 0.66, 1.0},
-		.colorPixelFormat = MTL::PixelFormat::PixelFormatBGRA8Unorm,
-		.maxFramesInFlight = 3,
-	};
-
+	// Get our renderer's context
 	lune::metal::MetalContext& context = lune::metal::MetalContext::instance();
-	context.create(metalContextCreateInfo);
 
 	// Add our custom shader to the renderer
-	const auto shader = std::make_shared<CustomShader>(context.device(), "shaders/basic.metal");
-
+	lune::metal::GraphicsShaderCreateInfo shaderCreateInfo = {
+		.path = "shaders/basic.metal", // Must be set for each createInfo struct
+	};
+	const auto shader = std::make_shared<CustomShader>(shaderCreateInfo);
 	context.addShader(shader);
 
 	// Initialize our window
 	const lune::WindowCreateInfo windowCreateInfo = {
 		.width = 1280,
 		.height = 720,
-		.title = "Lune: Hello Triangle - Metal Renderer",
+		.title = "Lune: Sandbox - Metal Renderer",
 		.resizable = true,
 	};
 

@@ -1,8 +1,8 @@
 module;
 #include <Metal/Metal.hpp>
 #include <QuartzCore/QuartzCore.hpp>
-#include <simd/vector_types.h>
 #include <vector>
+#include <span>
 export module lune:metal_context;
 
 import :graphics_context;
@@ -13,7 +13,8 @@ namespace lune::metal
 	export struct MetalContextCreateInfo
 	{
 		MTL::ClearColor clearColor = {0.0f, 0.0f, 0.0f, 0.0f};
-		MTL::PixelFormat colorPixelFormat = MTL::PixelFormat::PixelFormatBGRA8Unorm;
+		MTL::LoadAction loadAction = MTL::LoadActionClear;
+		MTL::StoreAction storeAction = MTL::StoreActionStore;
 		int maxFramesInFlight = 3;
 	};
 
@@ -22,8 +23,8 @@ namespace lune::metal
 		NS::SharedPtr<MTL::Device> m_device{};
 		NS::SharedPtr<MTL::CommandQueue> m_commandQueue{};
 		NS::SharedPtr<MTL::CommandBuffer> m_commandBuffer{};
-		NS::SharedPtr<CA::MetalDrawable> m_drawable{};
 		NS::SharedPtr<MTL::RenderCommandEncoder> m_commandEncoder{};
+		NS::SharedPtr<CA::MetalDrawable> m_drawable{};
 		std::vector<NS::SharedPtr<CA::MetalLayer>> m_metalLayers{};
 		std::vector<std::shared_ptr<GraphicsShader>> m_graphicsShaders{};
 		MetalContextCreateInfo m_createInfo{};
@@ -36,12 +37,27 @@ namespace lune::metal
 		MetalContext(const MetalContext&) = delete;
 		MetalContext& operator=(const MetalContext&) = delete;
 
+		/**
+		 * @return The singleton for the Metal renderer.
+		 */
 		static MetalContext& instance();
 		void create(const MetalContextCreateInfo& info);
 
-		[[nodiscard]] NS::SharedPtr<MTL::Device> device() const
+		void createDefaultDevice();
+		void createCommandQueue();
+
+		void sendRenderCommand();
+		void draw() override;
+
+		void addMetalLayer(const NS::SharedPtr<CA::MetalLayer>& metalLayer);
+		void removeMetalLayer(const NS::SharedPtr<CA::MetalLayer>& metalLayer);
+
+		void addShader(const std::shared_ptr<GraphicsShader>& metalShader);
+
+
+		[[nodiscard]] MTL::Device* device() const
 		{
-			return m_device;
+			return m_device.get();
 		}
 
 		[[nodiscard]] MTL::CommandQueue* commandQueue() const
@@ -49,7 +65,7 @@ namespace lune::metal
 			return m_commandQueue.get();
 		}
 
-		[[nodiscard]] std::vector<NS::SharedPtr<CA::MetalLayer>> metalLayers() const
+		[[nodiscard]] std::span<const NS::SharedPtr<CA::MetalLayer>> metalLayers() const
 		{
 			return m_metalLayers;
 		}
@@ -63,16 +79,5 @@ namespace lune::metal
 		{
 			return m_createInfo;
 		}
-
-		void createDefaultDevice();
-		void createCommandQueue();
-
-		void sendRenderCommand();
-		void draw() override;
-
-		void addMetalLayer(const NS::SharedPtr<CA::MetalLayer>& metalLayer);
-		void removeMetalLayer(const NS::SharedPtr<CA::MetalLayer>& metalLayer);
-
-		void addShader(const std::shared_ptr<GraphicsShader>& metalShader);
 	};
-} // namespace lune::metal
+}

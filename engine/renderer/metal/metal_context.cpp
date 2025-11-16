@@ -48,9 +48,9 @@ namespace lune::metal
 		MTL::RenderPassColorAttachmentDescriptor* colorAttachmentDescriptor =
 			renderPassDescriptor->colorAttachments()->object(0);
 		colorAttachmentDescriptor->setTexture(m_drawable->texture());
-		colorAttachmentDescriptor->setLoadAction(MTL::LoadActionClear);
+		colorAttachmentDescriptor->setLoadAction(m_createInfo.loadAction);
 		colorAttachmentDescriptor->setClearColor(m_createInfo.clearColor);
-		colorAttachmentDescriptor->setStoreAction(MTL::StoreActionStore);
+		colorAttachmentDescriptor->setStoreAction(m_createInfo.storeAction);
 
 		MTL::RenderCommandEncoder* renderCommandEncoder = m_commandBuffer->renderCommandEncoder(
 			renderPassDescriptor);
@@ -101,4 +101,4 @@ namespace lune::metal
 	{
 		m_graphicsShaders.push_back(metalShader);
 	}
-} // namespace lune::metal
+}
