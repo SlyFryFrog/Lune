@@ -11,6 +11,11 @@ cleaner code.
 - [x] Platform independent input and window management system (w/ GLFW).
 - [x] Metal Shading Language (MSL) for macOS.
 - [ ] Support for Slang (for cross-platform shaders).
+- [ ] Support for compute and graphic-related shaders:
+  - [x] Metal compute shaders.
+  - [x] Metal vertex and fragment shaders.
+  - [ ] Vulkan compute shaders.
+  - [ ] Vulkan vertex and fragment shaders.
 - [ ] Load and render 3D meshes (e.g., OBJ, glTF).
 - [ ] A simple rendering API that works the same way on both Metal and Vulkan.
 - [ ] Shader hot-reloading for faster development.
@@ -26,12 +31,6 @@ cleaner code.
 | Clang++-20+ | `brew install llvm@20` | `sudo apt install clang-20`    |
 | Metal       | Metal 4                | N/A                            |
 | Vulkan      | Vulkan 1.4             | Vulkan 1.4                     |
-
-| Library   | Description       | License     |
-|-----------|-------------------|-------------|
-| GLFW3     | Window Management | zlib/libpng |
-| GLM       | Mathematics       | MIT         |
-| stb_image | Image Loading     | MIT         |
 
 ## CMake
 
@@ -126,3 +125,11 @@ int main()
 	return 0;
 }
 ```
+
+## Dependencies
+
+| Library   | Description       | License     |
+|-----------|-------------------|-------------|
+| GLFW3     | Window Management | zlib/libpng |
+| GLM       | Mathematics       | MIT         |
+| stb_image | Image Loading     | MIT         |

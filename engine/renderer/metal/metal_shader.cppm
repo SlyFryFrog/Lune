@@ -59,7 +59,7 @@ namespace lune::metal
 	public:
 		explicit GraphicsShader(const GraphicsShaderCreateInfo& createInfo);
 
-		virtual void encodeRenderCommand(MTL::RenderCommandEncoder* renderCommandEncoder) = 0;
+		virtual void encodeRenderCommand(MTL::RenderCommandEncoder* commandEncoder) = 0;
 
 		virtual void setupPipelineDescriptor(MTL::RenderPipelineDescriptor* pipelineDescriptor)
 		{
@@ -94,23 +94,21 @@ namespace lune::metal
 	export class ComputeShader : public Shader
 	{
 	protected:
-		std::vector<std::string> m_kernelNames;
-		std::vector<NS::SharedPtr<MTL::ComputePipelineState>> m_pipelines;
-
-		MTL::PipelineOption m_pipelineOption;
 		MTL::ComputePipelineReflection* m_pipelineReflection{};
+		MTL::PipelineOption m_pipelineOption;
+		std::vector<NS::SharedPtr<MTL::ComputePipelineState>> m_pipelines;
+		std::vector<std::string> m_kernelNames;
 		std::string m_path;
 
 	public:
 		explicit ComputeShader(const ComputeShaderCreateInfo& createInfo);
 
-		virtual void encodeComputeCommand(MTL::ComputeCommandEncoder* encoder) = 0;
+		virtual void encodeComputeCommand(MTL::ComputeCommandEncoder* commandEncoder) = 0;
 
 		virtual void setupPipelineDescriptor(MTL::ComputePipelineDescriptor* pipelineDescriptor)
 		{
 		}
 
-		void loadFunctions();
 		void createPipelines();
 
 		void addKernel(const std::string& name)
@@ -138,7 +136,7 @@ namespace lune::metal
 			return m_pipelineOption;
 		}
 
-		[[nodiscard]] MTL::ComputePipelineState* pipeline(const size_t i) const
+		[[nodiscard]] MTL::ComputePipelineState* pipelineState(const size_t i) const
 		{
 			return m_pipelines[i].get();
 		}

@@ -46,7 +46,9 @@ namespace lune::metal
 
 	void GraphicsShader::loadFunctions()
 	{
-		NS::SharedPtr<MTL::Library> library = createLibrary(m_path);
+		const NS::SharedPtr<MTL::Library> library = createLibrary(m_path);
+
+		// Load functions from metal library
 		m_vertexFunction = NS::TransferPtr(
 			library->newFunction(NS::String::string(m_vertexMain.c_str(), NS::UTF8StringEncoding)));
 		m_fragmentFunction = NS::TransferPtr(
@@ -61,7 +63,7 @@ namespace lune::metal
 
 	void GraphicsShader::createRenderPipeline()
 	{
-		NS::SharedPtr<MTL::RenderPipelineDescriptor> pipelineDescriptor = NS::TransferPtr(
+		const NS::SharedPtr<MTL::RenderPipelineDescriptor> pipelineDescriptor = NS::TransferPtr(
 			MTL::RenderPipelineDescriptor::alloc()->init());
 		pipelineDescriptor->setVertexFunction(m_vertexFunction.get());
 		pipelineDescriptor->setFragmentFunction(m_fragmentFunction.get());
@@ -83,31 +85,11 @@ namespace lune::metal
 
 	ComputeShader::ComputeShader(const ComputeShaderCreateInfo& createInfo) :
 		Shader(createInfo.device),
-		m_kernelNames(createInfo.kernels),
 		m_pipelineOption(createInfo.pipelineOption),
+		m_kernelNames(createInfo.kernels),
 		m_path(createInfo.path)
 	{
-		loadFunctions();
 		createPipelines();
-	}
-
-	void ComputeShader::loadFunctions()
-	{
-		const auto library = createLibrary(m_path);
-
-		for (const auto& name : m_kernelNames)
-		{
-			auto fn = NS::TransferPtr(
-				library->newFunction(NS::String::string(name.c_str(), NS::UTF8StringEncoding)));
-
-			if (!fn)
-			{
-				std::cerr << "Failed to load compute kernel: " << name << "\n";
-			}
-
-			// You don’t store functions; you build PSOs from them
-			// when building pipelines.
-		}
 	}
 
 	void ComputeShader::createPipelines()
@@ -121,14 +103,14 @@ namespace lune::metal
 
 			NS::Error* error = nullptr;
 
-			auto pso = NS::TransferPtr(
+			auto pipelineState = NS::TransferPtr(
 				m_device->newComputePipelineState(
 					fn.get(),
 					m_pipelineOption,
 					nullptr, // no reflection for multi-kernel? up to you
 					&error));
 
-			if (!pso)
+			if (!pipelineState)
 			{
 				std::cerr << "Failed to create pipeline state for kernel "
 					<< name << ": "
@@ -136,7 +118,7 @@ namespace lune::metal
 					<< "\n";
 			}
 
-			m_pipelines.emplace_back(std::move(pso));
+			m_pipelines.emplace_back(std::move(pipelineState));
 		}
 	}
 }

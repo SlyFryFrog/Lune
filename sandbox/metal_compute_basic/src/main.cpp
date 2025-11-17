@@ -4,8 +4,8 @@
 #include <vector>
 import lune;
 
-constexpr size_t arrayLength = 1 << 28;
-constexpr size_t iterations = 5;
+constexpr size_t arrayLength = 1 << 26;
+constexpr size_t iterations = 100;
 
 
 class CustomShader final : public lune::metal::ComputeShader
@@ -109,6 +109,25 @@ void cpuAddMultiply(const std::vector<float>& a,
 	}
 }
 
+void printProgress(size_t current, size_t total)
+{
+	const float ratio = static_cast<float>(current) / static_cast<float>(total);
+	constexpr int width = 50;
+
+	const int filled = static_cast<int>(ratio * width);
+
+	std::cout << "\r[";
+	for (int i = 0; i < filled; i++)
+		std::cout << '=';
+	for (int i = filled; i < width; i++)
+		std::cout << ' ';
+	std::cout << "] " << static_cast<int>(ratio * 100.0f) << "%";
+	if (current == total)
+	{
+		std::cout << "\n";
+	}
+	std::cout.flush();}
+
 
 int main()
 {
@@ -127,7 +146,11 @@ int main()
 	lune::Timer timer;
 	timer.start();
 	for (int i = 0; i < iterations; ++i)
+	{
+		printProgress(i, iterations);
 		context.compute();
+	}
+	printProgress(iterations, iterations);
 	auto duration = timer.delta() * 1000;
 
 	double ms = std::chrono::duration<double, std::milli>(duration).count();
@@ -147,7 +170,11 @@ int main()
 	// Record CPU execution time
 	timer.start();
 	for (int i = 0; i < iterations; ++i)
+	{
+		printProgress(i, iterations);
 		cpuAddMultiply(a, b, addOut, mulOut);
+	}
+	printProgress(iterations, iterations);
 	duration = timer.delta() * 1000;
 
 	ms = std::chrono::duration<double, std::milli>(duration).count();

@@ -44,7 +44,7 @@ namespace lune
 	 */
 	export class Window
 	{
-		GLFWwindow* m_handle = nullptr;
+		GLFWwindow* m_handle{};
 		int m_width{};
 		int m_height{};
 		std::string m_title{};
