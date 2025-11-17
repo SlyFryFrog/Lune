@@ -21,7 +21,7 @@ namespace lune::metal
 	{
 		MTL::Device* device = nullptr;
 		std::string path;
-		std::string computeMain = "computeMain";
+		std::vector<std::string> kernels;
 		MTL::PipelineOption pipelineOption = MTL::PipelineOptionNone;
 		MTL::AutoreleasedComputePipelineReflection* reflection = nullptr;
 	};
@@ -94,10 +94,13 @@ namespace lune::metal
 
 	export class ComputeShader : public Shader
 	{
-		NS::SharedPtr<MTL::ComputePipelineState> m_computePipelineState;
+	protected:
+		std::vector<std::string> m_kernelNames;
+		std::vector<NS::SharedPtr<MTL::ComputePipelineState>> m_pipelines;
+
 		NS::SharedPtr<MTL::Function> m_computeFunction;
 		MTL::PipelineOption m_pipelineOption;
-		MTL::ComputePipelineReflection* m_pipelineReflection;
+		MTL::ComputePipelineReflection* m_pipelineReflection{};
 		std::string m_path;
 		std::string m_computeMain;
 
@@ -110,8 +113,13 @@ namespace lune::metal
 		{
 		}
 
-		void loadFunction();
-		void createComputePipeline();
+		void loadFunctions();
+		void createPipelines();
+
+		void addKernel(const std::string& name)
+		{
+			m_kernelNames.push_back(name);
+		}
 
 		void setPipelineReflection(MTL::ComputePipelineReflection* pipelineReflection)
 		{
@@ -133,10 +141,16 @@ namespace lune::metal
 			return m_pipelineOption;
 		}
 
-		[[nodiscard]] MTL::ComputePipelineState* pipelineState() const
+		[[nodiscard]] MTL::ComputePipelineState* pipeline(size_t i) const
 		{
-			return m_computePipelineState.get();
+			return m_pipelines[i].get();
 		}
+
+		[[nodiscard]] size_t pipelineCount() const
+		{
+			return m_pipelines.size();
+		}
+
 
 		[[nodiscard]] MTL::Function* computeFunction() const
 		{

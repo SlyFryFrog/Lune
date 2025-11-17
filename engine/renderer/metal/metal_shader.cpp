@@ -1,7 +1,6 @@
 module;
 #include <iostream>
 #include <Metal/Metal.hpp>
-#include <QuartzCore/QuartzCore.hpp>
 #include <utility>
 module lune;
 
@@ -85,48 +84,60 @@ namespace lune::metal
 
 	ComputeShader::ComputeShader(const ComputeShaderCreateInfo& createInfo) :
 		Shader(createInfo.device),
+		m_kernelNames(createInfo.kernels),
 		m_pipelineOption(createInfo.pipelineOption),
-		m_path(createInfo.path),
-		m_computeMain(createInfo.computeMain)
+		m_path(createInfo.path)
 	{
-		loadFunction();
-		createComputePipeline();
+		loadFunctions();
+		createPipelines();
 	}
 
-	void ComputeShader::loadFunction()
+	void ComputeShader::loadFunctions()
 	{
-		const NS::SharedPtr<MTL::Library> library = createLibrary(m_path);
-		m_computeFunction = NS::TransferPtr(
-			library->newFunction(
-				NS::String::string(m_computeMain.c_str(), NS::UTF8StringEncoding)));
+		const auto library = createLibrary(m_path);
 
-		if (m_computeFunction.get() == nullptr)
+		for (const auto& name : m_kernelNames)
 		{
-			std::cerr << "Failed to create Metal shader functions\n";
+			auto fn = NS::TransferPtr(
+				library->newFunction(NS::String::string(name.c_str(), NS::UTF8StringEncoding)));
+
+			if (!fn)
+			{
+				std::cerr << "Failed to load compute kernel: " << name << "\n";
+			}
+
+			// You don’t store functions; you build PSOs from them
+			// when building pipelines.
 		}
 	}
 
-	void ComputeShader::createComputePipeline()
+	void ComputeShader::createPipelines()
 	{
-		NS::SharedPtr<MTL::ComputePipelineDescriptor> pipelineDescriptor = NS::TransferPtr(
-			MTL::ComputePipelineDescriptor::alloc()->init());
-		pipelineDescriptor->setComputeFunction(m_computeFunction.get());
+		const auto library = createLibrary(m_path);
 
-		// User customization
-		setupPipelineDescriptor(pipelineDescriptor.get());
-
-		NS::Error* error = nullptr;
-		m_computePipelineState = NS::TransferPtr(
-			m_device->newComputePipelineState(
-				pipelineDescriptor.get(),
-				m_pipelineOption,
-				pipelineReflection(),
-				&error)
-			);
-		if (!m_computePipelineState)
+		for (const auto& name : m_kernelNames)
 		{
-			std::cerr << "Failed to create pipeline state: " << error->localizedDescription()->
-				utf8String() << "\n";
+			auto fn = NS::TransferPtr(
+				library->newFunction(NS::String::string(name.c_str(), NS::UTF8StringEncoding)));
+
+			NS::Error* error = nullptr;
+
+			auto pso = NS::TransferPtr(
+				m_device->newComputePipelineState(
+					fn.get(),
+					m_pipelineOption,
+					nullptr, // no reflection for multi-kernel? up to you
+					&error));
+
+			if (!pso)
+			{
+				std::cerr << "Failed to create pipeline state for kernel "
+					<< name << ": "
+					<< error->localizedDescription()->utf8String()
+					<< "\n";
+			}
+
+			m_pipelines.emplace_back(std::move(pso));
 		}
 	}
 }
