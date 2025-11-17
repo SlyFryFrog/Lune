@@ -16,7 +16,6 @@ import :metal_context;
 import :objc_interop;
 #endif
 
-
 import :input_manager;
 
 namespace lune

@@ -4,7 +4,6 @@ module;
 #include <utility>
 module lune;
 
-
 namespace lune::metal
 {
 	Shader::Shader(MTL::Device* device) :

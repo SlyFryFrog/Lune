@@ -22,9 +22,6 @@ namespace lune::metal
 	{
 		NS::SharedPtr<MTL::Device> m_device{};
 		NS::SharedPtr<MTL::CommandQueue> m_commandQueue{};
-		NS::SharedPtr<MTL::CommandBuffer> m_commandBuffer{};
-		NS::SharedPtr<MTL::RenderCommandEncoder> m_commandEncoder{};
-		NS::SharedPtr<CA::MetalDrawable> m_drawable{};
 		std::vector<NS::SharedPtr<CA::MetalLayer>> m_metalLayers{};
 		std::vector<std::shared_ptr<GraphicsShader>> m_graphicsShaders{};
 		std::vector<std::shared_ptr<ComputeShader>> m_computeShaders{};
@@ -47,17 +44,16 @@ namespace lune::metal
 		void createDefaultDevice();
 		void createCommandQueue();
 
-		void sendRenderCommands();
-		void sendComputeCommands();
+		void sendRenderCommands(const NS::SharedPtr<CA::MetalDrawable>& drawable) const;
+		void sendComputeCommands() const;
 		void draw() override;
-		void compute();
+		void compute() const;
 
 		void addMetalLayer(const NS::SharedPtr<CA::MetalLayer>& metalLayer);
 		void removeMetalLayer(const NS::SharedPtr<CA::MetalLayer>& metalLayer);
 
 		void addShader(const std::shared_ptr<GraphicsShader>& metalShader);
 		void addShader(const std::shared_ptr<ComputeShader>& metalShader);
-
 
 		[[nodiscard]] MTL::Device* device() const
 		{
@@ -69,19 +65,9 @@ namespace lune::metal
 			return m_commandQueue.get();
 		}
 
-		[[nodiscard]] MTL::CommandBuffer* commandBuffer() const
-		{
-			return m_commandBuffer.get();
-		}
-
 		[[nodiscard]] std::span<const NS::SharedPtr<CA::MetalLayer>> metalLayers() const
 		{
 			return m_metalLayers;
-		}
-
-		[[nodiscard]] MTL::RenderCommandEncoder* currentRenderEncoder() const
-		{
-			return m_commandEncoder.get();
 		}
 
 		[[nodiscard]] MetalContextCreateInfo& createInfo()

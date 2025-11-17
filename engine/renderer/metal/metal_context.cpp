@@ -39,43 +39,41 @@ namespace lune::metal
 		m_commandQueue = NS::TransferPtr(m_device->newCommandQueue());
 	}
 
-	void MetalContext::sendRenderCommands()
+	void MetalContext::sendRenderCommands(const NS::SharedPtr<CA::MetalDrawable>& drawable) const
 	{
-		m_commandBuffer = NS::TransferPtr(m_commandQueue->commandBuffer());
+		const auto commandBuffer = NS::TransferPtr(m_commandQueue->commandBuffer());
 
-		MTL::RenderPassDescriptor* renderPassDescriptor =
-			MTL::RenderPassDescriptor::alloc()->init();
+		const NS::SharedPtr<MTL::RenderPassDescriptor> renderPassDescriptor =
+			NS::TransferPtr(MTL::RenderPassDescriptor::alloc()->init());
 		MTL::RenderPassColorAttachmentDescriptor* colorAttachmentDescriptor =
 			renderPassDescriptor->colorAttachments()->object(0);
-		colorAttachmentDescriptor->setTexture(m_drawable->texture());
+		colorAttachmentDescriptor->setTexture(drawable->texture());
 		colorAttachmentDescriptor->setLoadAction(m_createInfo.loadAction);
 		colorAttachmentDescriptor->setClearColor(m_createInfo.clearColor);
 		colorAttachmentDescriptor->setStoreAction(m_createInfo.storeAction);
 
-		MTL::RenderCommandEncoder* renderCommandEncoder = m_commandBuffer->renderCommandEncoder(
-			renderPassDescriptor);
+		const NS::SharedPtr<MTL::RenderCommandEncoder> renderCommandEncoder = NS::TransferPtr(
+			commandBuffer->renderCommandEncoder(
+				renderPassDescriptor.get()));
 
 		for (const auto& shader : m_graphicsShaders)
 		{
-			shader->encodeRenderCommand(renderCommandEncoder);
+			shader->encodeRenderCommand(renderCommandEncoder.get());
 		}
-
 		renderCommandEncoder->endEncoding();
 
-		m_commandBuffer->presentDrawable(m_drawable.get());
-		m_commandBuffer->commit();
-		m_commandBuffer->waitUntilCompleted();
-
-		renderPassDescriptor->release();
+		commandBuffer->presentDrawable(drawable.get());
+		commandBuffer->commit();
+		commandBuffer->waitUntilCompleted();
 	}
 
-	void MetalContext::sendComputeCommands()
+	void MetalContext::sendComputeCommands() const
 	{
 		// Create a new command buffer for compute
-		m_commandBuffer = NS::TransferPtr(m_commandQueue->commandBuffer());
+		const auto commandBuffer = NS::TransferPtr(m_commandQueue->commandBuffer());
 
 		// Encode compute commands for all compute shaders
-		MTL::ComputeCommandEncoder* computeCommandEncoder = m_commandBuffer->computeCommandEncoder();
+		MTL::ComputeCommandEncoder* computeCommandEncoder = commandBuffer->computeCommandEncoder();
 		for (const auto& shader : m_computeShaders)
 		{
 			shader->encodeComputeCommand(computeCommandEncoder);
@@ -83,23 +81,22 @@ namespace lune::metal
 		computeCommandEncoder->endEncoding();
 
 		// Commit and wait for completion
-		m_commandBuffer->commit();
-		m_commandBuffer->waitUntilCompleted();
+		commandBuffer->commit();
+		commandBuffer->waitUntilCompleted();
 	}
 
 	void MetalContext::draw()
 	{
 		for (const auto& layer : m_metalLayers)
 		{
-			m_drawable = NS::TransferPtr(layer->nextDrawable());
-			if (m_drawable)
+			if (NS::SharedPtr<CA::MetalDrawable> drawable = NS::TransferPtr(layer->nextDrawable()))
 			{
-				sendRenderCommands();
+				sendRenderCommands(drawable);
 			}
 		}
 	}
 
-	void MetalContext::compute()
+	void MetalContext::compute() const
 	{
 		if (!m_computeShaders.empty())
 		{

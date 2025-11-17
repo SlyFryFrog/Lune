@@ -226,7 +226,7 @@ namespace lune
 			 * @param width The new width in pixels.
 			 * @param height The new height in pixels.
 			 */
-			void resize(int width, int height) const
+			void resize(const int width, const int height) const
 			{
 				m_rawWindow.resize(width, height);
 			}
@@ -247,7 +247,7 @@ namespace lune
 			 *
 			 * @param shouldClose If true, the window will close.
 			 */
-			void setShouldClose(bool shouldClose) const
+			void setShouldClose(const bool shouldClose) const
 			{
 				m_rawWindow.setShouldClose(shouldClose);
 			}

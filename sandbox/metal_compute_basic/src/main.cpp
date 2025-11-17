@@ -4,7 +4,8 @@
 #include <vector>
 import lune;
 
-constexpr size_t arrayLength = 1 << 26;
+constexpr size_t arrayLength = 1 << 28;
+constexpr size_t iterations = 5;
 
 
 class CustomShader final : public lune::metal::ComputeShader
@@ -125,7 +126,8 @@ int main()
 	// Calculate the time for the gpu version
 	lune::Timer timer;
 	timer.start();
-	context.compute();
+	for (int i = 0; i < iterations; ++i)
+		context.compute();
 	auto duration = timer.delta() * 1000;
 
 	double ms = std::chrono::duration<double, std::milli>(duration).count();
@@ -144,7 +146,8 @@ int main()
 
 	// Record CPU execution time
 	timer.start();
-	cpuAddMultiply(a, b, addOut, mulOut);
+	for (int i = 0; i < iterations; ++i)
+		cpuAddMultiply(a, b, addOut, mulOut);
 	duration = timer.delta() * 1000;
 
 	ms = std::chrono::duration<double, std::milli>(duration).count();
