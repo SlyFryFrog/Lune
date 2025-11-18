@@ -6,51 +6,30 @@ module lune;
 
 namespace lune::metal
 {
-	ComputeShader::ComputeShader(const ComputeShaderCreateInfo& createInfo) :
-		Shader(createInfo.device),
-		m_path(createInfo.path)
+	ComputeKernel::ComputeKernel(MTL::Device* device, const std::string& name) :
+		m_device(device),
+		m_name(name)
 	{
-		for (const auto& name : createInfo.kernels)
-		{
-			Kernel kernel;
-			m_kernels[name] = std::move(kernel);
-		}
-
-		createPipelines();
 	}
 
-	ComputeShader& ComputeShader::dispatch(const std::string& kernelName, const size_t threadCount)
+	ComputeKernel& ComputeKernel::dispatch(const size_t threadCount)
 	{
-		const auto it = m_kernels.find(kernelName);
-		if (it == m_kernels.end())
+		auto* commandBuffer = MetalContext::instance().commandQueue()->commandBuffer();
+		auto* encoder = commandBuffer->computeCommandEncoder();
+
+		encoder->setComputePipelineState(m_pipeline.get());
+
+		// Bind buffers
+		for (auto& [name, buf] : m_buffers)
 		{
-			std::cerr << "ComputeShader: kernel not found: " << kernelName << "\n";
-			return *this;
+			const NS::UInteger index = m_bindings[name];
+			encoder->setBuffer(buf.get(), 0, index);
 		}
 
-		auto& kernel = it->second; // Extract kernel from pair for ease of use
+		NS::UInteger tgSize = m_pipeline->maxTotalThreadsPerThreadgroup();
+		NS::UInteger groups = (threadCount + tgSize - 1) / tgSize;
 
-		const NS::SharedPtr<MTL::CommandBuffer> commandBuffer = NS::TransferPtr(
-			MetalContext::instance().device()->newCommandQueue()->commandBuffer());
-		const NS::SharedPtr<MTL::ComputeCommandEncoder> encoder = NS::TransferPtr(
-			commandBuffer->computeCommandEncoder());
-
-		encoder->setComputePipelineState(kernel.pipeline.get());
-
-		// Automatically bind all buffers in m_boundBuffers
-		for (auto& [name, buf] : m_boundBuffers)
-		{
-			if (kernel.bufferBindings.contains(name))
-			{
-				encoder->setBuffer(buf.buffer.get(), 0, kernel.bufferBindings[name]);
-			}
-		}
-
-		// Threadgroup sizes
-		const NS::UInteger tg = std::min(kernel.pipeline->maxTotalThreadsPerThreadgroup(),
-		                                 static_cast<NS::UInteger>(threadCount));
-		encoder->dispatchThreads(MTL::Size(threadCount, 1, 1), MTL::Size(tg, 1, 1));
-
+		encoder->dispatchThreadgroups({groups, 1, 1}, {tgSize, 1, 1});
 		encoder->endEncoding();
 		commandBuffer->commit();
 		commandBuffer->waitUntilCompleted();
@@ -58,24 +37,49 @@ namespace lune::metal
 		return *this;
 	}
 
-	KernelReflectionInfo ComputeShader::kernelReflection(std::string_view name)
+	ComputeKernel& ComputeKernel::dispatch(const size_t x, const size_t y, const size_t z)
 	{
-		auto it = m_kernels.find(std::string(name));
-		if (it == m_kernels.end())
+		auto* commandBuffer = MetalContext::instance().commandQueue()->commandBuffer();
+		auto* encoder = commandBuffer->computeCommandEncoder();
+
+		encoder->setComputePipelineState(m_pipeline.get());
+
+		for (auto& [name, buf] : m_buffers)
 		{
-			std::cerr << "ComputeShader: kernel not found: " << name << "\n";
-			return {};
+			const NS::UInteger index = m_bindings[name];
+			encoder->setBuffer(buf.get(), 0, index);
 		}
 
-		const auto& kernel = it->second;
+		const MTL::Size threadsPerGroup = {16, 16, 1};
+		const MTL::Size groups = {
+			(x + 15) / 16,
+			(y + 15) / 16,
+			z
+		};
 
-		// Build a temporary pipeline to fetch reflection (in case pipeline is not built yet)
+		encoder->dispatchThreadgroups(groups, threadsPerGroup);
+		encoder->endEncoding();
+		commandBuffer->commit();
+		commandBuffer->waitUntilCompleted();
+
+		return *this;
+	}
+
+	void ComputeKernel::createPipeline(MTL::Library* library)
+	{
+		// Load the kernel function
+		m_function = NS::TransferPtr(
+			library->newFunction(NS::String::string(m_name.c_str(), NS::UTF8StringEncoding))
+			);
+
+		// Create pipeline state with reflection
 		NS::Error* error = nullptr;
 		MTL::ComputePipelineReflection* reflection = nullptr;
 
-		const NS::SharedPtr<MTL::ComputePipelineState> pipeline = NS::TransferPtr(
+		// Create the pipeline
+		m_pipeline = NS::TransferPtr(
 			m_device->newComputePipelineState(
-				kernel.function.get(),
+				m_function.get(),
 				MTL::PipelineOptionArgumentInfo,
 				&reflection,
 				&error
@@ -83,86 +87,37 @@ namespace lune::metal
 			);
 		if (error)
 		{
-			std::cerr << "Reflection failed for kernel " << name << ": "
-				<< error->localizedDescription()->utf8String() << "\n";
-			return {};
+			std::cerr << "Failed to create pipeline state for kernel "
+				<< m_name << ": "
+				<< error->localizedDescription()->utf8String()
+				<< "\n";
+			return;
 		}
 
-		return createKernelReflectionInfo(name, reflection);
-	}
+		m_reflection = createKernelReflectionInfo(m_name, reflection);
 
-	std::vector<std::string> ComputeShader::kernelNames() const
-	{
-		std::vector<std::string> names;
-		names.reserve(m_kernels.size());
-
-		for(const auto& [name, kernel] : m_kernels)
+		// Automatically populate bufferBindings from reflection
+		const NS::Array* args = reflection->arguments();
+		for (NS::UInteger i = 0; i < args->count(); ++i)
 		{
-			names.push_back(name);
-		}
-
-		return names;
-	}
-
-	void ComputeShader::createPipelines()
-	{
-		const auto library = createLibrary(m_path);
-
-		for (auto& [kernelName, kernel] : m_kernels)
-		{
-			// Load the kernel function
-			kernel.function = NS::TransferPtr(
-				library->newFunction(NS::String::string(kernelName.c_str(), NS::UTF8StringEncoding))
-				);
-
-			// Create pipeline state with reflection
-			NS::Error* error = nullptr;
-			MTL::ComputePipelineReflection* reflection = nullptr;
-
-			// Create the pipeline
-			kernel.pipeline = NS::TransferPtr(
-				m_device->newComputePipelineState(
-					kernel.function.get(),
-					MTL::PipelineOptionArgumentInfo,
-					&reflection,
-					&error
-					)
-				);
-			if (error)
+			if (const auto arg = static_cast<MTL::Argument*>(args->object(i));
+				arg->type() == MTL::ArgumentTypeBuffer)
 			{
-				std::cerr << "Failed to create pipeline state for kernel "
-					<< kernelName << ": "
-					<< error->localizedDescription()->utf8String()
-					<< "\n";
-				continue;
-			}
+				const NS::String* nameObj = arg->name();
+				std::string name = nameObj ? nameObj->utf8String() : "<null>";
+				const NS::UInteger index = arg->index();
 
-			kernel.bufferBindings.clear();
-
-			// Automatically populate bufferBindings from reflection
-			const NS::Array* args = reflection->arguments();
-			for (NS::UInteger i = 0; i < args->count(); ++i)
-			{
-				if (const auto arg = static_cast<MTL::Argument*>(args->object(i));
-					arg->type() == MTL::ArgumentTypeBuffer)
-				{
-					const NS::String* nameObj = arg->name();
-					std::string name = nameObj ? nameObj->utf8String() : "<null>";
-					const NS::UInteger index = arg->index();
-
-					kernel.bufferBindings[name] = index;
-				}
+				m_bindings[name] = index;
 			}
 		}
 	}
 
-	KernelReflectionInfo ComputeShader::createKernelReflectionInfo(
-		const std::string_view name,
-		const MTL::ComputePipelineReflection*
-		reflection)
+	KernelReflectionInfo ComputeKernel::createKernelReflectionInfo(
+		const std::string& name,
+		const MTL::ComputePipelineReflection* reflection)
 	{
 		KernelReflectionInfo info{};
-		info.kernelName = std::string(name);
+		info.kernelName = name;
 
 		const NS::Array* args = reflection->arguments();
 		info.arguments.reserve(args->count());
@@ -209,5 +164,29 @@ namespace lune::metal
 		}
 
 		return info;
+	}
+
+
+	ComputeShader::ComputeShader(const ComputeShaderCreateInfo& info) :
+		Shader(info.device),
+		m_path(info.path)
+	{
+		for (const auto& name : info.kernels)
+		{
+			m_kernels[name] = std::make_unique<ComputeKernel>(m_device, name);
+		}
+
+		createPipelines();
+	}
+
+	void ComputeShader::createPipelines()
+	{
+		const auto library = createLibrary(m_path);
+
+		// Create a pipeline for each kernel
+		for (auto& [kernelName, kernel] : m_kernels)
+		{
+			kernel->createPipeline(library.get());
+		}
 	}
 }

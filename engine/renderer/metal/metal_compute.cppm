@@ -1,7 +1,6 @@
 module;
 #include <iostream>
 #include <string>
-#include <string_view>
 #include <Metal/Metal.hpp>
 #include <map>
 #include <span>
@@ -9,19 +8,9 @@ export module lune:metal_compute;
 
 import :metal_shader;
 
-namespace lune::metal
+export namespace lune::metal
 {
-	export struct ComputeShaderCreateInfo
-	{
-		MTL::Device* device = nullptr;
-		MTL::PipelineOption pipelineOption = MTL::PipelineOptionNone;
-		MTL::AutoreleasedComputePipelineReflection* reflection = nullptr;
-		std::string path;
-		std::vector<std::string> kernels;
-	};
-
-
-	export struct KernelReflectionInfo
+	struct KernelReflectionInfo
 	{
 		std::string kernelName;
 		MTL::Function* function;
@@ -57,94 +46,161 @@ namespace lune::metal
 	};
 
 
-	export class ComputeShader final : public Shader
+	struct ComputeShaderCreateInfo
 	{
-	protected:
-		struct Kernel
-		{
-			NS::SharedPtr<MTL::Function> function;
-			NS::SharedPtr<MTL::ComputePipelineState> pipeline;
-			std::map<std::string, NS::UInteger> bufferBindings;
-			///< (offset, index)
-		};
+		MTL::Device* device;
+		std::string path;
+		std::vector<std::string> kernels;
+	};
 
 
-		struct Buffer
-		{
-			NS::SharedPtr<MTL::Buffer> buffer;
-			NS::UInteger size{};
-		};
+	class ComputeKernel
+	{
+		NS::SharedPtr<MTL::ComputePipelineState> m_pipeline;
+		NS::SharedPtr<MTL::Function> m_function;
+		MTL::Device* m_device;
 
-		std::map<std::string, Kernel> m_kernels;
-		std::map<std::string, Buffer> m_boundBuffers;
-		std::string m_path;
+		std::map<std::string, NS::UInteger> m_bindings;
+		std::map<std::string, NS::SharedPtr<MTL::Buffer>> m_buffers;
+
+		KernelReflectionInfo m_reflection{};
+
+		std::string m_name;
 
 	public:
-		explicit ComputeShader(const ComputeShaderCreateInfo& createInfo);
+		explicit ComputeKernel(MTL::Device* device, const std::string& name);
 
-		ComputeShader& dispatch(const std::string& kernelName, size_t threadCount);
-
-		KernelReflectionInfo kernelReflection(std::string_view name);
-
-		ComputeShader& setBuffer(const std::string_view name,
-		                         const NS::SharedPtr<MTL::Buffer>& buffer)
+		[[nodiscard]] const std::string& name() const noexcept
 		{
-			m_boundBuffers[std::string(name)] = {buffer, buffer->length()};
+			return m_name;
+		}
+
+		ComputeKernel& dispatch(size_t threadCount);
+		ComputeKernel& dispatch(size_t x, size_t y, size_t z = 1);
+
+		ComputeKernel& setBuffer(const std::string& name, const NS::SharedPtr<MTL::Buffer>& buf)
+		{
+			m_buffers[name] = buf;
+			return *this;
+		}
+
+		ComputeKernel& setBytes(const std::string& name, const void* data, const size_t size)
+		{
+			// Allocate a small temp buffer for byte data
+			const auto device = m_pipeline->device();
+			NS::SharedPtr<MTL::Buffer> temp =
+				NS::TransferPtr(device->newBuffer(size, MTL::ResourceStorageModeShared));
+
+			std::memcpy(temp->contents(), data, size);
+			m_buffers[name] = temp;
+
 			return *this;
 		}
 
 		template <typename T>
-		ComputeShader& setBuffer(const std::string_view name,
-		                         const std::vector<T>& buffer)
+		ComputeKernel& setBuffer(const std::string& name, const std::vector<T>& vec)
 		{
-			// Allocate Metal buffer
-			NS::SharedPtr<MTL::Buffer> mtlBuffer = NS::TransferPtr(
-				m_device->newBuffer(buffer.size() * sizeof(T), MTL::ResourceStorageModeShared));
+			const auto device = m_pipeline->device();
+			const size_t byteSize = vec.size() * sizeof(T);
 
-			// Copy data into GPU buffer
-			std::memcpy(mtlBuffer->contents(), buffer.data(), buffer.size() * sizeof(T));
+			NS::SharedPtr<MTL::Buffer> mtlBuffer =
+				NS::TransferPtr(device->newBuffer(byteSize, MTL::ResourceStorageModeShared));
 
-			// Store buffer with size in bytes
-			m_boundBuffers[std::string(name)] = {
-				mtlBuffer,
-				static_cast<NS::UInteger>(buffer.size() * sizeof(T))
-			};
+			std::memcpy(mtlBuffer->contents(), vec.data(), byteSize);
 
+			m_buffers[name] = mtlBuffer;
 			return *this;
 		}
 
-		template <typename T>
-		ComputeShader& setBuffer(const std::string_view name,
-		                         const std::span<T>& buffer)
+		MTL::Buffer* buffer(const std::string& name)
 		{
-			// Allocate Metal buffer
-			NS::SharedPtr<MTL::Buffer> mtlBuffer = NS::TransferPtr(
-				m_device->newBuffer(buffer.size() * sizeof(T), MTL::ResourceStorageModeShared));
-
-			// Copy data into GPU buffer
-			std::memcpy(mtlBuffer->contents(), buffer.data(), buffer.size() * sizeof(T));
-
-			// Store buffer with size in bytes
-			m_boundBuffers[std::string(name)] = {
-				mtlBuffer,
-				static_cast<NS::UInteger>(buffer.size() * sizeof(T))
-			};
-
-			return *this;
+			return m_buffers[name].get();
 		}
 
-		[[nodiscard]] bool hasKernel(const std::string_view kernelName) const
+		[[nodiscard]] KernelReflectionInfo reflection() const
 		{
-			return m_kernels.contains(std::string(kernelName));
+			return m_reflection;
 		}
 
-		[[nodiscard]] std::vector<std::string> kernelNames() const;
+		void createPipeline(MTL::Library* library);
 
 	private:
-		void createPipelines();
-
-		static KernelReflectionInfo createKernelReflectionInfo(std::string_view name,
+		static KernelReflectionInfo createKernelReflectionInfo(const std::string& name,
 		                                                       const MTL::ComputePipelineReflection*
 		                                                       reflection);
 	};
+
+	class ComputeShader final : public Shader
+	{
+		std::map<std::string, std::unique_ptr<ComputeKernel>> m_kernels;
+		std::string m_path;
+
+	public:
+		explicit ComputeShader(const ComputeShaderCreateInfo& info);
+
+		[[nodiscard]] bool hasKernel(const std::string& name) const
+		{
+			return m_kernels.contains(name);
+		}
+
+		ComputeKernel& kernel(const std::string& name)
+		{
+			if (!m_kernels.contains(name))
+			{
+				throw std::runtime_error("Kernel name not found");
+			}
+
+			return *m_kernels[name];
+		}
+
+		[[nodiscard]] std::vector<std::string> listKernels() const
+		{
+			std::vector<std::string> names;
+			for (const auto& [name, kernel] : m_kernels)
+			{
+				names.push_back(name);
+			}
+
+			return names;
+		}
+
+	private:
+		void createPipelines();
+	};
+
+
+	void printKernelInfo(const KernelReflectionInfo& info)
+	{
+		std::cout << "================= Kernel Reflection =================\n";
+		std::cout << "Function: " << info.kernelName << "\n\n";
+
+		if (!info.arguments.empty())
+		{
+			std::cout << "Arguments (" << info.arguments.size() << "):\n";
+			for (const auto& arg : info.arguments)
+			{
+				std::cout
+					<< "  - Name      : " << arg.name << "\n"
+					<< "    Index     : " << arg.index << "\n"
+					<< "    Type      : " << arg.type << "\n"
+					<< "    Data Type : " << arg.dataType << "\n"
+					<< "    Data Size : " << arg.dataSize << " bytes\n\n";
+			}
+		}
+
+		if (info.threadgroupMemory.has_value())
+		{
+			std::cout << "Threadgroup Memory:\n";
+			for (const auto& tg : info.threadgroupMemory.value())
+			{
+				std::cout
+					<< "  - Index     : " << tg.index << "\n"
+					<< "    Size      : " << tg.size << " bytes\n"
+					<< "    Alignment : " << tg.alignment << " bytes\n\n";
+			}
+			std::cout << "\n";
+		}
+
+		std::cout << "=====================================================\n\n";
+	}
 }

@@ -4,7 +4,7 @@
 #include <cmath>
 import lune;
 
-constexpr size_t arrayLength = 1 << 24;
+constexpr size_t arrayLength = 1 << 26;
 constexpr size_t iterations = 10;
 
 void cpuAddMultiply(const std::vector<float>& a,
@@ -36,40 +36,6 @@ void printProgress(const size_t current, const size_t total)
 	std::cout.flush();
 }
 
-void printKernelInfo(const lune::metal::KernelReflectionInfo& info)
-{
-	std::cout << "================= Kernel Reflection =================\n";
-	std::cout << "Function: " << info.kernelName << "\n\n";
-
-	if (!info.arguments.empty())
-	{
-		std::cout << "Arguments (" << info.arguments.size() << "):\n";
-		for (const auto& arg : info.arguments)
-		{
-			std::cout
-				<< "  - Name      : " << arg.name << "\n"
-				<< "    Index     : " << arg.index << "\n"
-				<< "    Type      : " << arg.type << "\n"
-				<< "    Data Type : " << arg.dataType << "\n"
-				<< "    Data Size : " << arg.dataSize << " bytes\n\n";
-		}
-	}
-
-	if (info.threadgroupMemory.has_value())
-	{
-		std::cout << "Threadgroup Memory:\n";
-		for (const auto& tg : info.threadgroupMemory.value())
-		{
-			std::cout
-				<< "  - Index     : " << tg.index << "\n"
-				<< "    Size      : " << tg.size << " bytes\n"
-				<< "    Alignment : " << tg.alignment << " bytes\n\n";
-		}
-		std::cout << "\n";
-	}
-
-	std::cout << "=====================================================\n\n";
-}
 
 int main()
 {
@@ -77,18 +43,12 @@ int main()
 	auto& context = lune::metal::MetalContext::instance();
 
 	// CPU input data
-	std::vector<float> a(arrayLength), b(arrayLength);
+	std::vector<float> a(arrayLength), b(arrayLength), outputAdd(arrayLength), outputMul(arrayLength);
 	for (size_t i = 0; i < arrayLength; ++i)
 	{
 		a[i] = static_cast<float>(rand()) / RAND_MAX;
 		b[i] = static_cast<float>(rand()) / RAND_MAX;
 	}
-
-	// GPU buffers
-	auto outputAdd = NS::TransferPtr(context.device()->newBuffer(arrayLength * sizeof(float),
-	                                                             MTL::ResourceStorageModeShared));
-	auto outputMul = NS::TransferPtr(context.device()->newBuffer(arrayLength * sizeof(float),
-	                                                             MTL::ResourceStorageModeShared));
 
 	// Create shader
 	lune::metal::ComputeShaderCreateInfo info{
@@ -97,13 +57,18 @@ int main()
 	};
 
 	// Add our buffers to our shader
-	auto shader = lune::metal::ComputeShader(info)
-	              .setBuffer("inputA", a)
-	              .setBuffer("inputB", b)
-	              .setBuffer("outputAdd", outputAdd)
-	              .setBuffer("outputMul", outputMul);
+	auto shader = lune::metal::ComputeShader(info);
+	auto kernelAdd = shader.kernel("add_arrays")
+	                       .setBuffer("inputA", a)
+	                       .setBuffer("inputB", b)
+	                       .setBuffer("outputAdd", outputAdd);
+	auto kernelMul = shader.kernel("multiply_arrays")
+	                       .setBuffer("inputA", a)
+	                       .setBuffer("inputB", b)
+	                       .setBuffer("outputMul", outputMul);
 
-	printKernelInfo(shader.kernelReflection("add_arrays"));
+	printKernelInfo(kernelAdd.reflection());
+	printKernelInfo(kernelMul.reflection());
 
 	// Dispatch GPU
 	lune::Timer timer;
@@ -111,17 +76,18 @@ int main()
 	for (int i = 0; i < iterations; ++i)
 	{
 		printProgress(i, iterations);
-		shader.dispatch("add_arrays", arrayLength)
-		      .dispatch("multiply_arrays", arrayLength);
+		kernelAdd.dispatch(arrayLength);
+		kernelMul.dispatch(arrayLength);
 	}
 	printProgress(iterations, iterations);
+
+	auto outA = kernelAdd.buffer("outputAdd");
+	auto outB = kernelMul.buffer("outputMul");
+	memcpy(outputAdd.data(), outA->contents(), arrayLength * sizeof(float));
+	memcpy(outputMul.data(), outB->contents(), arrayLength * sizeof(float));
+
 	auto duration = timer.delta() * 1000;
 	std::cout << "GPU add/multiply time: " << duration << " ms\n";
-
-	// Copy results back
-	std::vector<float> gpuAdd(arrayLength), gpuMul(arrayLength);
-	std::memcpy(gpuAdd.data(), outputAdd->contents(), arrayLength * sizeof(float));
-	std::memcpy(gpuMul.data(), outputMul->contents(), arrayLength * sizeof(float));
 
 	// Verify CPU vs GPU
 	std::vector<float> addOut(arrayLength), mulOut(arrayLength);
@@ -138,10 +104,10 @@ int main()
 	bool correct = true;
 	for (size_t i = 0; i < arrayLength; ++i)
 	{
-		if (std::abs(gpuAdd[i] - addOut[i]) > 1e-5f || std::abs(gpuMul[i] - mulOut[i]) > 1e-5f)
+		if (std::abs(outputAdd[i] - addOut[i]) > 1e-5f || std::abs(outputMul[i] - mulOut[i]) > 1e-5f)
 		{
 			correct = false;
-			std::cerr << "Mismatch at index " << i << ": GPU(" << gpuAdd[i] << "," << gpuMul[i]
+			std::cerr << "Mismatch at index " << i << ": GPU(" << outputAdd[i] << "," << outputMul[i]
 				<< ") vs CPU(" << addOut[i] << "," << mulOut[i] << ")\n";
 			break;
 		}
