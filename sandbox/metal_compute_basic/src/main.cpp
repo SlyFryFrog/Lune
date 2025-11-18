@@ -1,101 +1,11 @@
 #include <Metal/Metal.hpp>
 #include <iostream>
-#include <cmath>
 #include <vector>
+#include <cmath>
 import lune;
 
 constexpr size_t arrayLength = 1 << 26;
-constexpr size_t iterations = 100;
-
-
-class CustomShader final : public lune::metal::ComputeShader
-{
-	NS::SharedPtr<MTL::Buffer> m_inputA;
-	NS::SharedPtr<MTL::Buffer> m_inputB;
-	NS::SharedPtr<MTL::Buffer> m_outputAdd;
-	NS::SharedPtr<MTL::Buffer> m_outputMul;
-	NS::UInteger m_bufferSize;
-
-public:
-	explicit CustomShader(const lune::metal::ComputeShaderCreateInfo& info) :
-		ComputeShader(info),
-		m_bufferSize(arrayLength * sizeof(float))
-	{
-		createBuffers();
-	}
-
-	void encodeComputeCommand(MTL::ComputeCommandEncoder* encoder) override
-	{
-		for (size_t i = 0; i < m_pipelines.size(); ++i)
-		{
-			encoder->setComputePipelineState(m_pipelines[i].get());
-			encoder->setBuffer(m_inputA.get(), 0, 0);
-			encoder->setBuffer(m_inputB.get(), 0, 1);
-
-			if (i == 0)
-				encoder->setBuffer(m_outputAdd.get(), 0, 2);
-			else
-				encoder->setBuffer(m_outputMul.get(), 0, 2);
-
-			MTL::Size gridSize = MTL::Size(arrayLength, 1, 1);
-			NS::UInteger threadGroupSize = m_pipelines[i]->maxTotalThreadsPerThreadgroup();
-			if (threadGroupSize > arrayLength)
-				threadGroupSize = arrayLength;
-			const MTL::Size threadsPerGroup = MTL::Size(threadGroupSize, 1, 1);
-
-			encoder->dispatchThreads(gridSize, threadsPerGroup);
-		}
-	}
-
-	void createBuffers()
-	{
-		m_inputA = NS::TransferPtr(
-			m_device->newBuffer(m_bufferSize, MTL::ResourceStorageModeShared));
-		m_inputB = NS::TransferPtr(
-			m_device->newBuffer(m_bufferSize, MTL::ResourceStorageModeShared));
-		m_outputAdd = NS::TransferPtr(
-			m_device->newBuffer(m_bufferSize, MTL::ResourceStorageModeShared));
-		m_outputMul = NS::TransferPtr(
-			m_device->newBuffer(m_bufferSize, MTL::ResourceStorageModeShared));
-
-		fillRandom(m_inputA);
-		fillRandom(m_inputB);
-	}
-
-	void fillRandom(const NS::SharedPtr<MTL::Buffer>& buf)
-	{
-		float* ptr = static_cast<float*>(buf->contents());
-		for (unsigned long i = 0; i < arrayLength; ++i)
-			ptr[i] = static_cast<float>(rand()) / RAND_MAX;
-	}
-
-	void verifyResults()
-	{
-		float* a = static_cast<float*>(m_inputA->contents());
-		float* b = static_cast<float*>(m_inputB->contents());
-		float* addR = static_cast<float*>(m_outputAdd->contents());
-		float* mulR = static_cast<float*>(m_outputMul->contents());
-
-		bool ok = true;
-		for (unsigned long i = 0; i < arrayLength; ++i)
-		{
-			if (std::fabs(addR[i] - (a[i] + b[i])) > 1e-6f)
-			{
-				std::cout << "Add ERROR at index " << i << "\n";
-				ok = false;
-				break;
-			}
-			if (std::fabs(mulR[i] - (a[i] * b[i])) > 1e-6f)
-			{
-				std::cout << "Mul ERROR at index " << i << "\n";
-				ok = false;
-				break;
-			}
-		}
-		if (ok)
-			std::cout << "Compute results verified for both kernels!\n";
-	}
-};
+constexpr size_t iterations = 10;
 
 void cpuAddMultiply(const std::vector<float>& a,
                     const std::vector<float>& b,
@@ -109,11 +19,10 @@ void cpuAddMultiply(const std::vector<float>& a,
 	}
 }
 
-void printProgress(size_t current, size_t total)
+void printProgress(const size_t current, const size_t total)
 {
 	const float ratio = static_cast<float>(current) / static_cast<float>(total);
 	constexpr int width = 50;
-
 	const int filled = static_cast<int>(ratio * width);
 
 	std::cout << "\r[";
@@ -123,51 +32,69 @@ void printProgress(size_t current, size_t total)
 		std::cout << ' ';
 	std::cout << "] " << static_cast<int>(ratio * 100.0f) << "%";
 	if (current == total)
-	{
 		std::cout << "\n";
-	}
-	std::cout.flush();}
-
+	std::cout.flush();
+}
 
 int main()
 {
 	lune::setWorkingDirectory();
 	auto& context = lune::metal::MetalContext::instance();
 
-	// Create our compute kernels/shader
-	lune::metal::ComputeShaderCreateInfo info{
-		.path = "shaders/basic.metal",
-		.kernels = {"add_arrays", "multiply_arrays"}
-	};
-	auto shader = std::make_shared<CustomShader>(info);
-	context.addShader(shader);
-
-	// Calculate the time for the gpu version
-	lune::Timer timer;
-	timer.start();
-	for (int i = 0; i < iterations; ++i)
-	{
-		printProgress(i, iterations);
-		context.compute();
-	}
-	printProgress(iterations, iterations);
-	auto duration = timer.delta() * 1000;
-
-	double ms = std::chrono::duration<double, std::milli>(duration).count();
-	std::cout << "GPU add/multiply time: " << ms << " ms\n";
-	shader->verifyResults(); // Verify our results are actually correct
-	shader.reset();
-	// Run same calculation on the CPU to compare speeds
-	std::vector<float> a(arrayLength), b(arrayLength), addOut(arrayLength), mulOut(arrayLength);
-
-	// Fill random data
+	// CPU input data
+	std::vector<float> a(arrayLength), b(arrayLength);
 	for (size_t i = 0; i < arrayLength; ++i)
 	{
 		a[i] = static_cast<float>(rand()) / RAND_MAX;
 		b[i] = static_cast<float>(rand()) / RAND_MAX;
 	}
 
-	// Record CPU execution time
+	// GPU buffers
+	auto inputA = NS::TransferPtr(
+		context.device()->newBuffer(arrayLength * sizeof(float), MTL::ResourceStorageModeShared));
+	auto inputB = NS::TransferPtr(
+		context.device()->newBuffer(arrayLength * sizeof(float), MTL::ResourceStorageModeShared));
+	auto outputAdd = NS::TransferPtr(
+		context.device()->newBuffer(arrayLength * sizeof(float), MTL::ResourceStorageModeShared));
+	auto outputMul = NS::TransferPtr(
+		context.device()->newBuffer(arrayLength * sizeof(float), MTL::ResourceStorageModeShared));
+
+	std::memcpy(inputA->contents(), a.data(), arrayLength * sizeof(float));
+	std::memcpy(inputB->contents(), b.data(), arrayLength * sizeof(float));
+
+	// Create shader
+	lune::metal::ComputeShaderCreateInfo info{
+		.path = "shaders/basic.metal",
+		.kernels = {"add_arrays", "multiply_arrays"}
+	};
+
+	// Add our buffers to our shader
+	auto shader = std::make_shared<lune::metal::ComputeShader>(info);
+	shader->setBuffer("inputA", inputA);
+	shader->setBuffer("inputB", inputB);
+	shader->setBuffer("outputAdd", outputAdd);
+	shader->setBuffer("outputMul", outputMul);
+
+	// Dispatch GPU
+	lune::Timer timer;
+	timer.start();
+	for (int i = 0; i < iterations; ++i)
+	{
+		printProgress(i, iterations);
+		shader->dispatch("add_arrays", arrayLength);
+		shader->dispatch("multiply_arrays", arrayLength);
+	}
+	printProgress(iterations, iterations);
+	auto duration = timer.delta() * 1000;
+	std::cout << "GPU add/multiply time: " << duration << " ms\n";
+
+	// Copy results back
+	std::vector<float> gpuAdd(arrayLength), gpuMul(arrayLength);
+	std::memcpy(gpuAdd.data(), outputAdd->contents(), arrayLength * sizeof(float));
+	std::memcpy(gpuMul.data(), outputMul->contents(), arrayLength * sizeof(float));
+
+	// Verify CPU vs GPU
+	std::vector<float> addOut(arrayLength), mulOut(arrayLength);
 	timer.start();
 	for (int i = 0; i < iterations; ++i)
 	{
@@ -176,10 +103,21 @@ int main()
 	}
 	printProgress(iterations, iterations);
 	duration = timer.delta() * 1000;
+	std::cout << "CPU add/multiply time: " << duration << " ms\n";
 
-	ms = std::chrono::duration<double, std::milli>(duration).count();
-	std::cout << "CPU add/multiply time: " << ms << " ms\n";
-
+	bool correct = true;
+	for (size_t i = 0; i < arrayLength; ++i)
+	{
+		if (std::abs(gpuAdd[i] - addOut[i]) > 1e-5f || std::abs(gpuMul[i] - mulOut[i]) > 1e-5f)
+		{
+			correct = false;
+			std::cerr << "Mismatch at index " << i << ": GPU(" << gpuAdd[i] << "," << gpuMul[i]
+				<< ") vs CPU(" << addOut[i] << "," << mulOut[i] << ")\n";
+			break;
+		}
+	}
+	if (correct)
+		std::cout << "GPU results verified!\n";
 
 	return 0;
 }

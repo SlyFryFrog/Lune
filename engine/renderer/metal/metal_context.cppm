@@ -24,7 +24,6 @@ namespace lune::metal
 		NS::SharedPtr<MTL::CommandQueue> m_commandQueue{};
 		std::vector<NS::SharedPtr<CA::MetalLayer>> m_metalLayers{};
 		std::vector<std::shared_ptr<GraphicsShader>> m_graphicsShaders{};
-		std::vector<std::shared_ptr<ComputeShader>> m_computeShaders{};
 		MetalContextCreateInfo m_createInfo{};
 
 	private:
@@ -45,7 +44,6 @@ namespace lune::metal
 		void createCommandQueue();
 
 		void sendRenderCommands(const NS::SharedPtr<CA::MetalDrawable>& drawable) const;
-		void sendComputeCommands() const;
 		void draw() override;
 		void compute() const;
 
@@ -53,7 +51,6 @@ namespace lune::metal
 		void removeMetalLayer(const NS::SharedPtr<CA::MetalLayer>& metalLayer);
 
 		void addShader(const std::shared_ptr<GraphicsShader>& metalShader);
-		void addShader(const std::shared_ptr<ComputeShader>& metalShader);
 
 		[[nodiscard]] MTL::Device* device() const
 		{

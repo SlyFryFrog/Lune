@@ -67,24 +67,6 @@ namespace lune::metal
 		commandBuffer->waitUntilCompleted();
 	}
 
-	void MetalContext::sendComputeCommands() const
-	{
-		// Create a new command buffer for compute
-		const auto commandBuffer = NS::TransferPtr(m_commandQueue->commandBuffer());
-
-		// Encode compute commands for all compute shaders
-		MTL::ComputeCommandEncoder* computeCommandEncoder = commandBuffer->computeCommandEncoder();
-		for (const auto& shader : m_computeShaders)
-		{
-			shader->encodeComputeCommand(computeCommandEncoder);
-		}
-		computeCommandEncoder->endEncoding();
-
-		// Commit and wait for completion
-		commandBuffer->commit();
-		commandBuffer->waitUntilCompleted();
-	}
-
 	void MetalContext::draw()
 	{
 		for (const auto& layer : m_metalLayers)
@@ -93,14 +75,6 @@ namespace lune::metal
 			{
 				sendRenderCommands(drawable);
 			}
-		}
-	}
-
-	void MetalContext::compute() const
-	{
-		if (!m_computeShaders.empty())
-		{
-			sendComputeCommands();
 		}
 	}
 
@@ -123,10 +97,5 @@ namespace lune::metal
 	void MetalContext::addShader(const std::shared_ptr<GraphicsShader>& metalShader)
 	{
 		m_graphicsShaders.push_back(metalShader);
-	}
-
-	void MetalContext::addShader(const std::shared_ptr<ComputeShader>& metalShader)
-	{
-		m_computeShaders.push_back(metalShader);
 	}
 }

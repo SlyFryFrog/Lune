@@ -1,6 +1,9 @@
 module;
+#include <iostream>
 #include <string>
+#include <string_view>
 #include <Metal/Metal.hpp>
+#include <map>
 export module lune:metal_shader;
 
 namespace lune::metal
@@ -21,8 +24,8 @@ namespace lune::metal
 		MTL::Device* device = nullptr;
 		MTL::PipelineOption pipelineOption = MTL::PipelineOptionNone;
 		MTL::AutoreleasedComputePipelineReflection* reflection = nullptr;
-		std::vector<std::string> kernels;
 		std::string path;
+		std::vector<std::string> kernels;
 	};
 
 
@@ -94,56 +97,41 @@ namespace lune::metal
 	export class ComputeShader : public Shader
 	{
 	protected:
-		MTL::ComputePipelineReflection* m_pipelineReflection{};
-		MTL::PipelineOption m_pipelineOption;
+		struct Kernel
+		{
+			NS::SharedPtr<MTL::Function> function;
+			NS::SharedPtr<MTL::ComputePipelineState> pipeline;
+			NS::UInteger maxThreads;
+			std::map<std::string, std::pair<NS::UInteger, NS::UInteger>> bufferBindings;
+			///< (offset, index)
+		};
+
+
+		struct Buffer
+		{
+			NS::SharedPtr<MTL::Buffer> buffer;
+		};
+
+		std::map<std::string, Kernel> m_kernels;
+		std::map<std::string, Buffer> m_boundBuffers;
 		std::vector<NS::SharedPtr<MTL::ComputePipelineState>> m_pipelines;
-		std::vector<std::string> m_kernelNames;
 		std::string m_path;
 
 	public:
 		explicit ComputeShader(const ComputeShaderCreateInfo& createInfo);
 
-		virtual void encodeComputeCommand(MTL::ComputeCommandEncoder* commandEncoder) = 0;
-
-		virtual void setupPipelineDescriptor(MTL::ComputePipelineDescriptor* pipelineDescriptor)
-		{
-		}
-
 		void createPipelines();
 
-		void addKernel(const std::string& name)
+		void dispatch(const std::string& kernelName, size_t threadCount);
+
+		void setBuffer(const std::string_view name, const NS::SharedPtr<MTL::Buffer>& buffer)
 		{
-			m_kernelNames.push_back(name);
+			m_boundBuffers[std::string(name)] = {buffer};
 		}
 
-		void setPipelineReflection(MTL::ComputePipelineReflection* pipelineReflection)
+		[[nodiscard]] bool hasKernel(std::string_view kernelName) const
 		{
-			m_pipelineReflection = pipelineReflection;
-		}
-
-		[[nodiscard]] MTL::AutoreleasedComputePipelineReflection* pipelineReflection()
-		{
-			return &m_pipelineReflection;
-		}
-
-		void setPipelineOption(const MTL::PipelineOption pipelineOption)
-		{
-			m_pipelineOption = pipelineOption;
-		}
-
-		[[nodiscard]] MTL::PipelineOption pipelineOption() const
-		{
-			return m_pipelineOption;
-		}
-
-		[[nodiscard]] MTL::ComputePipelineState* pipelineState(const size_t i) const
-		{
-			return m_pipelines[i].get();
-		}
-
-		[[nodiscard]] size_t pipelineCount() const
-		{
-			return m_pipelines.size();
+			return m_kernels.contains(std::string(kernelName));
 		}
 	};
 }

@@ -5,18 +5,18 @@ using namespace metal;
 kernel void add_arrays(
     device const float* inputA [[buffer(0)]],
     device const float* inputB [[buffer(1)]],
-    device float* output [[buffer(2)]],
+    device float* outputAdd [[buffer(2)]],
     uint id [[thread_position_in_grid]]
 ) {
-    output[id] = inputA[id] + inputB[id];
+    outputAdd[id] = inputA[id] + inputB[id];
 }
 
 // Kernel 2: Multiply two arrays
 kernel void multiply_arrays(
     device const float* inputA [[buffer(0)]],
     device const float* inputB [[buffer(1)]],
-    device float* output [[buffer(2)]],
+    device float* outputMul [[buffer(2)]],
     uint id [[thread_position_in_grid]]
 ) {
-    output[id] = inputA[id] * inputB[id];
+    outputMul[id] = inputA[id] * inputB[id];
 }
