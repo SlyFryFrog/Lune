@@ -7,6 +7,7 @@ module;
 export module lune:metal_compute;
 
 import :metal_shader;
+import :metal_datatype_utils;
 
 export namespace lune::metal
 {
@@ -56,6 +57,7 @@ export namespace lune::metal
 
 	class ComputeKernel
 	{
+		NS::SharedPtr<MTL::CommandBuffer> m_lastCommandBuffer;
 		NS::SharedPtr<MTL::ComputePipelineState> m_pipeline;
 		NS::SharedPtr<MTL::Function> m_function;
 		MTL::Device* m_device;
@@ -75,27 +77,13 @@ export namespace lune::metal
 			return m_name;
 		}
 
-		ComputeKernel& dispatch(size_t threadCount);
-		ComputeKernel& dispatch(size_t x, size_t y, size_t z = 1);
+		ComputeKernel& dispatch(size_t threadCount, bool async = true);
+		ComputeKernel& dispatch(size_t x, size_t y, size_t z = 1, bool async = true);
+		ComputeKernel& dispatch(size_t x, size_t y, size_t z,
+		                        std::function<void()> callback, bool async = true);
 
-		ComputeKernel& setBuffer(const std::string& name, const NS::SharedPtr<MTL::Buffer>& buf)
-		{
-			m_buffers[name] = buf;
-			return *this;
-		}
-
-		ComputeKernel& setBytes(const std::string& name, const void* data, const size_t size)
-		{
-			// Allocate a small temp buffer for byte data
-			const auto device = m_pipeline->device();
-			NS::SharedPtr<MTL::Buffer> temp =
-				NS::TransferPtr(device->newBuffer(size, MTL::ResourceStorageModeShared));
-
-			std::memcpy(temp->contents(), data, size);
-			m_buffers[name] = temp;
-
-			return *this;
-		}
+		ComputeKernel& setBuffer(const std::string& name, const NS::SharedPtr<MTL::Buffer>& buf);
+		ComputeKernel& setBytes(const std::string& name, const void* data, size_t size);
 
 		template <typename T>
 		ComputeKernel& setBuffer(const std::string& name, const std::vector<T>& vec)
@@ -123,12 +111,14 @@ export namespace lune::metal
 		}
 
 		void createPipeline(MTL::Library* library);
+		ComputeKernel& waitUntilComplete();
 
 	private:
 		static KernelReflectionInfo createKernelReflectionInfo(const std::string& name,
 		                                                       const MTL::ComputePipelineReflection*
 		                                                       reflection);
 	};
+
 
 	class ComputeShader final : public Shader
 	{
@@ -138,30 +128,13 @@ export namespace lune::metal
 	public:
 		explicit ComputeShader(const ComputeShaderCreateInfo& info);
 
+		ComputeKernel& kernel(const std::string& name);
+
+		[[nodiscard]] std::vector<std::string> listKernels() const;
+
 		[[nodiscard]] bool hasKernel(const std::string& name) const
 		{
 			return m_kernels.contains(name);
-		}
-
-		ComputeKernel& kernel(const std::string& name)
-		{
-			if (!m_kernels.contains(name))
-			{
-				throw std::runtime_error("Kernel name not found");
-			}
-
-			return *m_kernels[name];
-		}
-
-		[[nodiscard]] std::vector<std::string> listKernels() const
-		{
-			std::vector<std::string> names;
-			for (const auto& [name, kernel] : m_kernels)
-			{
-				names.push_back(name);
-			}
-
-			return names;
 		}
 
 	private:
@@ -169,38 +142,5 @@ export namespace lune::metal
 	};
 
 
-	void printKernelInfo(const KernelReflectionInfo& info)
-	{
-		std::cout << "================= Kernel Reflection =================\n";
-		std::cout << "Function: " << info.kernelName << "\n\n";
-
-		if (!info.arguments.empty())
-		{
-			std::cout << "Arguments (" << info.arguments.size() << "):\n";
-			for (const auto& arg : info.arguments)
-			{
-				std::cout
-					<< "  - Name      : " << arg.name << "\n"
-					<< "    Index     : " << arg.index << "\n"
-					<< "    Type      : " << arg.type << "\n"
-					<< "    Data Type : " << arg.dataType << "\n"
-					<< "    Data Size : " << arg.dataSize << " bytes\n\n";
-			}
-		}
-
-		if (info.threadgroupMemory.has_value())
-		{
-			std::cout << "Threadgroup Memory:\n";
-			for (const auto& tg : info.threadgroupMemory.value())
-			{
-				std::cout
-					<< "  - Index     : " << tg.index << "\n"
-					<< "    Size      : " << tg.size << " bytes\n"
-					<< "    Alignment : " << tg.alignment << " bytes\n\n";
-			}
-			std::cout << "\n";
-		}
-
-		std::cout << "=====================================================\n\n";
-	}
+	void printKernelInfo(const KernelReflectionInfo& info);
 }

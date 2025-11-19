@@ -45,7 +45,6 @@ namespace lune::metal
 
 		void sendRenderCommands(const NS::SharedPtr<CA::MetalDrawable>& drawable) const;
 		void draw() override;
-		void compute() const;
 
 		void addMetalLayer(const NS::SharedPtr<CA::MetalLayer>& metalLayer);
 		void removeMetalLayer(const NS::SharedPtr<CA::MetalLayer>& metalLayer);

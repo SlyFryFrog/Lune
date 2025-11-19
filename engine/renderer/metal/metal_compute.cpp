@@ -12,7 +12,7 @@ namespace lune::metal
 	{
 	}
 
-	ComputeKernel& ComputeKernel::dispatch(const size_t threadCount)
+	ComputeKernel& ComputeKernel::dispatch(const size_t threadCount, const bool async)
 	{
 		auto* commandBuffer = MetalContext::instance().commandQueue()->commandBuffer();
 		auto* encoder = commandBuffer->computeCommandEncoder();
@@ -32,12 +32,16 @@ namespace lune::metal
 		encoder->dispatchThreadgroups({groups, 1, 1}, {tgSize, 1, 1});
 		encoder->endEncoding();
 		commandBuffer->commit();
-		commandBuffer->waitUntilCompleted();
+		m_lastCommandBuffer = NS::TransferPtr(commandBuffer);
+
+		if (!async)
+			commandBuffer->waitUntilCompleted();
 
 		return *this;
 	}
 
-	ComputeKernel& ComputeKernel::dispatch(const size_t x, const size_t y, const size_t z)
+	ComputeKernel& ComputeKernel::dispatch(const size_t x, const size_t y, const size_t z,
+	                                       const bool async)
 	{
 		auto* commandBuffer = MetalContext::instance().commandQueue()->commandBuffer();
 		auto* encoder = commandBuffer->computeCommandEncoder();
@@ -60,7 +64,68 @@ namespace lune::metal
 		encoder->dispatchThreadgroups(groups, threadsPerGroup);
 		encoder->endEncoding();
 		commandBuffer->commit();
-		commandBuffer->waitUntilCompleted();
+		m_lastCommandBuffer = NS::TransferPtr(commandBuffer);
+
+		if (!async)
+			commandBuffer->waitUntilCompleted();
+
+		return *this;
+	}
+
+	ComputeKernel& ComputeKernel::dispatch(const size_t x, const size_t y, const size_t z,
+	                                       std::function<void()> callback, const bool async)
+	{
+		auto* commandBuffer = MetalContext::instance().commandQueue()->commandBuffer();
+		auto* encoder = commandBuffer->computeCommandEncoder();
+
+		encoder->setComputePipelineState(m_pipeline.get());
+
+		for (auto& [name, buf] : m_buffers)
+		{
+			const NS::UInteger index = m_bindings[name];
+			encoder->setBuffer(buf.get(), 0, index);
+		}
+
+		const MTL::Size threadsPerGroup = {16, 16, 1};
+		const MTL::Size groups = {
+			(x + 15) / 16,
+			(y + 15) / 16,
+			z
+		};
+
+		encoder->dispatchThreadgroups(groups, threadsPerGroup);
+		encoder->endEncoding();
+		commandBuffer->addCompletedHandler(
+			[callback = std::move(callback)](MTL::CommandBuffer*)
+			{
+				callback();
+			});
+		commandBuffer->commit();
+		m_lastCommandBuffer = NS::TransferPtr(commandBuffer);
+
+		if (!async)
+			commandBuffer->waitUntilCompleted();
+
+		return *this;
+	}
+
+	ComputeKernel& ComputeKernel::setBuffer(const std::string& name,
+	                                        const NS::SharedPtr<MTL::Buffer>& buf)
+	{
+		m_buffers[name] = buf;
+		return *this;
+	}
+
+	ComputeKernel& ComputeKernel::setBytes(const std::string& name, const void* data,
+	                                       const size_t size)
+	{
+		// Allocate a small temp buffer for byte data
+		const auto device = m_pipeline->device();
+		NS::SharedPtr<MTL::Buffer> temp =
+			NS::TransferPtr(device->newBuffer(size, MTL::ResourceStorageModeShared));
+
+		std::memcpy(temp->contents(), data, size);
+		m_buffers[name] = temp;
 
 		return *this;
 	}
@@ -110,6 +175,14 @@ namespace lune::metal
 				m_bindings[name] = index;
 			}
 		}
+	}
+
+	ComputeKernel& ComputeKernel::waitUntilComplete()
+	{
+		if (m_lastCommandBuffer)
+			m_lastCommandBuffer->waitUntilCompleted();
+
+		return *this;
 	}
 
 	KernelReflectionInfo ComputeKernel::createKernelReflectionInfo(
@@ -179,6 +252,27 @@ namespace lune::metal
 		createPipelines();
 	}
 
+	ComputeKernel& ComputeShader::kernel(const std::string& name)
+	{
+		if (!m_kernels.contains(name))
+		{
+			throw std::runtime_error("Kernel name not found");
+		}
+
+		return *m_kernels[name];
+	}
+
+	std::vector<std::string> ComputeShader::listKernels() const
+	{
+		std::vector<std::string> names;
+		for (const auto& [name, kernel] : m_kernels)
+		{
+			names.push_back(name);
+		}
+
+		return names;
+	}
+
 	void ComputeShader::createPipelines()
 	{
 		const auto library = createLibrary(m_path);
@@ -188,5 +282,40 @@ namespace lune::metal
 		{
 			kernel->createPipeline(library.get());
 		}
+	}
+
+	void printKernelInfo(const KernelReflectionInfo& info)
+	{
+		std::cout << "================= Kernel Reflection =================\n";
+		std::cout << "Function: " << info.kernelName << "\n\n";
+
+		if (!info.arguments.empty())
+		{
+			std::cout << "Arguments (" << info.arguments.size() << "):\n";
+			for (const auto& arg : info.arguments)
+			{
+				std::cout
+					<< "  - Name      : " << arg.name << "\n"
+					<< "    Index     : " << arg.index << "\n"
+					<< "    Type      : " << to_string(arg.type) << "\n"
+					<< "    Data Type : " << to_string(arg.dataType) << "\n"
+					<< "    Data Size : " << arg.dataSize << " bytes\n\n";
+			}
+		}
+
+		if (info.threadgroupMemory.has_value())
+		{
+			std::cout << "Threadgroup Memory:\n";
+			for (const auto& tg : info.threadgroupMemory.value())
+			{
+				std::cout
+					<< "  - Index     : " << tg.index << "\n"
+					<< "    Size      : " << tg.size << " bytes\n"
+					<< "    Alignment : " << tg.alignment << " bytes\n\n";
+			}
+			std::cout << "\n";
+		}
+
+		std::cout << "=====================================================\n\n";
 	}
 }

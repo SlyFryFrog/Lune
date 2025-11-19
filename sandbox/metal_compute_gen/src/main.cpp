@@ -9,7 +9,7 @@ int main()
 	lune::setWorkingDirectory();
 
 	constexpr size_t N = 1 << 16; // smaller for histogram printing
-	std::vector<float> cpuData(N, 0.0f);
+	std::vector cpuData(N, 0.0f);
 
 	const lune::metal::ComputeShaderCreateInfo info = {
 		.path = "shaders/basic.metal",
@@ -19,7 +19,8 @@ int main()
 	auto shader = lune::metal::ComputeShader(info);
 	auto kernel = shader.kernel("generate_random")
 	                    .setBuffer("outBuffer", cpuData)
-	                    .dispatch(N);
+	                    .dispatch(N)
+						.waitUntilComplete();
 
 	const auto result = kernel.buffer("outBuffer");
 

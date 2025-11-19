@@ -40,7 +40,6 @@ void printProgress(const size_t current, const size_t total)
 int main()
 {
 	lune::setWorkingDirectory();
-	auto& context = lune::metal::MetalContext::instance();
 
 	// CPU input data
 	std::vector<float> a(arrayLength), b(arrayLength), outputAdd(arrayLength), outputMul(arrayLength);
@@ -81,8 +80,13 @@ int main()
 	}
 	printProgress(iterations, iterations);
 
+
+	kernelAdd.waitUntilComplete();
+	kernelMul.waitUntilComplete();
+
 	auto outA = kernelAdd.buffer("outputAdd");
 	auto outB = kernelMul.buffer("outputMul");
+
 	memcpy(outputAdd.data(), outA->contents(), arrayLength * sizeof(float));
 	memcpy(outputMul.data(), outB->contents(), arrayLength * sizeof(float));
 
