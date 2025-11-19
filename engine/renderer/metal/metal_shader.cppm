@@ -1,7 +1,6 @@
 module;
 #include <iostream>
 #include <string>
-#include <string_view>
 #include <Metal/Metal.hpp>
 #include <map>
 export module lune:metal_shader;

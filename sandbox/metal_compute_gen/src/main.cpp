@@ -8,22 +8,16 @@ int main()
 {
 	lune::setWorkingDirectory();
 
-	constexpr size_t N = 1 << 16; // smaller for histogram printing
+	constexpr size_t N = 1 << 20; // smaller for histogram printing
 	std::vector cpuData(N, 0.0f);
 
-	const lune::metal::ComputeShaderCreateInfo info = {
-		.path = "shaders/basic.metal",
-		.kernels = {"generate_random"},
-	};
-
-	auto shader = lune::metal::ComputeShader(info);
+	auto shader = lune::metal::ComputeShader("shaders/basic.metal");
 	auto kernel = shader.kernel("generate_random")
 	                    .setBuffer("outBuffer", cpuData)
 	                    .dispatch(N)
 						.waitUntilComplete();
 
 	const auto result = kernel.buffer("outBuffer");
-
 	std::memcpy(cpuData.data(), result->contents(), sizeof(float) * N);
 
 	printKernelInfo(kernel.reflection());

@@ -239,16 +239,11 @@ namespace lune::metal
 		return info;
 	}
 
+	ComputeShader::ComputeShader(const std::string& path, MTL::Device* device) :
+		Shader(device),
+		m_path(path)
 
-	ComputeShader::ComputeShader(const ComputeShaderCreateInfo& info) :
-		Shader(info.device),
-		m_path(info.path)
 	{
-		for (const auto& name : info.kernels)
-		{
-			m_kernels[name] = std::make_unique<ComputeKernel>(m_device, name);
-		}
-
 		createPipelines();
 	}
 
@@ -275,12 +270,22 @@ namespace lune::metal
 
 	void ComputeShader::createPipelines()
 	{
-		const auto library = createLibrary(m_path);
+		const NS::SharedPtr<MTL::Library> library = createLibrary(m_path);
+		const NS::Array* functionNames = library->functionNames();
 
-		// Create a pipeline for each kernel
-		for (auto& [kernelName, kernel] : m_kernels)
+		for (int i = 0; i < functionNames->count(); ++i)
 		{
-			kernel->createPipeline(library.get());
+			NS::String* nsName = functionNames->object<NS::String>(i);
+			std::string name = functionNames->object<NS::String>(i)->utf8String();
+			NS::SharedPtr<MTL::Function> function = NS::TransferPtr(library->newFunction(nsName));
+			if (!function)
+				continue;
+
+			if (function->functionType() == MTL::FunctionTypeKernel)
+			{
+				m_kernels[name] = std::make_unique<ComputeKernel>(m_device, name);
+				m_kernels[name]->createPipeline(library.get());
+			}
 		}
 	}
 

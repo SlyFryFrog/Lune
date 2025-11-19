@@ -1,11 +1,10 @@
-#include <Metal/Metal.hpp>
 #include <iostream>
 #include <vector>
 #include <cmath>
 import lune;
 
-constexpr size_t arrayLength = 1 << 26;
-constexpr size_t iterations = 10;
+constexpr size_t arrayLength = 1 << 24;
+constexpr size_t iterations = 20;
 
 void cpuAddMultiply(const std::vector<float>& a,
                     const std::vector<float>& b,
@@ -49,14 +48,8 @@ int main()
 		b[i] = static_cast<float>(rand()) / RAND_MAX;
 	}
 
-	// Create shader
-	lune::metal::ComputeShaderCreateInfo info{
-		.path = "shaders/basic.metal",
-		.kernels = {"add_arrays", "multiply_arrays"}
-	};
-
 	// Add our buffers to our shader
-	auto shader = lune::metal::ComputeShader(info);
+	auto shader = lune::metal::ComputeShader("shaders/basic.metal");
 	auto kernelAdd = shader.kernel("add_arrays")
 	                       .setBuffer("inputA", a)
 	                       .setBuffer("inputB", b)
@@ -75,14 +68,12 @@ int main()
 	for (int i = 0; i < iterations; ++i)
 	{
 		printProgress(i, iterations);
-		kernelAdd.dispatch(arrayLength);
-		kernelMul.dispatch(arrayLength);
+		kernelAdd.dispatch(arrayLength).waitUntilComplete();
+		kernelMul.dispatch(arrayLength).waitUntilComplete();
 	}
 	printProgress(iterations, iterations);
 
-
-	kernelAdd.waitUntilComplete();
-	kernelMul.waitUntilComplete();
+	auto duration = timer.delta() * 1000;
 
 	auto outA = kernelAdd.buffer("outputAdd");
 	auto outB = kernelMul.buffer("outputMul");
@@ -90,7 +81,6 @@ int main()
 	memcpy(outputAdd.data(), outA->contents(), arrayLength * sizeof(float));
 	memcpy(outputMul.data(), outB->contents(), arrayLength * sizeof(float));
 
-	auto duration = timer.delta() * 1000;
 	std::cout << "GPU add/multiply time: " << duration << " ms\n";
 
 	// Verify CPU vs GPU

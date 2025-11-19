@@ -18,6 +18,7 @@ namespace lune::metal
 		int maxFramesInFlight = 3;
 	};
 
+
 	export class MetalContext final : public GraphicsContext
 	{
 		NS::SharedPtr<MTL::Device> m_device{};

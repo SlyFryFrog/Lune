@@ -47,14 +47,6 @@ export namespace lune::metal
 	};
 
 
-	struct ComputeShaderCreateInfo
-	{
-		MTL::Device* device;
-		std::string path;
-		std::vector<std::string> kernels;
-	};
-
-
 	class ComputeKernel
 	{
 		NS::SharedPtr<MTL::CommandBuffer> m_lastCommandBuffer;
@@ -78,7 +70,7 @@ export namespace lune::metal
 		}
 
 		ComputeKernel& dispatch(size_t threadCount, bool async = true);
-		ComputeKernel& dispatch(size_t x, size_t y, size_t z = 1, bool async = true);
+		ComputeKernel& dispatch(size_t x, size_t y, size_t z, bool async = true);
 		ComputeKernel& dispatch(size_t x, size_t y, size_t z,
 		                        std::function<void()> callback, bool async = true);
 
@@ -126,7 +118,7 @@ export namespace lune::metal
 		std::string m_path;
 
 	public:
-		explicit ComputeShader(const ComputeShaderCreateInfo& info);
+		explicit ComputeShader(const std::string& path, MTL::Device* device = nullptr);
 
 		ComputeKernel& kernel(const std::string& name);
 
