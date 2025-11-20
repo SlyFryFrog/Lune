@@ -11,6 +11,15 @@ import :metal_datatype_utils;
 
 export namespace lune::metal
 {
+	enum BufferUsage
+	{
+		Managed = MTL::StorageModeManaged,
+		Memoryless = MTL::StorageModeMemoryless,
+		Private = MTL::ResourceStorageModePrivate,
+		Shared = MTL::ResourceStorageModeShared
+	};
+
+
 	struct KernelReflectionInfo
 	{
 		std::string kernelName;
@@ -55,7 +64,8 @@ export namespace lune::metal
 		MTL::Device* m_device;
 
 		std::map<std::string, NS::UInteger> m_bindings;
-		std::map<std::string, NS::SharedPtr<MTL::Buffer>> m_buffers;
+		std::map<std::string, MTL::Buffer*> m_buffers;
+		std::map<std::string, MTL::Texture*> m_textures;
 
 		KernelReflectionInfo m_reflection{};
 
@@ -69,32 +79,36 @@ export namespace lune::metal
 			return m_name;
 		}
 
-		ComputeKernel& dispatch(size_t threadCount, bool async = true);
-		ComputeKernel& dispatch(size_t x, size_t y, size_t z, bool async = true);
-		ComputeKernel& dispatch(size_t x, size_t y, size_t z,
-		                        std::function<void()> callback, bool async = true);
+		[[nodiscard]] std::map<std::string, MTL::Buffer*>& buffers() noexcept
+		{
+			return m_buffers;
+		}
 
-		ComputeKernel& setBuffer(const std::string& name, const NS::SharedPtr<MTL::Buffer>& buf);
-		ComputeKernel& setBytes(const std::string& name, const void* data, size_t size);
+		ComputeKernel& dispatch(size_t threadCount);
+		ComputeKernel& dispatch(size_t x, size_t y, size_t z);
+		ComputeKernel& dispatch(size_t x, size_t y, size_t z,
+		                        std::function<void()> callback);
+		ComputeKernel& dispatch(const MTL::Size& threadGroups, const MTL::Size& threadsPerGroup);
+
+		ComputeKernel& setBytes(const std::string& name, const void* data, size_t size,
+		                        BufferUsage options = BufferUsage::Shared);
+		template <typename T>
+		ComputeKernel& setByte(const std::string& name, T& data,
+		                       BufferUsage options = BufferUsage::Shared);
+
+		ComputeKernel& setBuffer(const std::string& name, MTL::Buffer* buffer);
 
 		template <typename T>
-		ComputeKernel& setBuffer(const std::string& name, const std::vector<T>& vec)
-		{
-			const auto device = m_pipeline->device();
-			const size_t byteSize = vec.size() * sizeof(T);
+		ComputeKernel& setBuffer(const std::string& name, const std::vector<T>& vec,
+		                         BufferUsage options = BufferUsage::Shared);
 
-			NS::SharedPtr<MTL::Buffer> mtlBuffer =
-				NS::TransferPtr(device->newBuffer(byteSize, MTL::ResourceStorageModeShared));
+		ComputeKernel& setTexture(const std::string& name, MTL::Texture* texture);
 
-			std::memcpy(mtlBuffer->contents(), vec.data(), byteSize);
-
-			m_buffers[name] = mtlBuffer;
-			return *this;
-		}
+		MTL::Texture* texture(const std::string& name);
 
 		MTL::Buffer* buffer(const std::string& name)
 		{
-			return m_buffers[name].get();
+			return m_buffers[name];
 		}
 
 		[[nodiscard]] KernelReflectionInfo reflection() const
@@ -105,11 +119,42 @@ export namespace lune::metal
 		void createPipeline(MTL::Library* library);
 		ComputeKernel& waitUntilComplete();
 
+		static void bufferToTexture(const MTL::Buffer* buffer, const MTL::Texture* texture, NS::UInteger bytesPerRow, const MTL::Size& sourceSize);
+
 	private:
 		static KernelReflectionInfo createKernelReflectionInfo(const std::string& name,
 		                                                       const MTL::ComputePipelineReflection*
 		                                                       reflection);
 	};
+
+
+	template <typename T>
+	ComputeKernel& ComputeKernel::setByte(const std::string& name, T& data, const BufferUsage options)
+	{
+		// Allocate a small temp buffer for byte data
+		const auto device = m_pipeline->device();
+		auto temp = device->newBuffer(sizeof(T), static_cast<MTL::ResourceOptions>(options));
+
+		std::memcpy(temp->contents(), &data, sizeof(T));
+		m_buffers[name] = temp;
+
+		return *this;
+	}
+
+	template <typename T>
+	ComputeKernel& ComputeKernel::setBuffer(const std::string& name, const std::vector<T>& vec,
+	                                        const BufferUsage options)
+	{
+		const auto device = m_pipeline->device();
+		const size_t byteSize = vec.size() * sizeof(T);
+
+		auto mtlBuffer = device->newBuffer(byteSize, static_cast<MTL::ResourceOptions>(options));
+
+		std::memcpy(mtlBuffer->contents(), vec.data(), byteSize);
+
+		m_buffers[name] = mtlBuffer;
+		return *this;
+	}
 
 
 	class ComputeShader final : public Shader

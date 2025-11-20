@@ -12,7 +12,7 @@ namespace lune::metal
 	{
 	}
 
-	ComputeKernel& ComputeKernel::dispatch(const size_t threadCount, const bool async)
+	ComputeKernel& ComputeKernel::dispatch(const size_t threadCount)
 	{
 		auto* commandBuffer = MetalContext::instance().commandQueue()->commandBuffer();
 		auto* encoder = commandBuffer->computeCommandEncoder();
@@ -23,7 +23,7 @@ namespace lune::metal
 		for (auto& [name, buf] : m_buffers)
 		{
 			const NS::UInteger index = m_bindings[name];
-			encoder->setBuffer(buf.get(), 0, index);
+			encoder->setBuffer(buf, 0, index);
 		}
 
 		NS::UInteger tgSize = m_pipeline->maxTotalThreadsPerThreadgroup();
@@ -34,14 +34,10 @@ namespace lune::metal
 		commandBuffer->commit();
 		m_lastCommandBuffer = NS::TransferPtr(commandBuffer);
 
-		if (!async)
-			commandBuffer->waitUntilCompleted();
-
 		return *this;
 	}
 
-	ComputeKernel& ComputeKernel::dispatch(const size_t x, const size_t y, const size_t z,
-	                                       const bool async)
+	ComputeKernel& ComputeKernel::dispatch(const size_t x, const size_t y, const size_t z)
 	{
 		auto* commandBuffer = MetalContext::instance().commandQueue()->commandBuffer();
 		auto* encoder = commandBuffer->computeCommandEncoder();
@@ -51,7 +47,7 @@ namespace lune::metal
 		for (auto& [name, buf] : m_buffers)
 		{
 			const NS::UInteger index = m_bindings[name];
-			encoder->setBuffer(buf.get(), 0, index);
+			encoder->setBuffer(buf, 0, index);
 		}
 
 		const MTL::Size threadsPerGroup = {16, 16, 1};
@@ -66,14 +62,11 @@ namespace lune::metal
 		commandBuffer->commit();
 		m_lastCommandBuffer = NS::TransferPtr(commandBuffer);
 
-		if (!async)
-			commandBuffer->waitUntilCompleted();
-
 		return *this;
 	}
 
 	ComputeKernel& ComputeKernel::dispatch(const size_t x, const size_t y, const size_t z,
-	                                       std::function<void()> callback, const bool async)
+	                                       std::function<void()> callback)
 	{
 		auto* commandBuffer = MetalContext::instance().commandQueue()->commandBuffer();
 		auto* encoder = commandBuffer->computeCommandEncoder();
@@ -83,7 +76,7 @@ namespace lune::metal
 		for (auto& [name, buf] : m_buffers)
 		{
 			const NS::UInteger index = m_bindings[name];
-			encoder->setBuffer(buf.get(), 0, index);
+			encoder->setBuffer(buf, 0, index);
 		}
 
 		const MTL::Size threadsPerGroup = {16, 16, 1};
@@ -103,31 +96,84 @@ namespace lune::metal
 		commandBuffer->commit();
 		m_lastCommandBuffer = NS::TransferPtr(commandBuffer);
 
-		if (!async)
-			commandBuffer->waitUntilCompleted();
-
 		return *this;
 	}
 
-	ComputeKernel& ComputeKernel::setBuffer(const std::string& name,
-	                                        const NS::SharedPtr<MTL::Buffer>& buf)
+	ComputeKernel& ComputeKernel::dispatch(const MTL::Size& threadGroups,
+	                                       const MTL::Size& threadsPerGroup)
 	{
-		m_buffers[name] = buf;
+		// Get a new command buffer
+		const auto commandBuffer = NS::TransferPtr(
+			MetalContext::instance().commandQueue()->commandBuffer());
+		if (!commandBuffer)
+			throw std::runtime_error("Failed to create Metal command buffer");
+
+		// Create a compute encoder
+		auto* encoder = commandBuffer->computeCommandEncoder();
+		if (!encoder)
+			throw std::runtime_error("Failed to create Metal compute command encoder");
+
+		// Set pipeline
+		encoder->setComputePipelineState(m_pipeline.get());
+
+		// Bind all buffers
+		for (auto& [name, buf] : m_buffers)
+		{
+			const NS::UInteger index = m_bindings[name];
+			encoder->setBuffer(buf, 0, index);
+		}
+
+		for (auto& [name, tex] : m_textures)
+		{
+			const NS::UInteger index = m_bindings[name];
+			encoder->setTexture(tex, index);
+		}
+
+
+		// Dispatch threads
+		encoder->dispatchThreadgroups(threadGroups, threadsPerGroup);
+		encoder->endEncoding();
+
+		// Commit the command buffer (non-blocking)
+		commandBuffer->commit();
+
+		// Store the command buffer in case the user wants to wait
+		m_lastCommandBuffer = commandBuffer;
+
 		return *this;
 	}
 
 	ComputeKernel& ComputeKernel::setBytes(const std::string& name, const void* data,
-	                                       const size_t size)
+	                                       const size_t size, const BufferUsage options)
 	{
 		// Allocate a small temp buffer for byte data
 		const auto device = m_pipeline->device();
-		NS::SharedPtr<MTL::Buffer> temp =
-			NS::TransferPtr(device->newBuffer(size, MTL::ResourceStorageModeShared));
+		auto temp = device->newBuffer(size, static_cast<MTL::ResourceOptions>(options));
 
 		std::memcpy(temp->contents(), data, size);
 		m_buffers[name] = temp;
 
 		return *this;
+	}
+
+	ComputeKernel& ComputeKernel::setBuffer(const std::string& name,
+	                                        MTL::Buffer* buffer)
+	{
+		m_buffers[name] = buffer;
+
+		return *this;
+	}
+
+	ComputeKernel& ComputeKernel::setTexture(const std::string& name, MTL::Texture* texture)
+	{
+		m_textures[name] = texture;
+
+		return *this;
+	}
+
+	MTL::Texture* ComputeKernel::texture(const std::string& name)
+	{
+		return m_textures[name];
 	}
 
 	void ComputeKernel::createPipeline(MTL::Library* library)
@@ -183,6 +229,31 @@ namespace lune::metal
 			m_lastCommandBuffer->waitUntilCompleted();
 
 		return *this;
+	}
+
+	void ComputeKernel::bufferToTexture(const MTL::Buffer* buffer, const MTL::Texture* texture,
+	                                    const NS::UInteger bytesPerRow,
+	                                    const MTL::Size& sourceSize)
+	{
+		const auto cmdBuffer = MetalContext::instance().commandQueue()->commandBuffer();
+		const auto blit = cmdBuffer->blitCommandEncoder();
+
+		blit->copyFromBuffer(
+			buffer,
+			0,
+			bytesPerRow,
+			 0,
+			sourceSize,
+			texture,
+			0,
+			0,
+			MTL::Origin{0, 0, 0},
+			MTL::BlitOptionNone
+			);
+
+		blit->endEncoding();
+		cmdBuffer->commit();
+		cmdBuffer->waitUntilCompleted();
 	}
 
 	KernelReflectionInfo ComputeKernel::createKernelReflectionInfo(

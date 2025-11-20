@@ -43,6 +43,7 @@ namespace lune::metal
 		NS::SharedPtr<MTL::Function> m_vertexFunction;
 		NS::SharedPtr<MTL::Function> m_fragmentFunction;
 		NS::SharedPtr<MTL::RenderPipelineState> m_pipelineState;
+		MTL::Texture* m_texture;
 		MTL::PixelFormat m_colorPixelFormat;
 		std::string m_path;
 		std::string m_vertexMain;

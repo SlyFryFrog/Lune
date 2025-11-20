@@ -41,7 +41,8 @@ int main()
 	lune::setWorkingDirectory();
 
 	// CPU input data
-	std::vector<float> a(arrayLength), b(arrayLength), outputAdd(arrayLength), outputMul(arrayLength);
+	std::vector<float> a(arrayLength), b(arrayLength), outputAdd(arrayLength),
+	                   outputMul(arrayLength);
 	for (size_t i = 0; i < arrayLength; ++i)
 	{
 		a[i] = static_cast<float>(rand()) / RAND_MAX;
@@ -51,8 +52,8 @@ int main()
 	// Add our buffers to our shader
 	auto shader = lune::metal::ComputeShader("shaders/basic.metal");
 	auto kernelAdd = shader.kernel("add_arrays")
-	                       .setBuffer("inputA", a)
-	                       .setBuffer("inputB", b)
+	                       .setBytes("inputA", a.data(), a.size() * sizeof(float))
+	                       .setBytes("inputB", b.data(), b.size() * sizeof(float))
 	                       .setBuffer("outputAdd", outputAdd);
 	auto kernelMul = shader.kernel("multiply_arrays")
 	                       .setBuffer("inputA", a)
@@ -80,10 +81,9 @@ int main()
 
 	memcpy(outputAdd.data(), outA->contents(), arrayLength * sizeof(float));
 	memcpy(outputMul.data(), outB->contents(), arrayLength * sizeof(float));
-
 	std::cout << "GPU add/multiply time: " << duration << " ms\n";
 
-	// Verify CPU vs GPU
+
 	std::vector<float> addOut(arrayLength), mulOut(arrayLength);
 	timer.start();
 	for (int i = 0; i < iterations; ++i)
@@ -98,10 +98,12 @@ int main()
 	bool correct = true;
 	for (size_t i = 0; i < arrayLength; ++i)
 	{
-		if (std::abs(outputAdd[i] - addOut[i]) > 1e-5f || std::abs(outputMul[i] - mulOut[i]) > 1e-5f)
+		if (std::abs(outputAdd[i] - addOut[i]) > 1e-5f || std::abs(outputMul[i] - mulOut[i]) >
+			1e-5f)
 		{
 			correct = false;
-			std::cerr << "Mismatch at index " << i << ": GPU(" << outputAdd[i] << "," << outputMul[i]
+			std::cerr << "Mismatch at index " << i << ": GPU(" << outputAdd[i] << "," << outputMul[
+					i]
 				<< ") vs CPU(" << addOut[i] << "," << mulOut[i] << ")\n";
 			break;
 		}
