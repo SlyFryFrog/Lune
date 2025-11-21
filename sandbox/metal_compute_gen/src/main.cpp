@@ -60,19 +60,20 @@ int main()
 	const lune::WindowCreateInfo winInfo{
 		Width,
 		Height,
-		"Lune: GPU Game of Life",
+		"Lune – Jeu de la Vie sur GPU",
 		false
 	};
 	const lune::raii::Window window(winInfo);
 	window.show();
 
-	// Create textures
-	MTL::TextureDescriptor* desc = MTL::TextureDescriptor::texture2DDescriptor(
-		MTL::PixelFormatRGBA8Unorm, Width, Height, false);
-	desc->setUsage(MTL::TextureUsageShaderRead | MTL::TextureUsageShaderWrite);
-
-	// Initialize the shader's texture
-	MTL::Texture* shaderTexture = context.device()->newTexture(desc);
+	// Create our texture
+	lune::metal::TextureContextCreateInfo textureContextInfo{
+		.width = Width,
+		.height = Height,
+		.mipmapped = false,
+		.pixelFormat = lune::metal::PixelFormat::RGBA8_UNorm,
+	};
+	lune::metal::Texture shaderTexture(textureContextInfo);
 
 	// Generate initial data to be fed into compute shader
 	std::vector<uint8_t> pixelData(Width * Height * 4);
@@ -96,14 +97,14 @@ int main()
 	                           .setByte("width", Width)
 	                           .setByte("height", Height);
 
-	vizShader->setTexture(shaderTexture);
+	vizShader->setTexture(shaderTexture.texture());
 
 	while (!window.shouldClose())
 	{
 		if (lune::InputManager::isJustPressed(lune::KEY_ESCAPE))
 			window.setShouldClose(true);
 
-		if (!lune::InputManager::isOrderedPressed({lune::KEY_W}))
+		if (!lune::InputManager::isPressed(lune::KEY_W))
 		{
 			lune::Window::pollEvents();
 			continue;
@@ -116,14 +117,14 @@ int main()
 			      .setBuffer("outBuff", outBuff)
 			      .dispatch(Width, Height, 1)
 			      .waitUntilComplete();
+
+			std::swap(inBuff, outBuff); // Not really necessary, could read/write to single buffer
 		}
 
 		// Copy buffer data to texture and then draw
-		lune::metal::ComputeKernel::bufferToTexture(outBuff, shaderTexture,
+		lune::metal::ComputeKernel::bufferToTexture(inBuff, shaderTexture.texture(),
 		                                            Width * 4, // RGBA8
 		                                            {Width, Height, 1});
-
-		std::swap(inBuff, outBuff); // Not really necessary, could read/write to single buffer
 
 		context.draw();
 

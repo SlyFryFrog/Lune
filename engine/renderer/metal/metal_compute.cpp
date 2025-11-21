@@ -19,12 +19,8 @@ namespace lune::metal
 
 		encoder->setComputePipelineState(m_pipeline.get());
 
-		// Bind buffers
-		for (auto& [name, buf] : m_buffers)
-		{
-			const NS::UInteger index = m_bindings[name];
-			encoder->setBuffer(buf, 0, index);
-		}
+		bindBuffers(encoder);
+		bindTextures(encoder);
 
 		NS::UInteger tgSize = m_pipeline->maxTotalThreadsPerThreadgroup();
 		NS::UInteger groups = (threadCount + tgSize - 1) / tgSize;
@@ -44,11 +40,8 @@ namespace lune::metal
 
 		encoder->setComputePipelineState(m_pipeline.get());
 
-		for (auto& [name, buf] : m_buffers)
-		{
-			const NS::UInteger index = m_bindings[name];
-			encoder->setBuffer(buf, 0, index);
-		}
+		bindBuffers(encoder);
+		bindTextures(encoder);
 
 		const MTL::Size threadsPerGroup = {16, 16, 1};
 		const MTL::Size groups = {
@@ -73,11 +66,8 @@ namespace lune::metal
 
 		encoder->setComputePipelineState(m_pipeline.get());
 
-		for (auto& [name, buf] : m_buffers)
-		{
-			const NS::UInteger index = m_bindings[name];
-			encoder->setBuffer(buf, 0, index);
-		}
+		bindBuffers(encoder);
+		bindTextures(encoder);
 
 		const MTL::Size threadsPerGroup = {16, 16, 1};
 		const MTL::Size groups = {
@@ -116,19 +106,8 @@ namespace lune::metal
 		// Set pipeline
 		encoder->setComputePipelineState(m_pipeline.get());
 
-		// Bind all buffers
-		for (auto& [name, buf] : m_buffers)
-		{
-			const NS::UInteger index = m_bindings[name];
-			encoder->setBuffer(buf, 0, index);
-		}
-
-		for (auto& [name, tex] : m_textures)
-		{
-			const NS::UInteger index = m_bindings[name];
-			encoder->setTexture(tex, index);
-		}
-
+		bindBuffers(encoder);
+		bindTextures(encoder);
 
 		// Dispatch threads
 		encoder->dispatchThreadgroups(threadGroups, threadsPerGroup);
@@ -233,7 +212,7 @@ namespace lune::metal
 
 	void ComputeKernel::bufferToTexture(const MTL::Buffer* buffer, const MTL::Texture* texture,
 	                                    const NS::UInteger bytesPerRow,
-	                                    const MTL::Size& sourceSize)
+	                                    const MTL::Size& sourceSize, const bool waitUntilComplete)
 	{
 		const auto cmdBuffer = MetalContext::instance().commandQueue()->commandBuffer();
 		const auto blit = cmdBuffer->blitCommandEncoder();
@@ -242,7 +221,7 @@ namespace lune::metal
 			buffer,
 			0,
 			bytesPerRow,
-			 0,
+			0,
 			sourceSize,
 			texture,
 			0,
@@ -253,7 +232,9 @@ namespace lune::metal
 
 		blit->endEncoding();
 		cmdBuffer->commit();
-		cmdBuffer->waitUntilCompleted();
+
+		if (waitUntilComplete)
+			cmdBuffer->waitUntilCompleted();
 	}
 
 	KernelReflectionInfo ComputeKernel::createKernelReflectionInfo(
@@ -310,6 +291,24 @@ namespace lune::metal
 		return info;
 	}
 
+	void ComputeKernel::bindBuffers(MTL::ComputeCommandEncoder* commandEncoder)
+	{
+		for (auto& [name, buf] : m_buffers)
+		{
+			const NS::UInteger index = m_bindings[name];
+			commandEncoder->setBuffer(buf, 0, index);
+		}
+	}
+
+	void ComputeKernel::bindTextures(MTL::ComputeCommandEncoder* commandEncoder)
+	{
+		for (auto& [name, tex] : m_textures)
+		{
+			const NS::UInteger index = m_bindings[name];
+			commandEncoder->setTexture(tex, index);
+		}
+	}
+
 	ComputeShader::ComputeShader(const std::string& path, MTL::Device* device) :
 		Shader(device),
 		m_path(path)
@@ -322,7 +321,7 @@ namespace lune::metal
 	{
 		if (!m_kernels.contains(name))
 		{
-			throw std::runtime_error("Kernel name not found");
+			throw std::runtime_error("Error: Kernel with name \"" + name + "\" not found");
 		}
 
 		return *m_kernels[name];
