@@ -14,7 +14,7 @@ vertex VSOut vertexMain(uint vid [[vertex_id]],
     VSOut out;
     out.position = float4(verts[vid], 0.0, 1.0);
     float2 uv = (verts[vid] + 1.0) * 0.5;
-    uv = uv * (zoom ? zoom : 0.2f);
+    uv = uv * (zoom ? zoom : 0.25f);
     out.uv = uv;
     return out;
 }

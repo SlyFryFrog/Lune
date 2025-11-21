@@ -13,23 +13,23 @@ kernel void computeNextStateBuffer(
     uint index = gid.y * width + gid.x;
 
     uchar4 cell = inBuff[index];
-    bool alive = (cell.r + cell.g + cell.b) > 0;
+    bool alive = (cell.r + cell.g + cell.b) > 0;    // If cell has color
 
     int aliveNeighbors = 0;
 
-    // Iterate through all neighbor nodes
+    // Iterate through all neighbor cells
     for (int dy = -1; dy <= 1; ++dy)
     {
         for (int dx = -1; dx <= 1; ++dx)
         {
-            // Skip the middle (we are the middle node)
+            // Skip the middle (we are the middle cell)
             if (dx == 0 && dy == 0) continue;
             int nx = int(gid.x) + dx;
             int ny = int(gid.y) + dy;
             if (nx >= 0 && nx < width && ny >= 0 && ny < height)
             {
                 uchar4 n = inBuff[ny * width + nx];
-                aliveNeighbors += (n.r | n.g | n.b) > 0 ? 1 : 0;
+                aliveNeighbors += (n.r + n.g + n.b) > 0 ? 1 : 0;
             }
         }
     }
@@ -39,6 +39,6 @@ kernel void computeNextStateBuffer(
         (!alive && aliveNeighbors == 3);
 
     outBuff[index] = nextAlive
-        ? uchar4(255, 0, 255, 255)
+        ? uchar4(255, 0, 0, 255)
         : uchar4(0, 0, 0, 255);
 }

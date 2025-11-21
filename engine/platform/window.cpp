@@ -149,6 +149,7 @@ namespace lune
 
 	void Window::pollEvents()
 	{
+		InputManager::_process();
 		glfwPollEvents();
 	}
 

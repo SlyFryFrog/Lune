@@ -6,7 +6,7 @@ import lune;
 constexpr size_t Width = 1024;
 constexpr size_t Height = 728;
 constexpr size_t IterationsPerFrame = 1; ///< Number of compute cycles per frame
-constexpr float Zoom = 1.0f;
+constexpr float Zoom = 1.0f;             ///< Currently set in shader manually, need to add caller
 
 class LifeVizShader final : public lune::metal::GraphicsShader
 {
@@ -102,6 +102,12 @@ int main()
 	{
 		if (lune::InputManager::isJustPressed(lune::KEY_ESCAPE))
 			window.setShouldClose(true);
+
+		if (!lune::InputManager::isOrderedPressed({lune::KEY_W}))
+		{
+			lune::Window::pollEvents();
+			continue;
+		}
 
 		// Perform the simulation
 		for (size_t i = 0; i < IterationsPerFrame; ++i)
