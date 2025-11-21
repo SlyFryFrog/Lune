@@ -5,7 +5,8 @@ import lune;
 
 constexpr size_t Width = 1024;
 constexpr size_t Height = 728;
-constexpr size_t IterationsPerFrame = 2;	///< Number of compute cycles per frame
+constexpr size_t IterationsPerFrame = 1; ///< Number of compute cycles per frame
+constexpr float Zoom = 1.0f;
 
 class LifeVizShader final : public lune::metal::GraphicsShader
 {
@@ -24,8 +25,6 @@ public:
 
 	void encodeRenderCommand(MTL::RenderCommandEncoder* enc) override
 	{
-		enc->setViewport(MTL::Viewport{0, 0, static_cast<double>(Width),
-		                               static_cast<double>(Height), 0.0, 1.0});
 		enc->setRenderPipelineState(m_pipelineState.get());
 		enc->setVertexBuffer(m_vertexBuffer.get(), 0, 0);
 		if (m_texture)
@@ -50,11 +49,7 @@ int main()
 {
 	lune::setWorkingDirectory();
 
-	lune::metal::MetalContextCreateInfo info {
-		.clearColor = {1.0f, 1.0f, 1.0f, 1.0f}
-	};
 	auto& context = lune::metal::MetalContext::instance();
-	context.create(info);
 
 	// Create visual shader
 	lune::metal::GraphicsShaderCreateInfo vizInfo{.path = "shaders/life_visualize.metal"};
@@ -91,13 +86,15 @@ int main()
 	}
 
 	// Create out buffer and copy data
-	MTL::Buffer* dataBuffer = context.device()->newBuffer(pixelData.size() * 4,
-													  MTL::StorageModeShared);
-	std::memcpy(dataBuffer->contents(), pixelData.data(), pixelData.size());
+	MTL::Buffer* inBuff = context.device()->newBuffer(pixelData.size(), MTL::StorageModeShared);
+	MTL::Buffer* outBuff = context.device()->newBuffer(pixelData.size(), MTL::StorageModeShared);
+	std::memcpy(inBuff->contents(), pixelData.data(), pixelData.size());
 
 	// Compute shader setup
 	auto computeShader = lune::metal::ComputeShader("shaders/life_compute.metal");
-	auto kernel = computeShader.kernel("computeNextStateBuffer");
+	auto kernel = computeShader.kernel("computeNextStateBuffer")
+	                           .setByte("width", Width)
+	                           .setByte("height", Height);
 
 	vizShader->setTexture(shaderTexture);
 
@@ -109,15 +106,18 @@ int main()
 		// Perform the simulation
 		for (size_t i = 0; i < IterationsPerFrame; ++i)
 		{
-			kernel.setBuffer("dataBuffer", dataBuffer)
+			kernel.setBuffer("inBuff", inBuff)
+			      .setBuffer("outBuff", outBuff)
 			      .dispatch(Width, Height, 1)
 			      .waitUntilComplete();
 		}
 
 		// Copy buffer data to texture and then draw
-		lune::metal::ComputeKernel::bufferToTexture(dataBuffer, shaderTexture,
-		                                            1024 * 4,
+		lune::metal::ComputeKernel::bufferToTexture(outBuff, shaderTexture,
+		                                            Width * 4, // RGBA8
 		                                            {Width, Height, 1});
+
+		std::swap(inBuff, outBuff); // Not really necessary, could read/write to single buffer
 
 		context.draw();
 

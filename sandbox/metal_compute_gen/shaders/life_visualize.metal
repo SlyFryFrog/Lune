@@ -1,17 +1,21 @@
 #include <metal_stdlib>
 using namespace metal;
 
-struct VSOut {
+struct VSOut
+{
     float4 position [[position]];
     float2 uv;
 };
 
 vertex VSOut vertexMain(uint vid [[vertex_id]],
-                        const device float2* verts [[buffer(0)]])
+                        const device float2* verts [[buffer(0)]],
+                        constant float& zoom [[buffer(1)]])
 {
     VSOut out;
     out.position = float4(verts[vid], 0.0, 1.0);
-    out.uv = (verts[vid] + 1.0) * 0.3; // Extend uv to enlarge sim
+    float2 uv = (verts[vid] + 1.0) * 0.5;
+    uv = uv * (zoom ? zoom : 0.2f);
+    out.uv = uv;
     return out;
 }
 
