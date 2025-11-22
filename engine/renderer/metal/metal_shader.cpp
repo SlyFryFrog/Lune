@@ -14,7 +14,7 @@ namespace lune::metal
 	NS::SharedPtr<MTL::Library> Shader::createLibrary(const std::string& path) const
 	{
 		NS::SharedPtr<MTL::Library> library{};
-		NS::Error* error;
+		NS::Error* error{};
 		if (path.ends_with(".metal")) // Runtime-compiled shader
 		{
 			// Try to load shader from file on disk
@@ -28,6 +28,12 @@ namespace lune::metal
 		{
 			const auto nsPath = NS::String::string(path.c_str(), NS::UTF8StringEncoding);
 			library = NS::TransferPtr(m_device->newLibrary(nsPath, &error));
+		}
+
+		if (error)
+		{
+			std::cerr << "Failed to create library: " << error->localizedDescription()->cString(
+				NS::UTF8StringEncoding) << "\n";
 		}
 
 		return library;

@@ -15,7 +15,7 @@ namespace lune::metal
 
 	void Texture::create()
 	{
-		const auto pixelFmt = toMetal(m_info.pixelFormat);
+		const auto pixelFmt = toMetalPixelFormat(m_info.pixelFormat);
 		MTL::TextureDescriptor* desc = MTL::TextureDescriptor::texture2DDescriptor(
 			pixelFmt,
 			m_info.width,
@@ -25,10 +25,5 @@ namespace lune::metal
 		desc->setUsage(MTL::TextureUsageShaderRead | MTL::TextureUsageShaderWrite);
 
 		m_shaderTexture = NS::TransferPtr(m_info.device->newTexture(desc));
-	}
-
-	MTL::Texture* Texture::texture() const
-	{
-		return m_shaderTexture.get();
 	}
 }

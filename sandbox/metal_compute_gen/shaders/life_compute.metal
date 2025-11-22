@@ -6,6 +6,8 @@ kernel void computeNextStateBuffer(
     device uchar4* outBuff [[buffer(1)]],
     constant int& width [[buffer(2)]],
     constant int& height [[buffer(3)]],
+    constant uchar4& cellColor [[buffer(4)]],
+    constant uchar4& backgroundColor [[buffer(5)]],
     uint2 gid [[thread_position_in_grid]])
 {
     if (gid.x >= width || gid.y >= height) return;  // Out of bounds
@@ -13,7 +15,7 @@ kernel void computeNextStateBuffer(
     uint index = gid.y * width + gid.x;
 
     uchar4 cell = inBuff[index];
-    bool alive = (cell.r + cell.g + cell.b) > 0;    // If cell has color
+    bool alive = any(cell != backgroundColor);    // If cell has color
 
     int aliveNeighbors = 0;
 
@@ -29,7 +31,7 @@ kernel void computeNextStateBuffer(
             if (nx >= 0 && nx < width && ny >= 0 && ny < height)
             {
                 uchar4 n = inBuff[ny * width + nx];
-                aliveNeighbors += (n.r + n.g + n.b) > 0 ? 1 : 0;
+                aliveNeighbors += any(n > backgroundColor) ? 1 : 0;
             }
         }
     }
@@ -39,6 +41,6 @@ kernel void computeNextStateBuffer(
         (!alive && aliveNeighbors == 3);
 
     outBuff[index] = nextAlive
-        ? uchar4(255, 0, 0, 255)
-        : uchar4(0, 0, 0, 255);
+        ? (cellColor ? cellColor : uchar4(255, 0, 0, 255))
+        : backgroundColor;
 }

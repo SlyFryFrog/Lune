@@ -25,7 +25,10 @@ namespace lune::metal
 		NS::UInteger tgSize = m_pipeline->maxTotalThreadsPerThreadgroup();
 		NS::UInteger groups = (threadCount + tgSize - 1) / tgSize;
 
-		encoder->dispatchThreadgroups({groups, 1, 1}, {tgSize, 1, 1});
+		encoder->dispatchThreadgroups(
+			{groups, 1, 1},
+			{tgSize, 1, 1}
+			);
 		encoder->endEncoding();
 		commandBuffer->commit();
 		m_lastCommandBuffer = NS::TransferPtr(commandBuffer);
@@ -190,14 +193,21 @@ namespace lune::metal
 		const NS::Array* args = reflection->arguments();
 		for (NS::UInteger i = 0; i < args->count(); ++i)
 		{
-			if (const auto arg = static_cast<MTL::Argument*>(args->object(i));
-				arg->type() == MTL::ArgumentTypeBuffer)
-			{
-				const NS::String* nameObj = arg->name();
-				std::string name = nameObj ? nameObj->utf8String() : "<null>";
-				const NS::UInteger index = arg->index();
+			const auto arg = static_cast<MTL::Argument*>(args->object(i));
+			const NS::String* nameObj = arg->name();
+			std::string name = nameObj ? nameObj->utf8String() : "<null>";
+			const NS::UInteger index = arg->index();
 
+			switch (arg->type())
+			{
+			case MTL::ArgumentTypeBuffer:
 				m_bindings[name] = index;
+				break;
+			case MTL::ArgumentTypeTexture:
+				m_textureBindings[name] = index;
+				break;
+			default:
+				break;
 			}
 		}
 	}
@@ -304,7 +314,7 @@ namespace lune::metal
 	{
 		for (auto& [name, tex] : m_textures)
 		{
-			const NS::UInteger index = m_bindings[name];
+			const NS::UInteger index = m_textureBindings[name];
 			commandEncoder->setTexture(tex, index);
 		}
 	}

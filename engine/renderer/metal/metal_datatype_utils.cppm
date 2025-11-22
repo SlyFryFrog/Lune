@@ -323,4 +323,66 @@ namespace lune::metal
 			return "UnknownBindingAccess";
 		}
 	}
+
+
+	export enum PixelFormat
+	{
+		Undefined = 0,
+
+		R8_UNorm,
+		RG8_UNorm,
+		RGBA8_UNorm,
+		RGBA8_sRGB,
+
+		BGRA8_UNorm,
+		BGRA8_sRGB,
+
+		R16_Float,
+		RG16_Float,
+		RGBA16_Float,
+
+		R32_Float,
+		RG32_Float,
+		RGBA32_Float,
+	};
+
+
+	MTL::PixelFormat toMetalPixelFormat(const PixelFormat pixelFormat)
+	{
+		using PF = PixelFormat;
+
+		switch (pixelFormat)
+		{
+		case PF::R8_UNorm:
+			return MTL::PixelFormatR8Unorm;
+		case PF::RG8_UNorm:
+			return MTL::PixelFormatRG8Unorm;
+		case PF::RGBA8_UNorm:
+			return MTL::PixelFormatRGBA8Unorm;
+		case PF::RGBA8_sRGB:
+			return MTL::PixelFormatRGBA8Unorm_sRGB;
+
+		case PF::BGRA8_UNorm:
+			return MTL::PixelFormatBGRA8Unorm;
+		case PF::BGRA8_sRGB:
+			return MTL::PixelFormatBGRA8Unorm_sRGB;
+
+		case PF::R16_Float:
+			return MTL::PixelFormatR16Float;
+		case PF::RG16_Float:
+			return MTL::PixelFormatRG16Float;
+		case PF::RGBA16_Float:
+			return MTL::PixelFormatRGBA16Float;
+
+		case PF::R32_Float:
+			return MTL::PixelFormatR32Float;
+		case PF::RG32_Float:
+			return MTL::PixelFormatRG32Float;
+		case PF::RGBA32_Float:
+			return MTL::PixelFormatRGBA32Float;
+
+		default:
+			return MTL::PixelFormatInvalid;
+		}
+	}
 }

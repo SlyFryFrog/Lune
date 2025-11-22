@@ -6,11 +6,12 @@ import lune;
 constexpr size_t Width = 1024;
 constexpr size_t Height = 728;
 constexpr size_t IterationsPerFrame = 1; ///< Number of compute cycles per frame
-constexpr float Zoom = 1.0f;             ///< Currently set in shader manually, need to add caller
+constexpr float Zoom = 1.0f;              ///< Currently set in shader manually, need to add caller
+constexpr uint8_t CellColor[] = {255, 0, 0, 255};
+constexpr uint8_t BackgroundColor[] = {25, 25, 25, 255};
 
 class LifeVizShader final : public lune::metal::GraphicsShader
 {
-
 public:
 	explicit LifeVizShader(const lune::metal::GraphicsShaderCreateInfo& info) :
 		GraphicsShader(info)
@@ -68,10 +69,10 @@ int main()
 
 	// Create our texture
 	lune::metal::TextureContextCreateInfo textureContextInfo{
+		.pixelFormat = lune::metal::PixelFormat::RGBA8_UNorm,
 		.width = Width,
 		.height = Height,
 		.mipmapped = false,
-		.pixelFormat = lune::metal::PixelFormat::RGBA8_UNorm,
 	};
 	lune::metal::Texture shaderTexture(textureContextInfo);
 
@@ -95,7 +96,9 @@ int main()
 	auto computeShader = lune::metal::ComputeShader("shaders/life_compute.metal");
 	auto kernel = computeShader.kernel("computeNextStateBuffer")
 	                           .setByte("width", Width)
-	                           .setByte("height", Height);
+	                           .setByte("height", Height)
+	                           .setByte("cellColor", CellColor)
+	                           .setByte("backgroundColor", BackgroundColor);
 
 	vizShader->setTexture(shaderTexture.texture());
 
@@ -115,11 +118,12 @@ int main()
 		{
 			kernel.setBuffer("inBuff", inBuff)
 			      .setBuffer("outBuff", outBuff)
-			      .dispatch(Width, Height, 1)
-			      .waitUntilComplete();
+			      .dispatch(Width, Height, 1);
 
 			std::swap(inBuff, outBuff); // Not really necessary, could read/write to single buffer
 		}
+
+		kernel.waitUntilComplete();
 
 		// Copy buffer data to texture and then draw
 		lune::metal::ComputeKernel::bufferToTexture(inBuff, shaderTexture.texture(),
