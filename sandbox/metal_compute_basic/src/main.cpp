@@ -52,16 +52,15 @@ int main()
 	// Add our buffers to our shader
 	auto shader = lune::metal::ComputeShader("shaders/basic.metal");
 	auto kernelAdd = shader.kernel("add_arrays")
-	                       .setBytes("inputA", a.data(), a.size() * sizeof(float))
-	                       .setBytes("inputB", b.data(), b.size() * sizeof(float))
-	                       .setBuffer("outputAdd", outputAdd);
+	                       .setUniform("inputA", a.data(), a.size() * sizeof(float))
+	                       .setUniform("inputB", b.data(), b.size() * sizeof(float))
+	                       .setUniform("outputAdd", outputAdd.data(),
+	                                   outputAdd.size() * sizeof(float));
 	auto kernelMul = shader.kernel("multiply_arrays")
-	                       .setBuffer("inputA", a)
-	                       .setBuffer("inputB", b)
-	                       .setBuffer("outputMul", outputMul);
-
-	printKernelInfo(kernelAdd.reflection());
-	printKernelInfo(kernelMul.reflection());
+	                       .setUniform("inputA", a.data(), a.size() * sizeof(float))
+	                       .setUniform("inputB", b.data(), b.size() * sizeof(float))
+	                       .setUniform("outputMul", outputMul.data(),
+	                                   outputMul.size() * sizeof(float));
 
 	// Dispatch GPU
 	lune::Timer timer;

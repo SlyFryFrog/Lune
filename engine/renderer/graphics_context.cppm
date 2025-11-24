@@ -13,7 +13,5 @@ namespace lune
 		GraphicsContext& operator=(const GraphicsContext&) = delete;
 
 		static GraphicsContext& instance();
-
-		virtual void draw() = 0;
 	};
 }

@@ -125,7 +125,7 @@ namespace lune::metal
 		return *this;
 	}
 
-	ComputeKernel& ComputeKernel::setBytes(const std::string& name, const void* data,
+	ComputeKernel& ComputeKernel::setUniform(const std::string& name, const void* data,
 	                                       const size_t size, const BufferUsage options)
 	{
 		// Allocate a small temp buffer for byte data
@@ -138,7 +138,7 @@ namespace lune::metal
 		return *this;
 	}
 
-	ComputeKernel& ComputeKernel::setBuffer(const std::string& name,
+	ComputeKernel& ComputeKernel::setUniform(const std::string& name,
 	                                        MTL::Buffer* buffer)
 	{
 		m_buffers[name] = buffer;
@@ -146,7 +146,7 @@ namespace lune::metal
 		return *this;
 	}
 
-	ComputeKernel& ComputeKernel::setTexture(const std::string& name, MTL::Texture* texture)
+	ComputeKernel& ComputeKernel::setUniform(const std::string& name, MTL::Texture* texture)
 	{
 		m_textures[name] = texture;
 

@@ -5,6 +5,7 @@ module;
 
 #ifdef USE_METAL
 #include <QuartzCore/CAMetalLayer.hpp>
+#include <Metal/Metal.hpp>
 #endif
 export module lune:window;
 
@@ -44,6 +45,7 @@ namespace lune
 	 */
 	export class Window
 	{
+	protected:
 		GLFWwindow* m_handle{};
 		int m_width{};
 		int m_height{};
@@ -52,6 +54,7 @@ namespace lune
 
 #ifdef USE_METAL
 		NS::SharedPtr<CA::MetalLayer> m_metalLayer{};
+		mutable CA::MetalDrawable* m_currentDrawable{};
 #endif
 
 	public:
@@ -171,6 +174,12 @@ namespace lune
 		 * @brief Attaches a Metal layer to the GLFW window (macOS only).
 		 */
 		void attachMetalToGLFW();
+
+	public:
+		[[nodiscard]] CA::MetalDrawable* nextDrawable() const
+		{
+			return m_metalLayer->nextDrawable();
+		}
 #else
 		/**
 		 * @brief Attaches a Vulkan context to the GLFW window.
@@ -260,6 +269,11 @@ namespace lune
 			void setWindowMode(const WindowMode& mode)
 			{
 				m_rawWindow.setWindowMode(mode);
+			}
+
+			[[nodiscard]] CA::MetalDrawable* nextDrawable() const
+			{
+				return m_rawWindow.nextDrawable();
 			}
 		};
 	}

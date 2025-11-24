@@ -39,45 +39,6 @@ namespace lune::metal
 		m_commandQueue = NS::TransferPtr(m_device->newCommandQueue());
 	}
 
-	void MetalContext::sendRenderCommands(const NS::SharedPtr<CA::MetalDrawable>& drawable) const
-	{
-		const auto commandBuffer = NS::TransferPtr(m_commandQueue->commandBuffer());
-
-		const NS::SharedPtr<MTL::RenderPassDescriptor> renderPassDescriptor =
-			NS::TransferPtr(MTL::RenderPassDescriptor::alloc()->init());
-		MTL::RenderPassColorAttachmentDescriptor* colorAttachmentDescriptor =
-			renderPassDescriptor->colorAttachments()->object(0);
-		colorAttachmentDescriptor->setTexture(drawable->texture());
-		colorAttachmentDescriptor->setLoadAction(m_createInfo.loadAction);
-		colorAttachmentDescriptor->setClearColor(m_createInfo.clearColor);
-		colorAttachmentDescriptor->setStoreAction(m_createInfo.storeAction);
-
-		const NS::SharedPtr<MTL::RenderCommandEncoder> renderCommandEncoder = NS::TransferPtr(
-			commandBuffer->renderCommandEncoder(
-				renderPassDescriptor.get()));
-
-		for (const auto& shader : m_graphicsShaders)
-		{
-			shader->encodeRenderCommand(renderCommandEncoder.get());
-		}
-		renderCommandEncoder->endEncoding();
-
-		commandBuffer->presentDrawable(drawable.get());
-		commandBuffer->commit();
-		commandBuffer->waitUntilCompleted();
-	}
-
-	void MetalContext::draw()
-	{
-		for (const auto& layer : m_metalLayers)
-		{
-			if (NS::SharedPtr<CA::MetalDrawable> drawable = NS::TransferPtr(layer->nextDrawable()))
-			{
-				sendRenderCommands(drawable);
-			}
-		}
-	}
-
 	void MetalContext::addMetalLayer(const NS::SharedPtr<CA::MetalLayer>& metalLayer)
 	{
 		m_metalLayers.push_back(metalLayer);
@@ -92,10 +53,5 @@ namespace lune::metal
 				return ptr.get() == metalLayer.get();
 			}
 			);
-	}
-
-	void MetalContext::addShader(const std::shared_ptr<GraphicsShader>& metalShader)
-	{
-		m_graphicsShaders.push_back(metalShader);
 	}
 }

@@ -3,17 +3,16 @@ module;
 #ifdef USE_METAL
 #define GLFW_EXPOSE_NATIVE_COCOA
 #include <QuartzCore/QuartzCore.hpp>
+#include <Metal/Metal.hpp>
 #endif
 #include <GLFW/glfw3native.h>
-
 #include <iostream>
 #include <stdexcept>
 #include <string>
 module lune;
 
 #ifdef USE_METAL
-import :metal_context;
-import :objc_interop;
+import :metal;
 #endif
 
 import :input_manager;

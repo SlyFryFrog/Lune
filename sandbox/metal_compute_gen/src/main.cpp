@@ -6,43 +6,12 @@ import lune;
 constexpr size_t Width = 1024;
 constexpr size_t Height = 728;
 constexpr size_t IterationsPerFrame = 1; ///< Number of compute cycles per frame
-constexpr float Zoom = 1.0f;              ///< Currently set in shader manually, need to add caller
+constexpr float Zoom = 1.0f;             ///< Currently set in shader manually, need to add caller
 constexpr uint8_t CellColor[] = {255, 0, 0, 255};
 constexpr uint8_t BackgroundColor[] = {25, 25, 25, 255};
-
-class LifeVizShader final : public lune::metal::GraphicsShader
-{
-public:
-	explicit LifeVizShader(const lune::metal::GraphicsShaderCreateInfo& info) :
-		GraphicsShader(info)
-	{
-		createFullscreenQuad();
-	}
-
-	void setTexture(MTL::Texture* tex)
-	{
-		m_texture = tex;
-	}
-
-	void encodeRenderCommand(MTL::RenderCommandEncoder* enc) override
-	{
-		enc->setRenderPipelineState(m_pipelineState.get());
-		enc->setVertexBuffer(m_vertexBuffer.get(), 0, 0);
-		if (m_texture)
-			enc->setFragmentTexture(m_texture, 0);
-		enc->drawPrimitives(MTL::PrimitiveTypeTriangle, static_cast<NS::UInteger>(0), 6);
-	}
-
-private:
-	void createFullscreenQuad()
-	{
-		constexpr simd::float2 quad[] = {
-			{-1.f, -1.f}, {1.f, -1.f}, {-1.f, 1.f},
-			{-1.f, 1.f}, {1.f, -1.f}, {1.f, 1.f}
-		};
-		m_vertexBuffer = NS::TransferPtr(
-			m_device->newBuffer(&quad, sizeof(quad), MTL::ResourceStorageModeShared));
-	}
+constexpr simd::float2 quad[] = {
+	{-1.f, -1.f}, {1.f, -1.f}, {-1.f, 1.f},
+	{-1.f, 1.f}, {1.f, -1.f}, {1.f, 1.f}
 };
 
 
@@ -52,11 +21,6 @@ int main()
 
 	auto& context = lune::metal::MetalContext::instance();
 
-	// Create visual shader
-	lune::metal::GraphicsShaderCreateInfo vizInfo{.path = "shaders/life_visualize.metal"};
-	auto vizShader = std::make_shared<LifeVizShader>(vizInfo);
-	context.addShader(vizShader);
-
 	// Create window
 	const lune::WindowCreateInfo winInfo{
 		Width,
@@ -65,7 +29,6 @@ int main()
 		false
 	};
 	const lune::raii::Window window(winInfo);
-	window.show();
 
 	// Create our texture
 	lune::metal::TextureContextCreateInfo textureContextInfo{
@@ -74,7 +37,7 @@ int main()
 		.height = Height,
 		.mipmapped = false,
 	};
-	lune::metal::Texture shaderTexture(textureContextInfo);
+	lune::metal::Texture texture(textureContextInfo);
 
 	// Generate initial data to be fed into compute shader
 	std::vector<uint8_t> pixelData(Width * Height * 4);
@@ -95,13 +58,21 @@ int main()
 	// Compute shader setup
 	auto computeShader = lune::metal::ComputeShader("shaders/life_compute.metal");
 	auto kernel = computeShader.kernel("computeNextStateBuffer")
-	                           .setByte("width", Width)
-	                           .setByte("height", Height)
-	                           .setByte("cellColor", CellColor)
-	                           .setByte("backgroundColor", BackgroundColor);
+	                           .setUniform("width", Width)
+	                           .setUniform("height", Height)
+	                           .setUniform("cellColor", CellColor)
+	                           .setUniform("backgroundColor", BackgroundColor);
 
-	vizShader->setTexture(shaderTexture.texture());
 
+	lune::metal::GraphicsShader shader{"shaders/life_visualize.metal"};
+	lune::metal::GraphicsPipeline pipeline{shader};
+	lune::metal::RenderPass pass{&pipeline};
+
+	auto vertexBuffer = NS::TransferPtr(
+		context.device()->newBuffer(&quad, sizeof(quad), MTL::ResourceStorageModeShared));
+
+
+	window.show();
 	while (!window.shouldClose())
 	{
 		if (lune::InputManager::isJustPressed(lune::KEY_ESCAPE))
@@ -116,8 +87,8 @@ int main()
 		// Perform the simulation
 		for (size_t i = 0; i < IterationsPerFrame; ++i)
 		{
-			kernel.setBuffer("inBuff", inBuff)
-			      .setBuffer("outBuff", outBuff)
+			kernel.setUniform("inBuff", inBuff)
+			      .setUniform("outBuff", outBuff)
 			      .dispatch(Width, Height, 1);
 
 			std::swap(inBuff, outBuff); // Not really necessary, could read/write to single buffer
@@ -126,11 +97,19 @@ int main()
 		kernel.waitUntilComplete();
 
 		// Copy buffer data to texture and then draw
-		lune::metal::ComputeKernel::bufferToTexture(inBuff, shaderTexture.texture(),
+		lune::metal::ComputeKernel::bufferToTexture(inBuff, texture.texture(),
 		                                            Width * 4, // RGBA8
 		                                            {Width, Height, 1});
 
-		context.draw();
+		auto drawable = window.nextDrawable();
+		pass.begin(drawable);
+		{
+			pass.bind(pipeline);
+			pass.setVertexBuffer(vertexBuffer.get(), 0, 0);
+			pass.setFragmentTexture(texture.texture(), 0);
+			pass.draw(MTL::PrimitiveTypeTriangle, 6, 0);
+		}
+		pass.end(drawable);
 
 		lune::Window::pollEvents();
 	}

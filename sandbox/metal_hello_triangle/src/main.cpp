@@ -3,51 +3,16 @@
 
 import lune;
 
-
-class CustomShader final : public lune::metal::GraphicsShader
-{
-public:
-	explicit CustomShader(const lune::metal::GraphicsShaderCreateInfo& createInfo) :
-		GraphicsShader(createInfo)
-	{
-		createVertices();
-	}
-
-	void encodeRenderCommand(MTL::RenderCommandEncoder* renderCommandEncoder) override
-	{
-		renderCommandEncoder->setRenderPipelineState(m_pipelineState.get());
-		renderCommandEncoder->setVertexBuffer(m_vertexBuffer.get(), 0, 0);
-		constexpr MTL::PrimitiveType typeTriangle = MTL::PrimitiveTypeTriangle;
-		constexpr NS::UInteger vertexStart = 0;
-		constexpr NS::UInteger vertexCount = 3;
-		renderCommandEncoder->drawPrimitives(typeTriangle, vertexStart, vertexCount);
-	}
-
-private:
-	void createVertices()
-	{
-		constexpr simd::float3 vertices[] = {
-			{-0.5f, -0.5f, 0.0f}, {0.5f, -0.5f, 0.0f}, {0.0f, 0.5f, 0.0f}};
-
-		m_vertexBuffer = NS::TransferPtr(m_device->newBuffer(&vertices, sizeof(vertices),
-		                                                     MTL::ResourceStorageModeShared));
-	}
+constexpr simd::float3 vertices[] = {
+	{-0.5f, -0.5f, 0.0f},
+	{0.5f, -0.5f, 0.0f},
+	{0.0f, 0.5f, 0.0f}
 };
 
 
 int main()
 {
 	lune::setWorkingDirectory(); // So we can use local paths from executable
-
-	// Get our renderer's context
-	lune::metal::MetalContext& context = lune::metal::MetalContext::instance();
-
-	// Add our custom shader to the renderer
-	lune::metal::GraphicsShaderCreateInfo shaderCreateInfo = {
-		.path = "shaders/basic.metal", // Must be set for each createInfo struct
-	};
-	const auto shader = std::make_shared<CustomShader>(shaderCreateInfo);
-	context.addShader(shader);
 
 	// Initialize our window
 	const lune::WindowCreateInfo windowCreateInfo = {
@@ -56,18 +21,33 @@ int main()
 		.title = "Lune: Sandbox - Metal Renderer",
 		.resizable = true,
 	};
-
 	const lune::raii::Window window(windowCreateInfo);
-	window.show();
+
+	// Get our renderer's context
+	const lune::metal::MetalContext& context = lune::metal::MetalContext::instance();
+
+	const lune::metal::GraphicsShader module{"shaders/basic.metal"};
+	lune::metal::GraphicsPipeline pipeline{module};
+	lune::metal::RenderPass pass{&pipeline};
+
+	const MTL::Buffer* vertexBuff = context.device()->newBuffer(vertices, sizeof(vertices),
+																MTL::ResourceStorageModeShared);
 
 	// Perform our render loop
+	window.show();
 	while (!window.shouldClose())
 	{
 		if (lune::InputManager::isJustPressed(lune::KEY_ESCAPE))
 			window.setShouldClose(true);
 
-		context.draw();
-
+		const auto drawable = window.nextDrawable();
+		pass.begin(drawable);
+		{
+			pass.bind(pipeline);
+			pass.setVertexBuffer(vertexBuff, 0, 0);
+			pass.draw(MTL::PrimitiveTypeTriangle, 3, 0);
+		}
+		pass.end(drawable);
 		lune::Window::pollEvents();
 	}
 

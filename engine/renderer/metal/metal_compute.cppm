@@ -3,7 +3,6 @@ module;
 #include <string>
 #include <Metal/Metal.hpp>
 #include <map>
-#include <span>
 export module lune:metal_compute;
 
 import :metal_shader;
@@ -11,15 +10,6 @@ import :metal_datatype_utils;
 
 namespace lune::metal
 {
-	export enum BufferUsage
-	{
-		Managed = MTL::StorageModeManaged,
-		Memoryless = MTL::StorageModeMemoryless,
-		Private = MTL::ResourceStorageModePrivate,
-		Shared = MTL::ResourceStorageModeShared
-	};
-
-
 	export struct KernelReflectionInfo
 	{
 		std::string kernelName;
@@ -91,18 +81,14 @@ namespace lune::metal
 		ComputeKernel& dispatch(const MTL::Size& threadGroups, const MTL::Size& threadsPerGroup);
 
 		template <typename T>
-		ComputeKernel& setByte(const std::string& name, T& data,
+		ComputeKernel& setUniform(const std::string& name, T& data,
 		                       BufferUsage options = BufferUsage::Shared);
-		ComputeKernel& setBytes(const std::string& name, const void* data, size_t size,
+		ComputeKernel& setUniform(const std::string& name, const void* data, size_t size,
 		                        BufferUsage options = BufferUsage::Shared);
 
-		template <typename T>
-		ComputeKernel& setBuffer(const std::string& name, const std::vector<T>& vec,
-		                         BufferUsage options = BufferUsage::Shared);
+		ComputeKernel& setUniform(const std::string& name, MTL::Buffer* buffer);
 
-		ComputeKernel& setBuffer(const std::string& name, MTL::Buffer* buffer);
-
-		ComputeKernel& setTexture(const std::string& name, MTL::Texture* texture);
+		ComputeKernel& setUniform(const std::string& name, MTL::Texture* texture);
 
 		MTL::Texture* texture(const std::string& name);
 
@@ -134,7 +120,7 @@ namespace lune::metal
 
 
 	template <typename T>
-	ComputeKernel& ComputeKernel::setByte(const std::string& name, T& data,
+	ComputeKernel& ComputeKernel::setUniform(const std::string& name, T& data,
 	                                      const BufferUsage options)
 	{
 		// Allocate a small temp buffer for byte data
@@ -144,21 +130,6 @@ namespace lune::metal
 		std::memcpy(temp->contents(), &data, sizeof(T));
 		m_buffers[name] = temp;
 
-		return *this;
-	}
-
-	template <typename T>
-	ComputeKernel& ComputeKernel::setBuffer(const std::string& name, const std::vector<T>& vec,
-	                                        const BufferUsage options)
-	{
-		const auto device = m_pipeline->device();
-		const size_t byteSize = vec.size() * sizeof(T);
-
-		auto mtlBuffer = device->newBuffer(byteSize, static_cast<MTL::ResourceOptions>(options));
-
-		std::memcpy(mtlBuffer->contents(), vec.data(), byteSize);
-
-		m_buffers[name] = mtlBuffer;
 		return *this;
 	}
 

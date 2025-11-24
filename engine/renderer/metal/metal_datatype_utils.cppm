@@ -5,6 +5,37 @@ export module lune:metal_datatype_utils;
 
 namespace lune::metal
 {
+	export enum BufferUsage
+	{
+		Managed = MTL::StorageModeManaged,
+		Memoryless = MTL::StorageModeMemoryless,
+		Private = MTL::ResourceStorageModePrivate,
+		Shared = MTL::ResourceStorageModeShared
+	};
+
+
+	export enum PixelFormat
+	{
+		Undefined = 0,
+
+		R8_UNorm,
+		RG8_UNorm,
+		RGBA8_UNorm,
+		RGBA8_sRGB,
+
+		BGRA8_UNorm,
+		BGRA8_sRGB,
+
+		R16_Float,
+		RG16_Float,
+		RGBA16_Float,
+
+		R32_Float,
+		RG32_Float,
+		RGBA32_Float,
+	};
+
+
 	export constexpr std::string_view to_string(const MTL::DataType type)
 	{
 		switch (type)
@@ -323,28 +354,6 @@ namespace lune::metal
 			return "UnknownBindingAccess";
 		}
 	}
-
-
-	export enum PixelFormat
-	{
-		Undefined = 0,
-
-		R8_UNorm,
-		RG8_UNorm,
-		RGBA8_UNorm,
-		RGBA8_sRGB,
-
-		BGRA8_UNorm,
-		BGRA8_sRGB,
-
-		R16_Float,
-		RG16_Float,
-		RGBA16_Float,
-
-		R32_Float,
-		RG32_Float,
-		RGBA32_Float,
-	};
 
 
 	MTL::PixelFormat toMetalPixelFormat(const PixelFormat pixelFormat)
