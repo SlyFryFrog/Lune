@@ -8,25 +8,6 @@ export module lune:metal_shader;
 
 namespace lune::metal
 {
-	export struct GraphicsReflectionInfo
-	{
-		struct Resource
-		{
-			std::string name;
-
-			NS::UInteger index;
-			MTL::ArgumentType type;
-			MTL::DataType dataType;
-
-			bool isVertexStage;
-			bool isFragmentStage;
-			size_t dataSize;
-		};
-
-		std::vector<Resource> resources;
-	};
-
-
 	export struct GraphicsPipelineDesc
 	{
 		MTL::PixelFormat colorFormat = MTL::PixelFormatBGRA8Unorm;
@@ -41,11 +22,28 @@ namespace lune::metal
 	};
 
 
-	export class GraphicsShader
+	export class Shader
+	{
+	protected:
+		MTL::Device* m_device{};
+		NS::SharedPtr<MTL::Library> m_library;
+
+	public:
+		explicit Shader(MTL::Device* device);
+		virtual ~Shader() = default;
+
+		void createLibrary(const std::string& path, NS::Error** error);
+
+		[[nodiscard]] MTL::Device* device() const
+		{
+			return m_device;
+		}
+	};
+
+
+	export class GraphicsShader final : public Shader
 	{
 		MTL::Device* m_device{};
-
-		NS::SharedPtr<MTL::Library> m_library;
 
 		NS::SharedPtr<MTL::Function> m_vertex;
 		NS::SharedPtr<MTL::Function> m_fragment;
@@ -56,11 +54,6 @@ namespace lune::metal
 		                      const std::string& fsName = "fragmentMain",
 		                      MTL::Device* device = nullptr);
 
-		[[nodiscard]] MTL::Device* device() const
-		{
-			return m_device;
-		}
-
 		[[nodiscard]] MTL::Function* vertex() const
 		{
 			return m_vertex.get();
@@ -70,9 +63,6 @@ namespace lune::metal
 		{
 			return m_fragment.get();
 		}
-
-	private:
-		void createLibrary(const std::string& path, NS::Error** error);
 	};
 
 
@@ -82,7 +72,6 @@ namespace lune::metal
 
 		NS::SharedPtr<MTL::RenderPipelineState> m_state;
 		GraphicsPipelineDesc m_desc;
-		GraphicsReflectionInfo m_reflection;
 
 	public:
 		explicit GraphicsPipeline(const GraphicsShader& shader,
@@ -108,15 +97,8 @@ namespace lune::metal
 			return m_desc;
 		}
 
-		[[nodiscard]] const GraphicsReflectionInfo& reflection() const
-		{
-			return m_reflection;
-		}
-
 	private:
 		void createPipeline();
-
-		GraphicsReflectionInfo buildReflection(const MTL::RenderPipelineReflection* reflection);
 	};
 
 
@@ -134,13 +116,15 @@ namespace lune::metal
 		}
 
 		template <typename T>
-		void setUniform(const std::string& name, const T& value)
+		Material& setUniform(const std::string& name, const T& value)
 		{
 			setUniform(name, &value, sizeof(T));
+
+			return *this;
 		}
 
-		void setUniform(const std::string& name, const void* data, size_t size);
-		void setUniform(const std::string& name, MTL::Texture* texture);
+		Material& setUniform(const std::string& name, const void* data, size_t size);
+		Material& setUniform(const std::string& name, MTL::Texture* texture);
 
 		void bind(MTL::RenderCommandEncoder* encoder) const;
 
@@ -158,10 +142,14 @@ namespace lune::metal
 		NS::SharedPtr<MTL::CommandBuffer> m_commandBuffer{};
 
 	public:
-		explicit RenderPass(const GraphicsPipeline* pipeline) :
-			m_pipeline(pipeline)
+		[[nodiscard]] MTL::CommandBuffer* commandBuffer() const
 		{
-			m_encoder->setRenderPipelineState(m_pipeline->state());
+			return m_commandBuffer.get();
+		}
+
+		[[nodiscard]] MTL::RenderCommandEncoder* encoder() const
+		{
+			return m_encoder;
 		}
 
 		void bind(const GraphicsPipeline& pipeline) const
@@ -174,42 +162,10 @@ namespace lune::metal
 			material.bind(m_encoder);
 		}
 
-		void setVertexBuffer(const MTL::Buffer* buffer, const uint offset, const uint index) const
-		{
-			m_encoder->setVertexBuffer(buffer, offset, index);
-		}
-
-		void setFragmentBuffer(const MTL::Buffer* buffer, const uint offset, const uint index) const
-		{
-			m_encoder->setFragmentBuffer(buffer, offset, index);
-		}
-
-		void setFragmentTexture(const MTL::Texture* texture, const uint index) const
-		{
-			m_encoder->setFragmentTexture(texture, index);
-		}
-
 		void begin(const CA::MetalDrawable* drawable);
 
-		void end(const CA::MetalDrawable* drawable) const;
+		void end(const CA::MetalDrawable* drawable, bool waitUntilComplete = true) const;
 
-		void draw(MTL::PrimitiveType type, uint vertexCount, uint startVertex) const;
-	};
-
-	export class Shader
-	{
-	protected:
-		MTL::Device* m_device{};
-
-	public:
-		explicit Shader(MTL::Device* device);
-		virtual ~Shader() = default;
-
-		[[nodiscard]] NS::SharedPtr<MTL::Library> createLibrary(const std::string& path) const;
-
-		[[nodiscard]] MTL::Device* device() const
-		{
-			return m_device;
-		}
+		void draw(MTL::PrimitiveType type, uint startVertex, uint vertexCount) const;
 	};
 }

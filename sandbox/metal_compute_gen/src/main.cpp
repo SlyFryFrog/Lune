@@ -1,6 +1,5 @@
 #include <vector>
 #include <Metal/Metal.hpp>
-#include <simd/vector_types.h>
 import lune;
 
 constexpr size_t Width = 1024;
@@ -9,7 +8,7 @@ constexpr size_t IterationsPerFrame = 1; ///< Number of compute cycles per frame
 constexpr float Zoom = 1.0f;             ///< Currently set in shader manually, need to add caller
 constexpr uint8_t CellColor[] = {255, 0, 0, 255};
 constexpr uint8_t BackgroundColor[] = {25, 25, 25, 255};
-constexpr simd::float2 quad[] = {
+constexpr lune::Vec2 quad[] = {
 	{-1.f, -1.f}, {1.f, -1.f}, {-1.f, 1.f},
 	{-1.f, 1.f}, {1.f, -1.f}, {1.f, 1.f}
 };
@@ -64,12 +63,17 @@ int main()
 	                           .setUniform("backgroundColor", BackgroundColor);
 
 
-	lune::metal::GraphicsShader shader{"shaders/life_visualize.metal"};
+	lune::metal::GraphicsShader shader{
+		"shaders/life_visualize.metal",
+		"vertexMain",
+		"fragmentMain",
+	};
 	lune::metal::GraphicsPipeline pipeline{shader};
-	lune::metal::RenderPass pass{&pipeline};
+	lune::metal::Material material{pipeline};
+	lune::metal::RenderPass pass{};
 
 	auto vertexBuffer = NS::TransferPtr(
-		context.device()->newBuffer(&quad, sizeof(quad), MTL::ResourceStorageModeShared));
+		context.device()->newBuffer(quad, sizeof(quad), MTL::ResourceStorageModeShared));
 
 
 	window.show();
@@ -104,10 +108,11 @@ int main()
 		auto drawable = window.nextDrawable();
 		pass.begin(drawable);
 		{
+			material.setUniform("verts", vertexBuffer->contents(), vertexBuffer->length());
+			material.setUniform("tex", texture.texture());
+			pass.bind(material);
 			pass.bind(pipeline);
-			pass.setVertexBuffer(vertexBuffer.get(), 0, 0);
-			pass.setFragmentTexture(texture.texture(), 0);
-			pass.draw(MTL::PrimitiveTypeTriangle, 6, 0);
+			pass.draw(MTL::PrimitiveTypeTriangle, 0, 6);
 		}
 		pass.end(drawable);
 

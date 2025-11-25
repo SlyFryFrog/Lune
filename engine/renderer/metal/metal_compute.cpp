@@ -126,7 +126,7 @@ namespace lune::metal
 	}
 
 	ComputeKernel& ComputeKernel::setUniform(const std::string& name, const void* data,
-	                                       const size_t size, const BufferUsage options)
+	                                         const size_t size, const BufferUsage options)
 	{
 		// Allocate a small temp buffer for byte data
 		const auto device = m_pipeline->device();
@@ -139,7 +139,7 @@ namespace lune::metal
 	}
 
 	ComputeKernel& ComputeKernel::setUniform(const std::string& name,
-	                                        MTL::Buffer* buffer)
+	                                         MTL::Buffer* buffer)
 	{
 		m_buffers[name] = buffer;
 
@@ -350,21 +350,32 @@ namespace lune::metal
 
 	void ComputeShader::createPipelines()
 	{
-		const NS::SharedPtr<MTL::Library> library = createLibrary(m_path);
-		const NS::Array* functionNames = library->functionNames();
+		NS::Error* error = nullptr;
+		createLibrary(m_path, &error);
+
+		if (error)
+		{
+			if (const auto desc = error->localizedDescription())
+				std::cerr << "Failed to create library: " << desc->cString(NS::UTF8StringEncoding)
+					<< "\n";
+			else
+				std::cerr << "Failed to create library: unknown error\n";
+		}
+
+		const NS::Array* functionNames = m_library->functionNames();
 
 		for (int i = 0; i < functionNames->count(); ++i)
 		{
 			NS::String* nsName = functionNames->object<NS::String>(i);
 			std::string name = functionNames->object<NS::String>(i)->utf8String();
-			NS::SharedPtr<MTL::Function> function = NS::TransferPtr(library->newFunction(nsName));
+			NS::SharedPtr<MTL::Function> function = NS::TransferPtr(m_library->newFunction(nsName));
 			if (!function)
 				continue;
 
 			if (function->functionType() == MTL::FunctionTypeKernel)
 			{
 				m_kernels[name] = std::make_unique<ComputeKernel>(m_device, name);
-				m_kernels[name]->createPipeline(library.get());
+				m_kernels[name]->createPipeline(m_library.get());
 			}
 		}
 	}

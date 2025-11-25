@@ -1,14 +1,11 @@
 #include <Metal/Metal.hpp>
-#include <simd/vector_types.h>
-
 import lune;
 
-constexpr simd::float3 vertices[] = {
+constexpr lune::Vec3 vertices[] = {
 	{-0.5f, -0.5f, 0.0f},
 	{0.5f, -0.5f, 0.0f},
 	{0.0f, 0.5f, 0.0f}
 };
-
 
 int main()
 {
@@ -23,15 +20,10 @@ int main()
 	};
 	const lune::raii::Window window(windowCreateInfo);
 
-	// Get our renderer's context
-	const lune::metal::MetalContext& context = lune::metal::MetalContext::instance();
-
-	const lune::metal::GraphicsShader module{"shaders/basic.metal"};
+	lune::metal::GraphicsShader module{"shaders/basic.metal"};
 	lune::metal::GraphicsPipeline pipeline{module};
-	lune::metal::RenderPass pass{&pipeline};
-
-	const MTL::Buffer* vertexBuff = context.device()->newBuffer(vertices, sizeof(vertices),
-																MTL::ResourceStorageModeShared);
+	lune::metal::Material material{pipeline};
+	lune::metal::RenderPass pass{};
 
 	// Perform our render loop
 	window.show();
@@ -43,9 +35,10 @@ int main()
 		const auto drawable = window.nextDrawable();
 		pass.begin(drawable);
 		{
+			material.setUniform("vertexPositions", vertices, sizeof(vertices));
+			pass.bind(material);
 			pass.bind(pipeline);
-			pass.setVertexBuffer(vertexBuff, 0, 0);
-			pass.draw(MTL::PrimitiveTypeTriangle, 3, 0);
+			pass.draw(MTL::PrimitiveTypeTriangle, 0, 3);
 		}
 		pass.end(drawable);
 		lune::Window::pollEvents();

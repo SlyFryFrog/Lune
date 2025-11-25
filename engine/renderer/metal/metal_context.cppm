@@ -7,6 +7,7 @@ export module lune:metal_context;
 
 import :graphics_context;
 import :metal_shader;
+import :metal_datatype_utils;
 
 namespace lune::metal
 {
@@ -66,4 +67,11 @@ namespace lune::metal
 			return m_createInfo;
 		}
 	};
+
+	export const MTL::Buffer* makeBuffer(const void* data, const size_t size,
+	                              const BufferUsage bufferUsage,
+	                              MTL::Device* device = MetalContext::instance().device())
+	{
+		return device->newBuffer(data, size, bufferUsage);
+	}
 }

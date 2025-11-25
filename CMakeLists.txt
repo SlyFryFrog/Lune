@@ -29,6 +29,14 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
 
+if(LUNE_USE_SIMD)
+    add_compile_definitions(LUNE_USE_SIMD)
+endif()
+
+if(LUNE_USE_GLM)
+    add_compile_definitions(LUNE_USE_GLM)
+endif()
+
 #################################
 # Set constants for the project #
 #################################

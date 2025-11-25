@@ -12,7 +12,7 @@ vertexMain(uint vertexID [[vertex_id]],
     return vertexOutPositions;
 }
 
-fragment float4 fragmentMain(float4 vertexOutPositions [[stage_in]])
+fragment float4 fragmentMain()
 {
-    return float4(182.0f/255.0f, 240.0f/255.0f, 228.0f/255.0f, 1.0f);
+    return float4(182.0f/255.0f, 0.0f/255.0f, 228.0f/255.0f, 1.0f);
 }

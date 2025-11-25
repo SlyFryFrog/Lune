@@ -3,6 +3,8 @@ export module lune;
 export import :file;
 export import :timer;
 
+export import :vector;
+
 export import :window;
 export import :input_manager;
 export import :input_event;
