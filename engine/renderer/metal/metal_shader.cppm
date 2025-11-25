@@ -50,9 +50,9 @@ namespace lune::metal
 
 	public:
 		explicit GraphicsShader(const std::string& path,
-		                      const std::string& vsName = "vertexMain",
-		                      const std::string& fsName = "fragmentMain",
-		                      MTL::Device* device = nullptr);
+		                        const std::string& vsName = "vertexMain",
+		                        const std::string& fsName = "fragmentMain",
+		                        MTL::Device* device = nullptr);
 
 		[[nodiscard]] MTL::Function* vertex() const
 		{
@@ -68,10 +68,21 @@ namespace lune::metal
 
 	export class GraphicsPipeline
 	{
+		struct ArgumentInfo
+		{
+			std::string name;
+			uint32_t index;
+			uint32_t arrayLength;
+			MTL::ArgumentType type;
+		};
+
 		const GraphicsShader* m_shader{};
 
 		NS::SharedPtr<MTL::RenderPipelineState> m_state;
 		GraphicsPipelineDesc m_desc;
+
+		std::vector<ArgumentInfo> m_vertexArguments;
+		std::vector<ArgumentInfo> m_fragmentArguments;;
 
 	public:
 		explicit GraphicsPipeline(const GraphicsShader& shader,
@@ -97,8 +108,19 @@ namespace lune::metal
 			return m_desc;
 		}
 
+		[[nodiscard]] const std::vector<ArgumentInfo>& vertexArguments() const
+		{
+			return m_vertexArguments;
+		}
+
+		[[nodiscard]] const std::vector<ArgumentInfo>& fragmentArguments() const
+		{
+			return m_fragmentArguments;
+		}
+
 	private:
 		void createPipeline();
+		static std::vector<ArgumentInfo> parse(const NS::Array* arguments);
 	};
 
 

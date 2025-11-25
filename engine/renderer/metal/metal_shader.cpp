@@ -47,7 +47,7 @@ namespace lune::metal
 	                               MTL::Device* device) :
 		Shader(device)
 	{
-		NS::Error* error = nullptr;
+		NS::Error* error{};
 		createLibrary(path, &error);
 
 		if (error)
@@ -83,8 +83,8 @@ namespace lune::metal
 
 	void GraphicsPipeline::createPipeline()
 	{
-		NS::Error* error = nullptr;
-		MTL::RenderPipelineReflection* reflection = nullptr;
+		NS::Error* error{};
+		MTL::RenderPipelineReflection* reflection{};
 
 		const NS::SharedPtr<MTL::RenderPipelineDescriptor> descriptor = NS::TransferPtr(
 			MTL::RenderPipelineDescriptor::alloc()->init());
@@ -111,7 +111,7 @@ namespace lune::metal
 		m_state = NS::TransferPtr(m_shader->device()->newRenderPipelineState(
 				descriptor.get(),
 				MTL::PipelineOptionArgumentInfo,
-				nullptr,
+				&reflection,
 				&error)
 			);
 
@@ -122,7 +122,36 @@ namespace lune::metal
 					<< error->localizedDescription()->cString(NS::UTF8StringEncoding) << "\n";
 			else
 				std::cerr << "Failed to create pipeline state: unknown error\n";
+
+			return;
 		}
+
+		m_vertexArguments = parse(reflection->vertexArguments());
+		m_fragmentArguments = parse(reflection->fragmentArguments());
+	}
+
+	std::vector<GraphicsPipeline::ArgumentInfo> GraphicsPipeline::parse(const NS::Array* arguments)
+	{
+		std::vector<ArgumentInfo> out;
+		out.reserve(arguments->count());
+
+		for (int i = 0; i < arguments->count(); ++i)
+		{
+			// Extract the argument name
+			const auto arg = reinterpret_cast<MTL::Argument*>(arguments->object(i));
+			const NS::String* nameObj = arg->name();
+			const std::string name = nameObj ? nameObj->utf8String() : "<null>";
+
+			// Add argument to array with all relevant information
+			out.push_back({
+				.name = name,
+				.index = static_cast<uint32_t>(arg->index()),
+				.arrayLength = static_cast<uint32_t>(arg->arrayLength()),
+				.type = arg->type(),
+			});
+		}
+
+		return out;
 	}
 
 	Material& Material::setUniform(const std::string& name, const void* data, const size_t size)
@@ -157,28 +186,44 @@ namespace lune::metal
 		if (!encoder)
 			return;
 
-		// Simple, deterministic binding: bind buffers and textures sequentially
-		// to both vertex and fragment stages starting at slot 0
-		uint index = 0;
-		for (const auto& [name, buf] : m_uniformBuffers)
+		for (auto& arg : m_pipeline->vertexArguments())
 		{
-			if (buf)
+			if (arg.type == MTL::ArgumentTypeBuffer)
 			{
-				encoder->setVertexBuffer(buf.get(), 0, index);
-				encoder->setFragmentBuffer(buf.get(), 0, index);
+				auto it = m_uniformBuffers.find(arg.name);
+				if (it != m_uniformBuffers.end())
+				{
+					encoder->setVertexBuffer(it->second.get(), 0, arg.index);
+				}
 			}
-			++index;
+			else if (arg.type == MTL::ArgumentTypeTexture)
+			{
+				auto it = m_textures.find(arg.name);
+				if (it != m_textures.end())
+				{
+					encoder->setVertexTexture(it->second, arg.index);
+				}
+			}
 		}
 
-		index = 0;
-		for (const auto& [name, tex] : m_textures)
+		for (auto& arg : m_pipeline->fragmentArguments())
 		{
-			if (tex)
+			if (arg.type == MTL::ArgumentTypeBuffer)
 			{
-				encoder->setFragmentTexture(tex, index);
-				encoder->setVertexTexture(tex, index);
+				auto it = m_uniformBuffers.find(arg.name);
+				if (it != m_uniformBuffers.end())
+				{
+					encoder->setFragmentBuffer(it->second.get(), 0, arg.index);
+				}
 			}
-			++index;
+			else if (arg.type == MTL::ArgumentTypeTexture)
+			{
+				auto it = m_textures.find(arg.name);
+				if (it != m_textures.end())
+				{
+					encoder->setFragmentTexture(it->second, arg.index);
+				}
+			}
 		}
 	}
 

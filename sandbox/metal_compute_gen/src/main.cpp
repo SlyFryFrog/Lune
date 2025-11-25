@@ -13,7 +13,6 @@ constexpr lune::Vec2 quad[] = {
 	{-1.f, 1.f}, {1.f, -1.f}, {1.f, 1.f}
 };
 
-
 int main()
 {
 	lune::setWorkingDirectory();
@@ -62,7 +61,6 @@ int main()
 	                           .setUniform("cellColor", CellColor)
 	                           .setUniform("backgroundColor", BackgroundColor);
 
-
 	lune::metal::GraphicsShader shader{
 		"shaders/life_visualize.metal",
 		"vertexMain",
@@ -97,7 +95,6 @@ int main()
 
 			std::swap(inBuff, outBuff); // Not really necessary, could read/write to single buffer
 		}
-
 		kernel.waitUntilComplete();
 
 		// Copy buffer data to texture and then draw
@@ -108,9 +105,9 @@ int main()
 		auto drawable = window.nextDrawable();
 		pass.begin(drawable);
 		{
-			material.setUniform("verts", vertexBuffer->contents(), vertexBuffer->length());
-			material.setUniform("tex", texture.texture());
 			pass.bind(material);
+			material.setUniform("verts", vertexBuffer->contents(), vertexBuffer->length())
+			        .setUniform("tex", texture.texture());
 			pass.bind(pipeline);
 			pass.draw(MTL::PrimitiveTypeTriangle, 0, 6);
 		}

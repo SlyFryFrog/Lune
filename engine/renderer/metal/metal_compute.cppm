@@ -53,8 +53,8 @@ namespace lune::metal
 		NS::SharedPtr<MTL::Function> m_function;
 		MTL::Device* m_device;
 
-		std::map<std::string, NS::UInteger> m_bindings;
-		std::map<std::string, NS::UInteger> m_textureBindings;
+		std::map<std::string, NS::UInteger> m_bindings{};
+		std::map<std::string, NS::UInteger> m_textureBindings{};
 		std::map<std::string, MTL::Buffer*> m_buffers;
 		std::map<std::string, MTL::Texture*> m_textures;
 
