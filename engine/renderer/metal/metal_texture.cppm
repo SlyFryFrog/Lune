@@ -3,7 +3,7 @@ module;
 export module lune:metal_texture;
 
 import :metal_context;
-import :metal_datatype_utils;
+import :metal_mappings;
 
 namespace lune::metal
 {

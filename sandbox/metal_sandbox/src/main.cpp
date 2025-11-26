@@ -45,16 +45,16 @@ int main()
 		const auto drawable = window.nextDrawable();
 		pass.begin(drawable);
 
-		materialA.setUniform("vertexPositions", verticesA, sizeof(verticesA))
+		materialA.setUniform("vertexPositions", verticesA)
 		         .setUniform("uColor", colorA);
 		pass.bind(materialA);
 		pass.bind(pipeline);
-		pass.draw(MTL::PrimitiveTypeTriangle, 0, 3);
+		pass.draw(lune::Triangle, 0, 3);
 
-		materialB.setUniform("vertexPositions", verticesB, sizeof(verticesB))
+		materialB.setUniform("vertexPositions", verticesB)
 		         .setUniform("uColor", colorB);
 		pass.bind(materialB);
-		pass.draw(MTL::PrimitiveTypeTriangle, 0, 3);
+		pass.draw(lune::Triangle, 0, 3);
 
 		pass.end(drawable);
 		lune::Window::pollEvents();

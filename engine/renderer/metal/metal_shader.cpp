@@ -15,7 +15,6 @@ namespace lune::metal
 
 	void Shader::createLibrary(const std::string& path, NS::Error** error)
 	{
-		// Defensive: clear previous library
 		m_library = nullptr;
 
 		if (path.ends_with(".metal")) // Runtime-compiled shader
@@ -45,10 +44,18 @@ namespace lune::metal
 	                               const std::string& vsName,
 	                               const std::string& fsName,
 	                               MTL::Device* device) :
-		Shader(device)
+		Shader(device),
+		m_path(path),
+		m_vertexMainName(vsName),
+		m_fragmentMainName(fsName)
+	{
+		create();
+	}
+
+	void GraphicsShader::create()
 	{
 		NS::Error* error{};
-		createLibrary(path, &error);
+		createLibrary(m_path, &error);
 
 		if (error)
 		{
@@ -65,10 +72,10 @@ namespace lune::metal
 			{
 				m_vertex = NS::TransferPtr(
 					m_library->newFunction(
-						NS::String::string(vsName.c_str(), NS::UTF8StringEncoding)));
+						NS::String::string(m_vertexMainName.c_str(), NS::UTF8StringEncoding)));
 				m_fragment = NS::TransferPtr(
 					m_library->newFunction(
-						NS::String::string(fsName.c_str(), NS::UTF8StringEncoding)));
+						NS::String::string(m_fragmentMainName.c_str(), NS::UTF8StringEncoding)));
 			}
 		}
 	}
@@ -154,13 +161,13 @@ namespace lune::metal
 		return out;
 	}
 
-	Material& Material::setUniform(const std::string& name, const void* data, const size_t size)
+	Material& Material::setUniform(const std::string& name, const void* data, const size_t size, const BufferUsage usage)
 	{
 		if (!m_pipeline)
 			return *this;
 
 		auto buffer = NS::TransferPtr(
-			m_pipeline->device()->newBuffer(size, MTL::ResourceStorageModeShared));
+			m_pipeline->device()->newBuffer(size, toMetal(usage)));
 		if (!buffer)
 		{
 			std::cerr << "Failed to create uniform buffer for '" << name << "'\n";
@@ -170,14 +177,24 @@ namespace lune::metal
 		// Copy data to the newly created buffer and set as uniform
 		std::memcpy(buffer->contents(), data, size);
 		m_uniformBuffers[name] = buffer;
-
 		return *this;
 	}
 
 	Material& Material::setUniform(const std::string& name, MTL::Texture* texture)
 	{
-		m_textures[name] = texture;
+		if (!texture)
+			return *this;
 
+		m_textures[name] = NS::RetainPtr(texture);
+		return *this;
+	}
+
+	Material& Material::setUniform(const std::string& name, MTL::Buffer* buffer)
+	{
+		if (!buffer)
+			return *this;
+
+		m_uniformBuffers[name] = NS::RetainPtr(buffer);
 		return *this;
 	}
 
@@ -186,6 +203,7 @@ namespace lune::metal
 		if (!encoder)
 			return;
 
+		// iterate through all vertex and fragment args and set buffers
 		for (auto& arg : m_pipeline->vertexArguments())
 		{
 			if (arg.type == MTL::ArgumentTypeBuffer)
@@ -201,7 +219,7 @@ namespace lune::metal
 				auto it = m_textures.find(arg.name);
 				if (it != m_textures.end())
 				{
-					encoder->setVertexTexture(it->second, arg.index);
+					encoder->setVertexTexture(it->second.get(), arg.index);
 				}
 			}
 		}
@@ -221,7 +239,7 @@ namespace lune::metal
 				auto it = m_textures.find(arg.name);
 				if (it != m_textures.end())
 				{
-					encoder->setFragmentTexture(it->second, arg.index);
+					encoder->setFragmentTexture(it->second.get(), arg.index);
 				}
 			}
 		}
@@ -255,9 +273,9 @@ namespace lune::metal
 			m_commandBuffer->waitUntilCompleted();
 	}
 
-	void RenderPass::draw(const MTL::PrimitiveType type,
+	void RenderPass::draw(const PrimitiveType type,
 	                      const uint startVertex, const uint vertexCount) const
 	{
-		m_encoder->drawPrimitives(type, startVertex, vertexCount);
+		m_encoder->drawPrimitives(toMetal(type), startVertex, vertexCount);
 	}
 }

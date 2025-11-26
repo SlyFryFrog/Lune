@@ -1,11 +1,11 @@
-#include <vector>
+#include <array>
 #include <Metal/Metal.hpp>
 import lune;
 
 constexpr size_t Width = 1024;
 constexpr size_t Height = 728;
-constexpr size_t IterationsPerFrame = 1; ///< Number of compute cycles per frame
-constexpr float Zoom = 1.0f;             ///< Currently set in shader manually, need to add caller
+constexpr size_t IterationsPerFrame = 10; ///< Number of compute cycles per frame
+constexpr float Zoom = 0.25f;
 constexpr uint8_t CellColor[] = {255, 0, 0, 255};
 constexpr uint8_t BackgroundColor[] = {25, 25, 25, 255};
 constexpr lune::Vec2 quad[] = {
@@ -30,7 +30,7 @@ int main()
 
 	// Create our texture
 	lune::metal::TextureContextCreateInfo textureContextInfo{
-		.pixelFormat = lune::metal::PixelFormat::RGBA8_UNorm,
+		.pixelFormat = lune::PixelFormat::RGBA8_UNorm,
 		.width = Width,
 		.height = Height,
 		.mipmapped = false,
@@ -38,7 +38,7 @@ int main()
 	lune::metal::Texture texture(textureContextInfo);
 
 	// Generate initial data to be fed into compute shader
-	std::vector<uint8_t> pixelData(Width * Height * 4);
+	std::array<uint8_t, Width * Height * 4> pixelData{};
 	for (size_t i = 0; i < Width * Height; ++i)
 	{
 		const uint8_t v = rand() & 1 ? 255 : 0;
@@ -69,10 +69,6 @@ int main()
 	lune::metal::GraphicsPipeline pipeline{shader};
 	lune::metal::Material material{pipeline};
 	lune::metal::RenderPass pass{};
-
-	auto vertexBuffer = NS::TransferPtr(
-		context.device()->newBuffer(quad, sizeof(quad), MTL::ResourceStorageModeShared));
-
 
 	window.show();
 	while (!window.shouldClose())
@@ -105,11 +101,12 @@ int main()
 		auto drawable = window.nextDrawable();
 		pass.begin(drawable);
 		{
+			material.setUniform("verts", quad)
+			        .setUniform("tex", texture.texture())
+					.setUniform("zoom", Zoom);
 			pass.bind(material);
-			material.setUniform("verts", vertexBuffer->contents(), vertexBuffer->length())
-			        .setUniform("tex", texture.texture());
 			pass.bind(pipeline);
-			pass.draw(MTL::PrimitiveTypeTriangle, 0, 6);
+			pass.draw(lune::Triangle, 0, 6);
 		}
 		pass.end(drawable);
 

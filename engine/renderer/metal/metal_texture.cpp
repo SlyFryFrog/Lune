@@ -15,7 +15,7 @@ namespace lune::metal
 
 	void Texture::create()
 	{
-		const auto pixelFmt = toMetalPixelFormat(m_info.pixelFormat);
+		const auto pixelFmt = toMetal(m_info.pixelFormat);
 		MTL::TextureDescriptor* desc = MTL::TextureDescriptor::texture2DDescriptor(
 			pixelFmt,
 			m_info.width,

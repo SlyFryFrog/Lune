@@ -6,7 +6,7 @@ module;
 export module lune:metal_compute;
 
 import :metal_shader;
-import :metal_datatype_utils;
+import :metal_mappings;
 
 namespace lune::metal
 {
@@ -82,9 +82,9 @@ namespace lune::metal
 
 		template <typename T>
 		ComputeKernel& setUniform(const std::string& name, T& data,
-		                       BufferUsage options = BufferUsage::Shared);
+		                       BufferUsage usage = BufferUsage::Shared);
 		ComputeKernel& setUniform(const std::string& name, const void* data, size_t size,
-		                        BufferUsage options = BufferUsage::Shared);
+		                        BufferUsage usage = BufferUsage::Shared);
 
 		ComputeKernel& setUniform(const std::string& name, MTL::Buffer* buffer);
 
@@ -121,11 +121,11 @@ namespace lune::metal
 
 	template <typename T>
 	ComputeKernel& ComputeKernel::setUniform(const std::string& name, T& data,
-	                                      const BufferUsage options)
+	                                      const BufferUsage usage)
 	{
 		// Allocate a small temp buffer for byte data
 		const auto device = m_pipeline->device();
-		auto temp = device->newBuffer(sizeof(T), static_cast<MTL::ResourceOptions>(options));
+		auto temp = device->newBuffer(sizeof(T), toMetal(usage));
 
 		std::memcpy(temp->contents(), &data, sizeof(T));
 		m_buffers[name] = temp;
@@ -136,7 +136,7 @@ namespace lune::metal
 
 	export class ComputeShader final : public Shader
 	{
-		std::map<std::string, std::unique_ptr<ComputeKernel>> m_kernels;
+		std::map<std::string, std::unique_ptr<ComputeKernel>> m_kernels{};
 		std::string m_path;
 
 	public:

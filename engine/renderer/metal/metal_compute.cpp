@@ -126,11 +126,11 @@ namespace lune::metal
 	}
 
 	ComputeKernel& ComputeKernel::setUniform(const std::string& name, const void* data,
-	                                         const size_t size, const BufferUsage options)
+	                                         const size_t size, const BufferUsage usage)
 	{
 		// Allocate a small temp buffer for byte data
 		const auto device = m_pipeline->device();
-		auto temp = device->newBuffer(size, static_cast<MTL::ResourceOptions>(options));
+		auto temp = device->newBuffer(size, toMetal(usage));
 
 		std::memcpy(temp->contents(), data, size);
 		m_buffers[name] = temp;
@@ -260,7 +260,7 @@ namespace lune::metal
 		// Iterate through each argument and add all relevant information struct
 		for (NS::UInteger i = 0; i < args->count(); ++i)
 		{
-			const auto arg = static_cast<MTL::Argument*>(args->object(i));
+			const auto arg = reinterpret_cast<MTL::Argument*>(args->object(i));
 			KernelReflectionInfo::KernelArgumentInfo a{};
 
 			a.name = arg->name() ? arg->name()->utf8String() : "";
@@ -378,40 +378,5 @@ namespace lune::metal
 				m_kernels[name]->createPipeline(m_library.get());
 			}
 		}
-	}
-
-	void printKernelInfo(const KernelReflectionInfo& info)
-	{
-		std::cout << "================= Kernel Reflection =================\n";
-		std::cout << "Function: " << info.kernelName << "\n\n";
-
-		if (!info.arguments.empty())
-		{
-			std::cout << "Arguments (" << info.arguments.size() << "):\n";
-			for (const auto& arg : info.arguments)
-			{
-				std::cout
-					<< "  - Name      : " << arg.name << "\n"
-					<< "    Index     : " << arg.index << "\n"
-					<< "    Type      : " << to_string(arg.type) << "\n"
-					<< "    Data Type : " << to_string(arg.dataType) << "\n"
-					<< "    Data Size : " << arg.dataSize << " bytes\n\n";
-			}
-		}
-
-		if (info.threadgroupMemory.has_value())
-		{
-			std::cout << "Threadgroup Memory:\n";
-			for (const auto& tg : info.threadgroupMemory.value())
-			{
-				std::cout
-					<< "  - Index     : " << tg.index << "\n"
-					<< "    Size      : " << tg.size << " bytes\n"
-					<< "    Alignment : " << tg.alignment << " bytes\n\n";
-			}
-			std::cout << "\n";
-		}
-
-		std::cout << "=====================================================\n\n";
 	}
 }

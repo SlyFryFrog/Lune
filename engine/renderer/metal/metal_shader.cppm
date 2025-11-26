@@ -6,6 +6,8 @@ module;
 #include <QuartzCore/QuartzCore.hpp>
 export module lune:metal_shader;
 
+import :graphics_types;
+
 namespace lune::metal
 {
 	export struct GraphicsPipelineDesc
@@ -47,6 +49,9 @@ namespace lune::metal
 
 		NS::SharedPtr<MTL::Function> m_vertex;
 		NS::SharedPtr<MTL::Function> m_fragment;
+		std::string m_path;
+		std::string m_vertexMainName;
+		std::string m_fragmentMainName;
 
 	public:
 		explicit GraphicsShader(const std::string& path,
@@ -63,6 +68,9 @@ namespace lune::metal
 		{
 			return m_fragment.get();
 		}
+
+	private:
+		void create();
 	};
 
 
@@ -129,7 +137,7 @@ namespace lune::metal
 		const GraphicsPipeline* m_pipeline{};
 
 		std::map<std::string, NS::SharedPtr<MTL::Buffer>> m_uniformBuffers;
-		std::map<std::string, MTL::Texture*> m_textures;
+		std::map<std::string, NS::SharedPtr<MTL::Texture>> m_textures;
 
 	public:
 		explicit Material(const GraphicsPipeline& pipeline) :
@@ -141,12 +149,13 @@ namespace lune::metal
 		Material& setUniform(const std::string& name, const T& value)
 		{
 			setUniform(name, &value, sizeof(T));
-
 			return *this;
 		}
 
-		Material& setUniform(const std::string& name, const void* data, size_t size);
+		Material& setUniform(const std::string& name, const void* data, size_t size,
+		                     BufferUsage usage = Shared);
 		Material& setUniform(const std::string& name, MTL::Texture* texture);
+		Material& setUniform(const std::string& name, MTL::Buffer* buffer);
 
 		void bind(MTL::RenderCommandEncoder* encoder) const;
 
@@ -188,6 +197,6 @@ namespace lune::metal
 
 		void end(const CA::MetalDrawable* drawable, bool waitUntilComplete = true) const;
 
-		void draw(MTL::PrimitiveType type, uint startVertex, uint vertexCount) const;
+		void draw(PrimitiveType type, uint startVertex, uint vertexCount) const;
 	};
 }

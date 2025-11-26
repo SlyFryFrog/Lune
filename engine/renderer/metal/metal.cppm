@@ -10,7 +10,7 @@ export module lune:metal;
 
 export import :metal_compute;
 export import :metal_context;
-export import :metal_datatype_utils;
+export import :metal_mappings;
 export import :metal_shader;
 export import :metal_texture;
 export import :objc_interop;

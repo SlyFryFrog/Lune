@@ -4,6 +4,7 @@
  */
 
 module;
+#include <algorithm>
 #include <cmath>
 
 #ifdef LUNE_USE_SIMD
@@ -68,6 +69,32 @@ export namespace lune
 		{
 			const float len = length();
 			return len == 0 ? Vec2{} : *this / len;
+		}
+
+		[[nodiscard]] static constexpr Vec2 min(const Vec2& a, const Vec2& b) noexcept
+		{
+			return {std::min(a.x, b.x), std::min(a.y, b.y)};
+		}
+
+		[[nodiscard]] static constexpr Vec2 max(const Vec2& a, const Vec2& b) noexcept
+		{
+			return {std::max(a.x, b.x), std::max(a.y, b.y)};
+		}
+
+		[[nodiscard]] static constexpr Vec2 clamp(const Vec2& v, const Vec2& min,
+		                                          const Vec2& max) noexcept
+		{
+			return {std::clamp(v.x, min.x, max.x), std::clamp(v.y, min.y, max.y)};
+		}
+
+		[[nodiscard]] static constexpr Vec2 lerp(const Vec2& a, const Vec2& b, const float t) noexcept
+		{
+			return a + (b - a) * t;
+		}
+
+		[[nodiscard]] constexpr float distance(const Vec2& o) const noexcept
+		{
+			return (*this - o).length();
 		}
 
 #ifdef LUNE_USE_SIMD
@@ -144,6 +171,33 @@ export namespace lune
 			return len == 0 ? Vec3{} : *this / len;
 		}
 
+		[[nodiscard]] static constexpr Vec3 min(const Vec3& a, const Vec3& b) noexcept
+		{
+			return {std::min(a.x, b.x), std::min(a.y, b.y), std::min(a.z, b.z)};
+		}
+
+		[[nodiscard]] static constexpr Vec3 max(const Vec3& a, const Vec3& b) noexcept
+		{
+			return {std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z)};
+		}
+
+		[[nodiscard]] static constexpr Vec3 clamp(const Vec3& v, const Vec3& min,
+		                                          const Vec3& max) noexcept
+		{
+			return {std::clamp(v.x, min.x, max.x), std::clamp(v.y, min.y, max.y),
+			        std::clamp(v.z, min.z, max.z)};
+		}
+
+		[[nodiscard]] static constexpr Vec3 lerp(const Vec3& a, const Vec3& b, const float t) noexcept
+		{
+			return a + (b - a) * t;
+		}
+
+		[[nodiscard]] constexpr float distance(const Vec3& o) const noexcept
+		{
+			return (*this - o).length();
+		}
+
 #ifdef LUNE_USE_SIMD
 		constexpr explicit Vec3(const simd::float3& v) noexcept;
 		constexpr explicit operator simd::float3() const noexcept;
@@ -210,6 +264,33 @@ export namespace lune
 		{
 			const float len = length();
 			return len == 0 ? Vec4{} : *this / len;
+		}
+
+		[[nodiscard]] static constexpr Vec4 min(const Vec4& a, const Vec4& b) noexcept
+		{
+			return {std::min(a.x, b.x), std::min(a.y, b.y), std::min(a.z, b.z), std::min(a.w, b.w)};
+		}
+
+		[[nodiscard]] static constexpr Vec4 max(const Vec4& a, const Vec4& b) noexcept
+		{
+			return {std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z), std::max(a.w, b.w)};
+		}
+
+		[[nodiscard]] static constexpr Vec4 clamp(const Vec4& v, const Vec4& min,
+		                                          const Vec4& max) noexcept
+		{
+			return {std::clamp(v.x, min.x, max.x), std::clamp(v.y, min.y, max.y),
+			        std::clamp(v.z, min.z, max.z), std::clamp(v.w, min.w, max.w)};
+		}
+
+		[[nodiscard]] static constexpr Vec4 lerp(const Vec4& a, const Vec4& b, const float t) noexcept
+		{
+			return a + (b - a) * t;
+		}
+
+		[[nodiscard]] constexpr float distance(const Vec4& o) const noexcept
+		{
+			return (*this - o).length();
 		}
 
 #ifdef LUNE_USE_SIMD
