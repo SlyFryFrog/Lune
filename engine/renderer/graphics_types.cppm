@@ -31,6 +31,11 @@ namespace lune
 		R32_Float,
 		RG32_Float,
 		RGBA32_Float,
+
+		Depth16_UNorm,
+		Depth32_Float,
+		Depth24_UNorm_Stencil8,
+		Depth32_Float_Stencil8,
 	};
 
 
@@ -41,5 +46,12 @@ namespace lune
 		LineStrip,
 		Triangle,
 		TriangleStrip,
+	};
+
+
+	export enum FillMode
+	{
+		Fill,
+		Wireframe
 	};
 }

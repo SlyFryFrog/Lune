@@ -159,6 +159,16 @@ namespace lune
 		 */
 		void destroy();
 
+		[[nodiscard]] int width() const
+		{
+			return m_width;
+		}
+
+		[[nodiscard]] int height() const
+		{
+			return m_height;
+		}
+
 	private:
 		/**
 		 * @brief Callback for framebuffer resize events.
@@ -274,6 +284,16 @@ namespace lune
 			[[nodiscard]] CA::MetalDrawable* nextDrawable() const
 			{
 				return m_rawWindow.nextDrawable();
+			}
+
+			[[nodiscard]] int width() const
+			{
+				return m_rawWindow.width();
+			}
+
+			[[nodiscard]] int height() const
+			{
+				return m_rawWindow.height();
 			}
 		};
 	}

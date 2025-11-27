@@ -91,7 +91,6 @@ int main()
 
 			std::swap(inBuff, outBuff); // Not really necessary, could read/write to single buffer
 		}
-		kernel.waitUntilComplete();
 
 		// Copy buffer data to texture and then draw
 		lune::metal::ComputeKernel::bufferToTexture(inBuff, texture.texture(),
@@ -103,10 +102,10 @@ int main()
 		{
 			material.setUniform("verts", quad)
 			        .setUniform("tex", texture.texture())
-					.setUniform("zoom", Zoom);
-			pass.bind(material);
-			pass.bind(pipeline);
-			pass.draw(lune::Triangle, 0, 6);
+			        .setUniform("zoom", Zoom);
+			pass.bind(material)
+			    .bind(pipeline)
+			    .draw(lune::Triangle, 0, 6);
 		}
 		pass.end(drawable);
 

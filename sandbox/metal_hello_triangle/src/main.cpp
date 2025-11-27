@@ -1,4 +1,3 @@
-#include <Metal/Metal.hpp>
 import lune;
 
 constexpr lune::Vec3 vertices[] = {
@@ -8,9 +7,9 @@ constexpr lune::Vec3 vertices[] = {
 };
 
 constexpr lune::Vec3 colors[] = {
-	{1.0f, 0.0f, 0.0f},
-	{0.0f, 1.0f, 0.0f},
-	{0.0f, 0.0f, 1.0f}
+	{1.0f, 0.0f, 0.0f}, // Red
+	{0.0f, 1.0f, 0.0f}, // Green
+	{0.0f, 0.0f, 1.0f}  // Blue
 };
 
 
@@ -27,10 +26,11 @@ int main()
 	};
 	const lune::raii::Window window(windowCreateInfo);
 
-	lune::metal::GraphicsShader module{"shaders/basic.metal"};
-	lune::metal::GraphicsPipeline pipeline{module};
+	// Define our shader implementation
+	lune::metal::GraphicsShader shader{"shaders/basic.metal"};
+	lune::metal::GraphicsPipeline pipeline{shader};
 	lune::metal::Material material{pipeline};
-	lune::metal::RenderPass pass{};
+	lune::metal::RenderPass pass;
 
 	// Perform our render loop
 	window.show();
@@ -45,11 +45,11 @@ int main()
 			// Internally calculates the size of the variables passed
 			material.setUniform("vertexPositions", vertices)
 			        .setUniform("vertexColors", colors);
-			pass.bind(material);
-			pass.bind(pipeline);
-			pass.draw(lune::Triangle, 0, 3);
+			pass.bind(material)
+			    .bind(pipeline)
+			    .draw(lune::Triangle, 0, 3);
 		}
-		pass.end(drawable);
+		pass.end(drawable);	// Renders to the screen
 		lune::Window::pollEvents();
 	}
 

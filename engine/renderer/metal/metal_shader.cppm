@@ -12,8 +12,8 @@ namespace lune::metal
 {
 	export struct GraphicsPipelineDesc
 	{
-		MTL::PixelFormat colorFormat = MTL::PixelFormatBGRA8Unorm;
-		MTL::PixelFormat depthFormat = MTL::PixelFormatDepth32Float;
+		PixelFormat colorFormat = PixelFormat::RGBA8_UNorm;
+		PixelFormat depthFormat = PixelFormat::Depth32_Float;
 
 		bool enableBlending = false;
 		bool depthWrite = true;
@@ -183,20 +183,14 @@ namespace lune::metal
 			return m_encoder;
 		}
 
-		void bind(const GraphicsPipeline& pipeline) const
-		{
-			m_encoder->setRenderPipelineState(pipeline.state());
-		}
-
-		void bind(const Material& material) const
-		{
-			material.bind(m_encoder);
-		}
+		RenderPass& bind(const GraphicsPipeline& pipeline);
+		RenderPass& bind(const Material& material);
 
 		void begin(const CA::MetalDrawable* drawable);
+		void end(const CA::MetalDrawable* drawable) const;
 
-		void end(const CA::MetalDrawable* drawable, bool waitUntilComplete = true) const;
-
-		void draw(PrimitiveType type, uint startVertex, uint vertexCount) const;
+		RenderPass& draw(PrimitiveType type, uint startVertex, uint vertexCount);
+		RenderPass& setFillMode(FillMode mode);
+		RenderPass& waitUntilComplete();
 	};
 }

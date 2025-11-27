@@ -98,8 +98,8 @@ namespace lune::metal
 
 		descriptor->setVertexFunction(m_shader->vertex());
 		descriptor->setFragmentFunction(m_shader->fragment());
-		descriptor->colorAttachments()->object(0)->setPixelFormat(m_desc.colorFormat);
-		descriptor->setDepthAttachmentPixelFormat(m_desc.depthFormat);
+		descriptor->colorAttachments()->object(0)->setPixelFormat(toMetal(m_desc.colorFormat));
+		descriptor->setDepthAttachmentPixelFormat(toMetal(m_desc.depthFormat));
 
 		// Configure simple depth/blend state from desc
 		auto* colorAttachment = descriptor->colorAttachments()->object(0);
@@ -161,7 +161,8 @@ namespace lune::metal
 		return out;
 	}
 
-	Material& Material::setUniform(const std::string& name, const void* data, const size_t size, const BufferUsage usage)
+	Material& Material::setUniform(const std::string& name, const void* data, const size_t size,
+	                               const BufferUsage usage)
 	{
 		if (!m_pipeline)
 			return *this;
@@ -203,7 +204,7 @@ namespace lune::metal
 		if (!encoder)
 			return;
 
-		// iterate through all vertex and fragment args and set buffers
+		// Iterate through all vertex and fragment args and set buffers
 		for (auto& arg : m_pipeline->vertexArguments())
 		{
 			if (arg.type == MTL::ArgumentTypeBuffer)
@@ -245,8 +246,26 @@ namespace lune::metal
 		}
 	}
 
+	RenderPass& RenderPass::bind(const GraphicsPipeline& pipeline)
+	{
+		m_encoder->setRenderPipelineState(pipeline.state());
+		return *this;
+	}
+
+	RenderPass& RenderPass::bind(const Material& material)
+	{
+		material.bind(m_encoder);
+		return *this;
+	}
+
 	void RenderPass::begin(const CA::MetalDrawable* drawable)
 	{
+		if (!drawable)
+		{
+			std::cerr << "RenderPass::begin(): drawable is null\n";
+			return;
+		}
+
 		m_commandBuffer = NS::TransferPtr(
 			MetalContext::instance().commandQueue()->commandBuffer());
 
@@ -262,20 +281,30 @@ namespace lune::metal
 		m_encoder = m_commandBuffer->renderCommandEncoder(renderPassDescriptor.get());
 	}
 
-	void RenderPass::end(const CA::MetalDrawable* drawable, const bool waitUntilComplete) const
+	void RenderPass::end(const CA::MetalDrawable* drawable) const
 	{
 		m_encoder->endEncoding();
 
 		m_commandBuffer->presentDrawable(drawable);
 		m_commandBuffer->commit();
-
-		if (waitUntilComplete)
-			m_commandBuffer->waitUntilCompleted();
 	}
 
-	void RenderPass::draw(const PrimitiveType type,
-	                      const uint startVertex, const uint vertexCount) const
+	RenderPass& RenderPass::draw(const PrimitiveType type,
+	                             const uint startVertex, const uint vertexCount)
 	{
 		m_encoder->drawPrimitives(toMetal(type), startVertex, vertexCount);
+		return *this;
+	}
+
+	RenderPass& RenderPass::setFillMode(const FillMode mode)
+	{
+		m_encoder->setTriangleFillMode(toMetal(mode));
+		return *this;
+	}
+
+	RenderPass& RenderPass::waitUntilComplete()
+	{
+		m_commandBuffer->waitUntilCompleted();
+		return *this;
 	}
 }

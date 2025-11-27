@@ -23,11 +23,11 @@ namespace lune::metal
 	}
 
 
-	MTL::PixelFormat toMetal(const PixelFormat pixelFormat)
+	MTL::PixelFormat toMetal(const PixelFormat fmt)
 	{
 		using PF = PixelFormat;
 
-		switch (pixelFormat)
+		switch (fmt)
 		{
 		case PF::R8_UNorm:
 			return MTL::PixelFormatR8Unorm;
@@ -57,10 +57,20 @@ namespace lune::metal
 		case PF::RGBA32_Float:
 			return MTL::PixelFormatRGBA32Float;
 
+		case PF::Depth16_UNorm:
+			return MTL::PixelFormatDepth16Unorm;
+		case PF::Depth32_Float:
+			return MTL::PixelFormatDepth32Float;
+		case PF::Depth24_UNorm_Stencil8:
+			return MTL::PixelFormatDepth24Unorm_Stencil8;
+		case PF::Depth32_Float_Stencil8:
+			return MTL::PixelFormatDepth32Float_Stencil8;
+
 		default:
 			return MTL::PixelFormatInvalid;
 		}
 	}
+
 
 	MTL::PrimitiveType toMetal(const PrimitiveType type)
 	{
@@ -78,6 +88,20 @@ namespace lune::metal
 			return MTL::PrimitiveTypeTriangleStrip;
 		default:
 			return MTL::PrimitiveTypeTriangle;
+		}
+	}
+
+
+	inline MTL::TriangleFillMode toMetal(const FillMode mode)
+	{
+		switch (mode)
+		{
+		case FillMode::Fill:
+			return MTL::TriangleFillModeFill;
+		case FillMode::Wireframe:
+			return MTL::TriangleFillModeLines;
+		default:
+			return MTL::TriangleFillModeFill;
 		}
 	}
 }

@@ -3,19 +3,22 @@
   "version-string" : "1.0.0",
   "builtin-baseline" : "271a5b8850aa50f9a40269cbf3cf414b36e333d6",
   "dependencies" : [ {
+    "name" : "catch2",
+    "version>=" : "3.11.0"
+  }, {
     "name" : "glfw3",
     "version>=" : "3.4#1"
   }, {
     "name" : "glm",
     "version>=" : "1.0.2"
   }, {
-    "name" : "vcpkg-cmake-config",
-    "version>=" : "2024-05-23"
+    "name" : "shader-slang",
+    "version>=" : "2025.14.3"
   }, {
     "name" : "vcpkg-cmake",
     "version>=" : "2025-08-07"
   }, {
-    "name" : "shader-slang",
-    "version>=" : "2025.14.3"
+    "name" : "vcpkg-cmake-config",
+    "version>=" : "2024-05-23"
   } ]
 }

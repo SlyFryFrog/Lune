@@ -1,5 +1,12 @@
 module;
+#ifdef LUNE_USE_SIMD
 #include <simd/vector_types.h>
+#elif defined(LUNE_USE_GLM)
+#warning LUNE_USE_GLM was declared, however this implementation is incomplete and may not work.
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
+#endif
 module lune;
 
 namespace lune

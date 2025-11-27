@@ -87,7 +87,8 @@ export namespace lune
 			return {std::clamp(v.x, min.x, max.x), std::clamp(v.y, min.y, max.y)};
 		}
 
-		[[nodiscard]] static constexpr Vec2 lerp(const Vec2& a, const Vec2& b, const float t) noexcept
+		[[nodiscard]] static constexpr Vec2 lerp(const Vec2& a, const Vec2& b,
+		                                         const float t) noexcept
 		{
 			return a + (b - a) * t;
 		}
@@ -188,7 +189,8 @@ export namespace lune
 			        std::clamp(v.z, min.z, max.z)};
 		}
 
-		[[nodiscard]] static constexpr Vec3 lerp(const Vec3& a, const Vec3& b, const float t) noexcept
+		[[nodiscard]] static constexpr Vec3 lerp(const Vec3& a, const Vec3& b,
+		                                         const float t) noexcept
 		{
 			return a + (b - a) * t;
 		}
@@ -196,6 +198,25 @@ export namespace lune
 		[[nodiscard]] constexpr float distance(const Vec3& o) const noexcept
 		{
 			return (*this - o).length();
+		}
+
+		constexpr void normalize() noexcept
+		{
+			const float len = length();
+			if (len > 0.0f)
+			{
+				x /= len;
+				y /= len;
+				z /= len;
+			}
+		}
+
+		[[nodiscard]] constexpr Vec3 normalized() const noexcept
+		{
+			const float len = length();
+			return (len > 0.0f)
+				? Vec3{x / len, y / len, z / len}
+				: Vec3{0.0f, 0.0f, 0.0f}; // Handle zero vector
 		}
 
 #ifdef LUNE_USE_SIMD
@@ -283,7 +304,8 @@ export namespace lune
 			        std::clamp(v.z, min.z, max.z), std::clamp(v.w, min.w, max.w)};
 		}
 
-		[[nodiscard]] static constexpr Vec4 lerp(const Vec4& a, const Vec4& b, const float t) noexcept
+		[[nodiscard]] static constexpr Vec4 lerp(const Vec4& a, const Vec4& b,
+		                                         const float t) noexcept
 		{
 			return a + (b - a) * t;
 		}
@@ -304,3 +326,4 @@ export namespace lune
 #endif
 	};
 }
+

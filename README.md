@@ -51,7 +51,6 @@ much control as possible while still improving usability.
 `encodeRenderCommand`.
 
 ```c++
-#include <Metal/Metal.hpp>
 import lune;
 
 constexpr lune::Vec3 vertices[] = {
@@ -91,7 +90,7 @@ int main()
 			material.setUniform("vertexPositions", vertices, sizeof(vertices));
 			pass.bind(material);
 			pass.bind(pipeline);
-			pass.draw(MTL::PrimitiveTypeTriangle, 0, 3);
+			pass.draw(lune::Triangle, 0, 3);
 		}
 		pass.end(drawable);
 		lune::Window::pollEvents();
