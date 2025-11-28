@@ -29,14 +29,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
 
-if(LUNE_USE_SIMD)
-    add_compile_definitions(LUNE_USE_SIMD)
-endif()
-
-if(LUNE_USE_GLM)
-    add_compile_definitions(LUNE_USE_GLM)
-endif()
-
 #################################
 # Set constants for the project #
 #################################
@@ -71,8 +63,9 @@ endif ()
 ######################
 # External libraries #
 ######################
-find_package(glm CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
+
+add_library(stb_image STATIC ${CMAKE_CURRENT_SOURCE_DIR}/vendor/stb_image.cpp)
 
 ###################
 # Target: library #
@@ -87,14 +80,25 @@ target_sources(${PROJECT_NAME}
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20 INTERFACE cxx_std_20)
 target_link_libraries(${PROJECT_NAME}
         PRIVATE
-        glm::glm
         glfw
+        stb_image
 )
 
 target_include_directories(${PROJECT_NAME}
         PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/vendor
 )
+
+
+if(LUNE_USE_SIMD)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE LUNE_USE_SIMD)
+endif()
+
+if(LUNE_USE_GLM)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE LUNE_USE_GLM)
+    find_package(glm CONFIG REQUIRED)
+    target_link_libraries(${PROJECT_NAME} glm::glm)
+endif()
 
 ##################
 # Renderer setup #

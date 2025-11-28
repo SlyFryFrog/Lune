@@ -4,6 +4,7 @@
  */
 
 module;
+#include <cmath>
 #ifdef LUNE_USE_SIMD
 #include <simd/matrix_types.h>
 #elif defined(LUNE_USE_GLM)
@@ -35,7 +36,7 @@ export namespace lune
 		               const float m20, const float m21, const float m22) noexcept :
 			m{{m00, m01, m02},
 			  {m10, m11, m12},
-			  {m20, m21, m22,},}
+			  {m20, m21, m22,}}
 		{
 		}
 
@@ -92,14 +93,14 @@ export namespace lune
 		}
 
 #ifdef LUNE_USE_SIMD
-		constexpr explicit Mat3(const ::simd_float3x3& v) noexcept :
+		constexpr explicit Mat3(const simd_float3x3& v) noexcept :
 			m({v.columns[0][0], v.columns[0][1], v.columns[0][2]},
 			  {v.columns[1][0], v.columns[1][1], v.columns[1][2]},
 			  {v.columns[2][0], v.columns[2][1], v.columns[2][2]})
 		{
 		}
 
-		constexpr explicit operator ::simd_float3x3() const noexcept
+		constexpr explicit operator simd_float3x3() const noexcept
 		{
 			return simd_float3x3{
 				simd_make_float3(m[0][0], m[0][1], m[0][2]),

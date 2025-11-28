@@ -220,7 +220,7 @@ export namespace lune
 		}
 
 #ifdef LUNE_USE_SIMD
-		constexpr explicit Vec3(const simd::float3& v) noexcept;
+		constexpr explicit Vec3(const simd_float3& v) noexcept;
 		constexpr explicit operator simd::float3() const noexcept;
 #endif
 

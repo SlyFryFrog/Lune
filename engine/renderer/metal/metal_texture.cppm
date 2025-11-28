@@ -1,5 +1,6 @@
 module;
 #include <Metal/Metal.hpp>
+#include <stb_image.h>
 export module lune:metal_texture;
 
 import :metal_context;
@@ -20,7 +21,7 @@ namespace lune::metal
 	export class Texture
 	{
 		TextureContextCreateInfo m_info;
-		NS::SharedPtr<MTL::Texture> m_shaderTexture;
+		NS::SharedPtr<MTL::Texture> m_texture;
 
 	public:
 		explicit Texture(const TextureContextCreateInfo& createInfo);
@@ -28,18 +29,11 @@ namespace lune::metal
 
 		[[nodiscard]] MTL::Texture* texture() const
 		{
-			return m_shaderTexture.get();
+			return m_texture.get();
 		}
 
-		[[nodiscard]] MTL::SamplerState* samplerState()
-		{
-			auto desc = NS::TransferPtr(MTL::SamplerDescriptor::alloc()->init());
-			desc->setMinFilter(MTL::SamplerMinMagFilterLinear);
-			desc->setMagFilter(MTL::SamplerMinMagFilterLinear);
-			desc->setSAddressMode(MTL::SamplerAddressModeClampToEdge);
-			desc->setTAddressMode(MTL::SamplerAddressModeClampToEdge);
-			return MetalContext::instance().device()->newSamplerState(desc.get());
-		}
+		void load(const std::string& file, int desiredChannelCount = STBI_rgb_alpha);
+
 	private:
 		void create();
 	};

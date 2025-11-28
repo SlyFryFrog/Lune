@@ -6,7 +6,7 @@ import :graphics_types;
 
 namespace lune::metal
 {
-	MTL::ResourceOptions toMetal(const BufferUsage usage)
+	constexpr MTL::ResourceOptions toMetal(const BufferUsage usage) noexcept
 	{
 		switch (usage)
 		{
@@ -23,7 +23,7 @@ namespace lune::metal
 	}
 
 
-	MTL::PixelFormat toMetal(const PixelFormat fmt)
+	constexpr MTL::PixelFormat toMetal(const PixelFormat fmt) noexcept
 	{
 		using PF = PixelFormat;
 
@@ -72,7 +72,7 @@ namespace lune::metal
 	}
 
 
-	MTL::PrimitiveType toMetal(const PrimitiveType type)
+	constexpr MTL::PrimitiveType toMetal(const PrimitiveType type) noexcept
 	{
 		switch (type)
 		{
@@ -92,7 +92,7 @@ namespace lune::metal
 	}
 
 
-	inline MTL::TriangleFillMode toMetal(const FillMode mode)
+	constexpr MTL::TriangleFillMode toMetal(const FillMode mode) noexcept
 	{
 		switch (mode)
 		{
