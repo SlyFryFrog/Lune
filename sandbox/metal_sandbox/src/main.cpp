@@ -1,17 +1,10 @@
-#include <Metal/Metal.hpp>
 import lune;
 
-constexpr lune::Vec3 verticesA[] = {
-	{-0.5f, -0.5f, 0.0f},
-	{0.5f, -0.5f, 0.0f},
-	{0.0f, 0.5f, 0.0f}
+constexpr lune::Vec2 verticesA[] = {
+	{-1.f, -1.f}, {1.f, -1.f}, {-1.f, 1.f},
+	{-1.f, 1.f}, {1.f, -1.f}, {1.f, 1.f}
 };
 
-constexpr lune::Vec3 verticesB[] = {
-	{-0.25f, -0.25f, 0.0f},
-	{0.25f, -0.25f, 0.0f},
-	{0.0f, 0.50f, 0.0f}
-};
 
 int main()
 {
@@ -29,10 +22,9 @@ int main()
 	lune::metal::GraphicsPipeline pipeline{module};
 
 	lune::metal::Material materialA{pipeline};
-	lune::metal::Material materialB{pipeline};
 
-	constexpr lune::Vec4 colorA{182.0f / 255.0f, 0.0f / 255.0f, 228.0f / 255.0f, 1.0f};
-	constexpr lune::Vec4 colorB{0.0f, 182.0f / 255.0f, 228.0f / 255.0f, 1.0f};
+	lune::metal::Texture texture({});
+	texture.load("shaders/img.png");
 
 	lune::metal::RenderPass pass{};
 
@@ -44,18 +36,13 @@ int main()
 
 		const auto drawable = window.nextDrawable();
 		pass.begin(drawable);
-
-		materialA.setUniform("vertexPositions", verticesA)
-		         .setUniform("uColor", colorA);
-		pass.bind(materialA);
-		pass.bind(pipeline);
-		pass.draw(lune::Triangle, 0, 3);
-
-		materialB.setUniform("vertexPositions", verticesB)
-		         .setUniform("uColor", colorB);
-		pass.bind(materialB);
-		pass.draw(lune::Triangle, 0, 3);
-
+		{
+			materialA.setUniform("verts", verticesA)
+			         .setUniform("tex", texture.texture());
+			pass.bind(materialA);
+			pass.bind(pipeline);
+			pass.draw(lune::Triangle, 0, 6);
+		}
 		pass.end(drawable);
 		lune::Window::pollEvents();
 	}

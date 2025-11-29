@@ -1,4 +1,6 @@
-cmake_minimum_required(VERSION 4.0)
+set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
+
+cmake_minimum_required(VERSION 4.0 FATAL_ERROR)
 project(Lune LANGUAGES CXX)
 
 if (APPLE AND USE_METAL)
@@ -27,7 +29,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Options #
 ###########
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
 
 #################################
 # Set constants for the project #

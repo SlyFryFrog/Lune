@@ -5,7 +5,6 @@ module;
 #include <utility>
 module lune;
 
-
 namespace lune::metal
 {
 	Shader::Shader(MTL::Device* device) :
@@ -113,6 +112,13 @@ namespace lune::metal
 			colorAttachment->setSourceAlphaBlendFactor(MTL::BlendFactorOne);
 			colorAttachment->setDestinationAlphaBlendFactor(MTL::BlendFactorOneMinusSourceAlpha);
 		}
+
+		const auto depthDesc = NS::TransferPtr(MTL::DepthStencilDescriptor::alloc()->init());
+		depthDesc->setDepthWriteEnabled(m_desc.depthWrite);
+		depthDesc->setDepthCompareFunction(m_desc.depthCompare);
+		m_depthStencilState =
+			NS::TransferPtr(m_shader->device()->newDepthStencilState(depthDesc.get()));
+
 
 		// Create pipeline state with reflection info (request argument info)
 		m_state = NS::TransferPtr(m_shader->device()->newRenderPipelineState(
@@ -249,12 +255,15 @@ namespace lune::metal
 	RenderPass& RenderPass::bind(const GraphicsPipeline& pipeline)
 	{
 		m_encoder->setRenderPipelineState(pipeline.state());
+		m_encoder->setDepthStencilState(pipeline.depthStencilState());
+		m_encoder->setCullMode(pipeline.cullMode());
+		m_encoder->setFrontFacingWinding(pipeline.winding());
 		return *this;
 	}
 
 	RenderPass& RenderPass::bind(const Material& material)
 	{
-		material.bind(m_encoder);
+		material.bind(m_encoder.get());
 		return *this;
 	}
 
@@ -278,7 +287,8 @@ namespace lune::metal
 		colorAttachmentDescriptor->setClearColor(MTL::ClearColor(0.0f, 0.0f, 0.0f, 0.0f));
 		colorAttachmentDescriptor->setStoreAction(MTL::StoreActionStore);
 
-		m_encoder = m_commandBuffer->renderCommandEncoder(renderPassDescriptor.get());
+		m_encoder = NS::TransferPtr(
+			m_commandBuffer->renderCommandEncoder(renderPassDescriptor.get()));
 	}
 
 	void RenderPass::end(const CA::MetalDrawable* drawable) const

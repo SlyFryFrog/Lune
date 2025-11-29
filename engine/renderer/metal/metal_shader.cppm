@@ -1,9 +1,9 @@
 module;
 #include <iostream>
-#include <string>
-#include <Metal/Metal.hpp>
 #include <map>
+#include <Metal/Metal.hpp>
 #include <QuartzCore/QuartzCore.hpp>
+#include <string>
 export module lune:metal_shader;
 
 import :graphics_types;
@@ -49,6 +49,7 @@ namespace lune::metal
 
 		NS::SharedPtr<MTL::Function> m_vertex;
 		NS::SharedPtr<MTL::Function> m_fragment;
+
 		std::string m_path;
 		std::string m_vertexMainName;
 		std::string m_fragmentMainName;
@@ -85,12 +86,13 @@ namespace lune::metal
 		};
 
 		const GraphicsShader* m_shader{};
-
-		NS::SharedPtr<MTL::RenderPipelineState> m_state;
 		GraphicsPipelineDesc m_desc;
 
+		NS::SharedPtr<MTL::RenderPipelineState> m_state;
+		NS::SharedPtr<MTL::DepthStencilState> m_depthStencilState;
+
 		std::vector<ArgumentInfo> m_vertexArguments;
-		std::vector<ArgumentInfo> m_fragmentArguments;;
+		std::vector<ArgumentInfo> m_fragmentArguments;
 
 	public:
 		explicit GraphicsPipeline(const GraphicsShader& shader,
@@ -111,11 +113,6 @@ namespace lune::metal
 			return *m_shader;
 		}
 
-		[[nodiscard]] const GraphicsPipelineDesc& desc() const
-		{
-			return m_desc;
-		}
-
 		[[nodiscard]] const std::vector<ArgumentInfo>& vertexArguments() const
 		{
 			return m_vertexArguments;
@@ -124,6 +121,21 @@ namespace lune::metal
 		[[nodiscard]] const std::vector<ArgumentInfo>& fragmentArguments() const
 		{
 			return m_fragmentArguments;
+		}
+
+		[[nodiscard]] MTL::DepthStencilState* depthStencilState() const
+		{
+			return m_depthStencilState.get();
+		}
+
+		[[nodiscard]] MTL::CullMode cullMode() const
+		{
+			return m_desc.cullMode;
+		}
+
+		[[nodiscard]] MTL::Winding winding() const
+		{
+			return m_desc.winding;
 		}
 
 	private:
@@ -168,8 +180,7 @@ namespace lune::metal
 
 	export class RenderPass
 	{
-		MTL::RenderCommandEncoder* m_encoder{};
-		const GraphicsPipeline* m_pipeline{};
+		NS::SharedPtr<MTL::RenderCommandEncoder> m_encoder{};
 		NS::SharedPtr<MTL::CommandBuffer> m_commandBuffer{};
 
 	public:
@@ -180,7 +191,7 @@ namespace lune::metal
 
 		[[nodiscard]] MTL::RenderCommandEncoder* encoder() const
 		{
-			return m_encoder;
+			return m_encoder.get();
 		}
 
 		RenderPass& bind(const GraphicsPipeline& pipeline);

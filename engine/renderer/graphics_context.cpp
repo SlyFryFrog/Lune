@@ -8,7 +8,7 @@ namespace lune
 #ifdef USE_METAL
 		static auto& s_instance = metal::MetalContext::instance();
 #else
-		static auto& s_instance = lune::VulkanContext::instance();
+		static auto& s_instance = vulkan::VulkanContext::instance();
 #endif
 
 		return s_instance;

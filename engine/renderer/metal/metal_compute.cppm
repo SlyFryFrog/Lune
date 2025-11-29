@@ -1,5 +1,4 @@
 module;
-#include <iostream>
 #include <string>
 #include <Metal/Metal.hpp>
 #include <map>

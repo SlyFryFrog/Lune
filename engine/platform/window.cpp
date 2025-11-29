@@ -60,6 +60,10 @@ namespace lune
 #ifdef USE_METAL
 		attachMetalToGLFW();
 #endif
+
+#ifdef USE_VULKAN
+		attachVulkanToGLFW();
+#endif
 	}
 
 	void Window::destroy()
@@ -74,8 +78,18 @@ namespace lune
 	void Window::_onFrameBufferSizeCallback(GLFWwindow* handle, const int width, const int height)
 	{
 		const auto window = static_cast<Window*>(glfwGetWindowUserPointer(handle));
+
+#ifdef USE_METAL
 		window->m_metalLayer->setDrawableSize(CGSizeMake(width, height));
+#endif
 	}
+
+#ifdef USE_VULKAN
+	void Window::attachVulkanToGLFW()
+	{
+		// Todo
+	}
+#endif
 
 	Window::Window(Window&& other) noexcept :
 		m_handle(other.m_handle),

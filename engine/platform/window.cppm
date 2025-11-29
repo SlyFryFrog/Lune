@@ -45,7 +45,6 @@ namespace lune
 	 */
 	export class Window
 	{
-	protected:
 		GLFWwindow* m_handle{};
 		int m_width{};
 		int m_height{};
@@ -281,11 +280,6 @@ namespace lune
 				m_rawWindow.setWindowMode(mode);
 			}
 
-			[[nodiscard]] CA::MetalDrawable* nextDrawable() const
-			{
-				return m_rawWindow.nextDrawable();
-			}
-
 			[[nodiscard]] int width() const
 			{
 				return m_rawWindow.width();
@@ -295,6 +289,13 @@ namespace lune
 			{
 				return m_rawWindow.height();
 			}
+
+#ifdef USE_METAL
+			[[nodiscard]] CA::MetalDrawable* nextDrawable() const
+			{
+				return m_rawWindow.nextDrawable();
+			}
+#endif
 		};
 	}
 }

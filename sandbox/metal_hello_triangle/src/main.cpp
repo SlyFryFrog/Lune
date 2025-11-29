@@ -39,17 +39,19 @@ int main()
 		if (lune::InputManager::isJustPressed(lune::KEY_ESCAPE))
 			window.setShouldClose(true);
 
+		// Defines what/how we draw to our screen
 		const auto drawable = window.nextDrawable();
 		pass.begin(drawable);
 		{
 			// Internally calculates the size of the variables passed
 			material.setUniform("vertexPositions", vertices)
 			        .setUniform("vertexColors", colors);
-			pass.bind(material)
-			    .bind(pipeline)
+			pass.bind(pipeline)
+				.bind(material)
 			    .draw(lune::Triangle, 0, 3);
 		}
-		pass.end(drawable);	// Renders to the screen
+		pass.end(drawable); // Renders to the screen
+
 		lune::Window::pollEvents();
 	}
 

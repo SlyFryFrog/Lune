@@ -24,4 +24,10 @@ function(setup_vulkan_for_target target_name)
     endif ()
 
     target_link_libraries(${target_name} PRIVATE Vulkan::Vulkan Vulkan::cppm)
+
+    # Define USE_VULKAN for conditional compilation
+    target_compile_definitions(${target_name}
+            PRIVATE
+            USE_VULKAN=1
+    )
 endfunction()

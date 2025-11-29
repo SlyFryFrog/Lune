@@ -5,6 +5,7 @@
 
 module;
 #include <cmath>
+#include <cstddef>
 #ifdef LUNE_USE_SIMD
 #include <simd/matrix_types.h>
 #elif defined(LUNE_USE_GLM)
@@ -74,6 +75,15 @@ export namespace lune
 				for (int j = 0; j < 3; ++j)
 					for (int k = 0; k < 3; ++k)
 						r.m[i][j] += m[i][k] * o.m[k][j];
+			return r;
+		}
+
+		constexpr Mat3 operator/(const Mat3& o) const noexcept
+		{
+			Mat3 r{};
+			for (int i = 0; i < 3; ++i)
+				for (int j = 0; j < 3; ++j)
+					r.m[i][j] = m[i][j] / o.m[i][j];
 			return r;
 		}
 
@@ -174,6 +184,15 @@ export namespace lune
 			return r;
 		}
 
+		constexpr Mat4 operator/(const Mat4& o) const noexcept
+		{
+			Mat4 r{};
+			for (int i = 0; i < 4; ++i)
+				for (int j = 0; j < 4; ++j)
+					r.m[i][j] = m[i][j] / o.m[i][j];
+			return r;
+		}
+
 		constexpr float* operator[](const size_t row) noexcept
 		{
 			return m[row];
@@ -262,7 +281,6 @@ export namespace lune
 				0.0f, 0.0f, -(2.0f * far * near) / (far - near), 0.0f
 			};
 		}
-
 
 #ifdef LUNE_USE_SIMD
 		constexpr explicit Mat4(const simd_float4x4& v) noexcept :

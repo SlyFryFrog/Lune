@@ -11,9 +11,9 @@ namespace lune::metal
 	export struct TextureContextCreateInfo
 	{
 		MTL::Device* device{};
-		PixelFormat pixelFormat{};
-		int width{};
-		int height{};
+		PixelFormat pixelFormat{BGRA8_sRGB};
+		int width{1};
+		int height{1};
 		bool mipmapped = false;
 	};
 

@@ -21,8 +21,6 @@ namespace lune::vulkan
 	public:
 		static VulkanContext& instance();
 
-		void render() override;
-
 		void init();
 		void createInstance();
 

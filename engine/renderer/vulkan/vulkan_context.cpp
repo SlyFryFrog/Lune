@@ -25,10 +25,6 @@ namespace lune::vulkan
 		return s_instance;
 	}
 
-	void render() override
-	{
-	}
-
 	void VulkanContext::init()
 	{
 		createInstance();

@@ -46,12 +46,9 @@ namespace lune::metal
 
 	void MetalContext::removeMetalLayer(const NS::SharedPtr<CA::MetalLayer>& metalLayer)
 	{
-		std::erase_if(
-			m_metalLayers,
-			[&](const NS::SharedPtr<CA::MetalLayer>& ptr)
-			{
-				return ptr.get() == metalLayer.get();
-			}
+		m_metalLayers.erase(
+			std::remove(m_metalLayers.begin(), m_metalLayers.end(), metalLayer),
+			m_metalLayers.end()
 			);
 	}
 }

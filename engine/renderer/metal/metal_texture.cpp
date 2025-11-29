@@ -18,8 +18,8 @@ namespace lune::metal
 	void Texture::load(const std::string& file, const int desiredChannelCount)
 	{
 		stbi_set_flip_vertically_on_load(true);
-		int width, height, channelCount;
-		unsigned char* image = stbi_load(file.c_str(), &width, &height, &channelCount,
+		int channelCount;
+		unsigned char* image = stbi_load(file.c_str(), &m_info.width, &m_info.height, &channelCount,
 		                                 desiredChannelCount);
 
 		if (!image)
@@ -30,16 +30,15 @@ namespace lune::metal
 
 		MTL::TextureDescriptor* textureDescriptor = MTL::TextureDescriptor::alloc()->init();
 		textureDescriptor->setPixelFormat(MTL::PixelFormatRGBA8Unorm);
-		textureDescriptor->setWidth(width);
-		textureDescriptor->setHeight(height);
+		textureDescriptor->setWidth(m_info.width);
+		textureDescriptor->setHeight(m_info.height);
 
 		m_texture = NS::TransferPtr(m_info.device->newTexture(textureDescriptor));
 
 		const MTL::Region region = MTL::Region(0, 0, 0, m_info.width, m_info.height, 1);
-		const NS::UInteger bytesPerRow = 4 * width;
+		const NS::UInteger bytesPerRow = 4 * m_info.width;
 
 		m_texture->replaceRegion(region, 0, image, bytesPerRow);
-
 		textureDescriptor->release();
 		stbi_image_free(image);
 	}

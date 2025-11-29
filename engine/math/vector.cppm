@@ -113,8 +113,11 @@ export namespace lune
 	struct alignas(16) Vec3
 	{
 		float x, y, z;
-		float _pad = 0;
 
+	private:
+		float _pad = 0;	// Padding for 16-byte alignment
+
+	public:
 		constexpr Vec3() noexcept :
 			x(0),
 			y(0),
