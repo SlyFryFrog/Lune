@@ -42,13 +42,12 @@ cleaner code.
 
 ## Examples
 
-### Drawing a triangle in less than 50 lines with Metal
+### Drawing a triangle with Metal
 
 Much of the setup regarding the renderer and windowing system is abstracted allowing you to focus on creating your
 custom render loops. To define your own render loop, we need to create 4 variables: `GraphicsShader`,
-`GraphicsPipeline`, `Material`, and `Renderpass`. These separate the tasks related to drawing a screen to still give as
+`GraphicsPipeline`, `Material`, and `Renderpass`. These separate the tasks related to drawing to the screen to still give as
 much control as possible while still improving usability.
-`encodeRenderCommand`.
 
 ```c++
 import lune;
@@ -58,6 +57,13 @@ constexpr lune::Vec3 vertices[] = {
 	{0.5f, -0.5f, 0.0f},
 	{0.0f, 0.5f, 0.0f}
 };
+
+constexpr lune::Vec3 colors[] = {
+	{1.0f, 0.0f, 0.0f}, // Red
+	{0.0f, 1.0f, 0.0f}, // Green
+	{0.0f, 0.0f, 1.0f}  // Blue
+};
+
 
 int main()
 {
@@ -72,10 +78,15 @@ int main()
 	};
 	const lune::raii::Window window(windowCreateInfo);
 
-	lune::metal::GraphicsShader module{"shaders/basic.metal"};
-	lune::metal::GraphicsPipeline pipeline{module};
+	// Define our shader implementation
+	lune::metal::GraphicsShader shader{"shaders/basic.metal"};
+	lune::metal::GraphicsPipeline pipeline{shader};
 	lune::metal::Material material{pipeline};
-	lune::metal::RenderPass pass{};
+	lune::metal::RenderPass pass;
+
+	material.setUniform("vertexPositions", vertices)
+		.setUniform("vertexColors", colors);
+
 
 	// Perform our render loop
 	window.show();
@@ -84,15 +95,12 @@ int main()
 		if (lune::InputManager::isJustPressed(lune::KEY_ESCAPE))
 			window.setShouldClose(true);
 
-		const auto drawable = window.nextDrawable();
-		pass.begin(drawable);
-		{
-			material.setUniform("vertexPositions", vertices, sizeof(vertices));
-			pass.bind(material);
-			pass.bind(pipeline);
-			pass.draw(lune::Triangle, 0, 3);
-		}
-		pass.end(drawable);
+		// Defines the render pass
+		pass.begin(window.surface())
+		    .bind(material)
+		    .draw(lune::Triangle, 0, 3)
+		    .end();
+
 		lune::Window::pollEvents();
 	}
 

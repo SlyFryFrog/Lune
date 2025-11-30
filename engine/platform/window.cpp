@@ -1,10 +1,12 @@
 module;
 #include <GLFW/glfw3.h>
+
 #ifdef USE_METAL
 #define GLFW_EXPOSE_NATIVE_COCOA
 #include <QuartzCore/QuartzCore.hpp>
 #include <Metal/Metal.hpp>
 #endif
+
 #include <GLFW/glfw3native.h>
 #include <iostream>
 #include <stdexcept>
@@ -59,9 +61,7 @@ namespace lune
 
 #ifdef USE_METAL
 		attachMetalToGLFW();
-#endif
-
-#ifdef USE_VULKAN
+#elif defined(USE_VULKAN)
 		attachVulkanToGLFW();
 #endif
 	}
@@ -80,7 +80,7 @@ namespace lune
 		const auto window = static_cast<Window*>(glfwGetWindowUserPointer(handle));
 
 #ifdef USE_METAL
-		window->m_metalLayer->setDrawableSize(CGSizeMake(width, height));
+		window->surface().layer()->setDrawableSize(CGSizeMake(width, height));
 #endif
 	}
 
@@ -173,15 +173,15 @@ namespace lune
 		const id nsView = objcCall<id>(nsWindow, "contentView");
 
 		auto& metalCtx = metal::MetalContext::instance();
-		m_metalLayer = NS::TransferPtr(CA::MetalLayer::layer());
-		m_metalLayer->setDevice(metalCtx.device());
-		m_metalLayer->setPixelFormat(MTL::PixelFormatBGRA8Unorm);
-		m_metalLayer->setFramebufferOnly(false);
-		m_metalLayer->setDrawableSize(CGSizeMake(m_width, m_height));
+		m_surface = std::make_shared<metal::RenderSurface>(NS::TransferPtr(CA::MetalLayer::layer()));
+		m_surface->layer()->setDevice(metalCtx.device());
+		m_surface->layer()->setPixelFormat(MTL::PixelFormatBGRA8Unorm);
+		m_surface->layer()->setFramebufferOnly(false);
+		m_surface->layer()->setDrawableSize(CGSizeMake(m_width, m_height));
 
-		metalCtx.addMetalLayer(m_metalLayer);
+		metalCtx.addSurface(m_surface);
 		objcCall<void>(nsView, "wantsLayer", YES);
-		objcCall<void>(nsView, "setLayer:", m_metalLayer.get());
+		objcCall<void>(nsView, "setLayer:", m_surface->layer());
 	}
 #endif
 }

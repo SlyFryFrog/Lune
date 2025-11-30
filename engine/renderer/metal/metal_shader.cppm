@@ -7,6 +7,7 @@ module;
 export module lune:metal_shader;
 
 import :graphics_types;
+import :metal_context;
 
 namespace lune::metal
 {
@@ -182,6 +183,7 @@ namespace lune::metal
 	{
 		NS::SharedPtr<MTL::RenderCommandEncoder> m_encoder{};
 		NS::SharedPtr<MTL::CommandBuffer> m_commandBuffer{};
+		const RenderSurface* m_surface = nullptr;
 
 	public:
 		[[nodiscard]] MTL::CommandBuffer* commandBuffer() const
@@ -194,11 +196,10 @@ namespace lune::metal
 			return m_encoder.get();
 		}
 
-		RenderPass& bind(const GraphicsPipeline& pipeline);
 		RenderPass& bind(const Material& material);
 
-		void begin(const CA::MetalDrawable* drawable);
-		void end(const CA::MetalDrawable* drawable) const;
+		RenderPass& begin(RenderSurface& surface);
+		RenderPass& end();
 
 		RenderPass& draw(PrimitiveType type, uint startVertex, uint vertexCount);
 		RenderPass& setFillMode(FillMode mode);

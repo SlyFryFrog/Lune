@@ -32,6 +32,10 @@ int main()
 	lune::metal::Material material{pipeline};
 	lune::metal::RenderPass pass;
 
+	material.setUniform("vertexPositions", vertices)
+		.setUniform("vertexColors", colors);
+
+
 	// Perform our render loop
 	window.show();
 	while (!window.shouldClose())
@@ -39,18 +43,11 @@ int main()
 		if (lune::InputManager::isJustPressed(lune::KEY_ESCAPE))
 			window.setShouldClose(true);
 
-		// Defines what/how we draw to our screen
-		const auto drawable = window.nextDrawable();
-		pass.begin(drawable);
-		{
-			// Internally calculates the size of the variables passed
-			material.setUniform("vertexPositions", vertices)
-			        .setUniform("vertexColors", colors);
-			pass.bind(pipeline)
-				.bind(material)
-			    .draw(lune::Triangle, 0, 3);
-		}
-		pass.end(drawable); // Renders to the screen
+		// Defines the render pass
+		pass.begin(window.surface())
+		    .bind(material)
+		    .draw(lune::Triangle, 0, 3)
+		    .end();
 
 		lune::Window::pollEvents();
 	}

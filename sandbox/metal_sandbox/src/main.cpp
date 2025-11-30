@@ -20,13 +20,17 @@ int main()
 
 	lune::metal::GraphicsShader module{"shaders/basic.metal"};
 	lune::metal::GraphicsPipeline pipeline{module};
+	lune::metal::RenderPass pass{};
 
 	lune::metal::Material materialA{pipeline};
 
 	lune::metal::Texture texture({});
 	texture.load("shaders/img.png");
 
-	lune::metal::RenderPass pass{};
+
+	materialA.setUniform("verts", verticesA)
+	         .setUniform("tex", texture.texture());
+
 
 	window.show();
 	while (!window.shouldClose())
@@ -34,16 +38,10 @@ int main()
 		if (lune::InputManager::isJustPressed(lune::KEY_ESCAPE))
 			window.setShouldClose(true);
 
-		const auto drawable = window.nextDrawable();
-		pass.begin(drawable);
-		{
-			materialA.setUniform("verts", verticesA)
-			         .setUniform("tex", texture.texture());
-			pass.bind(materialA);
-			pass.bind(pipeline);
-			pass.draw(lune::Triangle, 0, 6);
-		}
-		pass.end(drawable);
+		pass.begin(window.surface())
+		    .bind(materialA)
+		    .draw(lune::Triangle, 0, 6)
+		    .end();
 		lune::Window::pollEvents();
 	}
 

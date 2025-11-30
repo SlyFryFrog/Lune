@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 4.0 FATAL_ERROR)
 project(Lune LANGUAGES CXX)
 
 if (APPLE AND USE_METAL)
-    if (USE_METAL)
+    if (USE_VULKAN)
         set(USE_VULKAN OFF CACHE BOOL "Deactivating USE_VULKAN as USE_METAL was specified" FORCE)
     endif ()
 
@@ -23,7 +23,7 @@ endif ()
 #####################
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_EXTENSIONS ON)
 
 ###########
 # Options #

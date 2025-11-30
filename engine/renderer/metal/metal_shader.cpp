@@ -252,28 +252,34 @@ namespace lune::metal
 		}
 	}
 
-	RenderPass& RenderPass::bind(const GraphicsPipeline& pipeline)
+	RenderPass& RenderPass::bind(const Material& material)
 	{
+		const auto pipeline = material.pipeline();
 		m_encoder->setRenderPipelineState(pipeline.state());
 		m_encoder->setDepthStencilState(pipeline.depthStencilState());
 		m_encoder->setCullMode(pipeline.cullMode());
 		m_encoder->setFrontFacingWinding(pipeline.winding());
-		return *this;
-	}
 
-	RenderPass& RenderPass::bind(const Material& material)
-	{
 		material.bind(m_encoder.get());
 		return *this;
 	}
 
-	void RenderPass::begin(const CA::MetalDrawable* drawable)
+	RenderPass& RenderPass::begin(RenderSurface& surface)
 	{
+		if (!surface.layer())
+		{
+			std::cerr << "RenderPass::begin(): layer is null\n";
+			return *this;
+		}
+
+		const auto* drawable = surface.nextDrawable();
 		if (!drawable)
 		{
 			std::cerr << "RenderPass::begin(): drawable is null\n";
-			return;
+			return *this;
 		}
+
+		m_surface = &surface;
 
 		m_commandBuffer = NS::TransferPtr(
 			MetalContext::instance().commandQueue()->commandBuffer());
@@ -289,14 +295,20 @@ namespace lune::metal
 
 		m_encoder = NS::TransferPtr(
 			m_commandBuffer->renderCommandEncoder(renderPassDescriptor.get()));
+
+		return *this;
 	}
 
-	void RenderPass::end(const CA::MetalDrawable* drawable) const
+	RenderPass& RenderPass::end()
 	{
 		m_encoder->endEncoding();
 
+		const auto* drawable = m_surface->drawable();
+
 		m_commandBuffer->presentDrawable(drawable);
 		m_commandBuffer->commit();
+
+		return *this;
 	}
 
 	RenderPass& RenderPass::draw(const PrimitiveType type,

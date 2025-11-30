@@ -2,21 +2,40 @@ module;
 #include <Metal/Metal.hpp>
 #include <QuartzCore/QuartzCore.hpp>
 #include <vector>
-#include <span>
+#include <memory>
 export module lune:metal_context;
 
 import :graphics_context;
-import :metal_shader;
 import :metal_mappings;
 
 namespace lune::metal
 {
-	export struct MetalContextCreateInfo
+	export class RenderSurface
 	{
-		MTL::ClearColor clearColor = {0.0f, 0.0f, 0.0f, 0.0f};
-		MTL::LoadAction loadAction = MTL::LoadActionClear;
-		MTL::StoreAction storeAction = MTL::StoreActionStore;
-		int maxFramesInFlight = 3;
+		NS::SharedPtr<CA::MetalLayer> m_layer{};
+		NS::SharedPtr<CA::MetalDrawable> m_drawable{};
+
+	public:
+		explicit RenderSurface(const NS::SharedPtr<CA::MetalLayer>& layer) :
+			m_layer(layer)
+		{
+		}
+
+		[[nodiscard]] CA::MetalDrawable* nextDrawable()
+		{
+			m_drawable = NS::TransferPtr(m_layer->nextDrawable());
+			return m_drawable.get();
+		}
+
+		[[nodiscard]] CA::MetalDrawable* drawable() const
+		{
+			return m_drawable.get();
+		}
+
+		[[nodiscard]] CA::MetalLayer* layer() const
+		{
+			return m_layer.get();
+		}
 	};
 
 
@@ -24,8 +43,7 @@ namespace lune::metal
 	{
 		NS::SharedPtr<MTL::Device> m_device{};
 		NS::SharedPtr<MTL::CommandQueue> m_commandQueue{};
-		std::vector<NS::SharedPtr<CA::MetalLayer>> m_metalLayers{};
-		MetalContextCreateInfo m_createInfo{};
+		std::vector<std::shared_ptr<RenderSurface>> m_surfaces{};
 
 	private:
 		MetalContext();
@@ -39,13 +57,9 @@ namespace lune::metal
 		 * @return The singleton for the Metal renderer.
 		 */
 		static MetalContext& instance();
-		void create(const MetalContextCreateInfo& info);
 
 		void createDefaultDevice();
 		void createCommandQueue();
-
-		void addMetalLayer(const NS::SharedPtr<CA::MetalLayer>& metalLayer);
-		void removeMetalLayer(const NS::SharedPtr<CA::MetalLayer>& metalLayer);
 
 		[[nodiscard]] MTL::Device* device() const
 		{
@@ -57,14 +71,19 @@ namespace lune::metal
 			return m_commandQueue.get();
 		}
 
-		[[nodiscard]] std::span<const NS::SharedPtr<CA::MetalLayer>> metalLayers() const
+		void addSurface(const std::shared_ptr<RenderSurface>& surface)
 		{
-			return m_metalLayers;
+			m_surfaces.push_back(surface);
 		}
 
-		[[nodiscard]] MetalContextCreateInfo& createInfo()
+		void removeSurface(const std::shared_ptr<RenderSurface>& surface)
 		{
-			return m_createInfo;
+			std::erase(m_surfaces, surface);
+		}
+
+		[[nodiscard]] std::vector<std::shared_ptr<RenderSurface>> surfaces() const
+		{
+			return m_surfaces;
 		}
 	};
 }

@@ -1,10 +1,7 @@
 module;
 #include <Metal/Metal.hpp>
-#include <QuartzCore/QuartzCore.hpp>
 #include <iostream>
 module lune;
-
-import :file;
 
 namespace lune::metal
 {
@@ -20,11 +17,6 @@ namespace lune::metal
 		return s_instance;
 	}
 
-	void MetalContext::create(const MetalContextCreateInfo& info)
-	{
-		m_createInfo = info;
-	}
-
 	void MetalContext::createDefaultDevice()
 	{
 		m_device = NS::TransferPtr(MTL::CreateSystemDefaultDevice());
@@ -37,18 +29,5 @@ namespace lune::metal
 	void MetalContext::createCommandQueue()
 	{
 		m_commandQueue = NS::TransferPtr(m_device->newCommandQueue());
-	}
-
-	void MetalContext::addMetalLayer(const NS::SharedPtr<CA::MetalLayer>& metalLayer)
-	{
-		m_metalLayers.push_back(metalLayer);
-	}
-
-	void MetalContext::removeMetalLayer(const NS::SharedPtr<CA::MetalLayer>& metalLayer)
-	{
-		m_metalLayers.erase(
-			std::remove(m_metalLayers.begin(), m_metalLayers.end(), metalLayer),
-			m_metalLayers.end()
-			);
 	}
 }

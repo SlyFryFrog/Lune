@@ -15,6 +15,6 @@ export import :utils;
 // Only build with the required backend renderer
 #ifdef USE_METAL
 export import :metal;
-#elif USE_VULKAN
+#elif defined(USE_VULKAN)
 export import :vulkan;
 #endif

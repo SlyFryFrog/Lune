@@ -11,6 +11,10 @@ export module lune:window;
 
 import :input_manager;
 
+#ifdef USE_METAL
+import :metal_context;
+#endif
+
 namespace lune
 {
 	/**
@@ -52,8 +56,7 @@ namespace lune
 		WindowMode m_mode{};
 
 #ifdef USE_METAL
-		NS::SharedPtr<CA::MetalLayer> m_metalLayer{};
-		mutable CA::MetalDrawable* m_currentDrawable{};
+		std::shared_ptr<metal::RenderSurface> m_surface{};
 #endif
 
 	public:
@@ -185,11 +188,11 @@ namespace lune
 		void attachMetalToGLFW();
 
 	public:
-		[[nodiscard]] CA::MetalDrawable* nextDrawable() const
+		[[nodiscard]] metal::RenderSurface& surface() const
 		{
-			return m_metalLayer->nextDrawable();
+			return *m_surface;
 		}
-#else
+#elif USE_VULKAN
 		/**
 		 * @brief Attaches a Vulkan context to the GLFW window.
 		 */
@@ -290,12 +293,10 @@ namespace lune
 				return m_rawWindow.height();
 			}
 
-#ifdef USE_METAL
-			[[nodiscard]] CA::MetalDrawable* nextDrawable() const
+			[[nodiscard]] metal::RenderSurface& surface() const
 			{
-				return m_rawWindow.nextDrawable();
+				return m_rawWindow.surface();
 			}
-#endif
 		};
 	}
 }

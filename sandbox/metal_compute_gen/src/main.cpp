@@ -70,6 +70,9 @@ int main()
 	lune::metal::Material material{pipeline};
 	lune::metal::RenderPass pass{};
 
+	material.setUniform("verts", quad)
+	        .setUniform("zoom", Zoom);
+
 	window.show();
 	while (!window.shouldClose())
 	{
@@ -97,17 +100,13 @@ int main()
 		                                            Width * 4, // RGBA8
 		                                            {Width, Height, 1});
 
-		auto drawable = window.nextDrawable();
-		pass.begin(drawable);
-		{
-			material.setUniform("verts", quad)
-			        .setUniform("tex", texture.texture())
-			        .setUniform("zoom", Zoom);
-			pass.bind(material)
-			    .bind(pipeline)
-			    .draw(lune::Triangle, 0, 6);
-		}
-		pass.end(drawable);
+
+		material.setUniform("tex", texture.texture());
+
+		pass.begin(window.surface())
+		    .bind(material)
+		    .draw(lune::Triangle, 0, 6)
+		    .end();
 
 		lune::Window::pollEvents();
 	}
