@@ -1,7 +1,6 @@
 #include <metal_stdlib>
 using namespace metal;
 
-// Vertex output structure
 struct VertexOut {
     float4 position [[position]];
     float3 color;
@@ -13,7 +12,7 @@ vertex VertexOut vertexMain(uint vertexID [[vertex_id]],
 {
     VertexOut out;
     out.position = float4(vertexPositions[vertexID], 1.0);
-    out.color = vertexColors[vertexID]; // pass RGB color
+    out.color = vertexColors[vertexID];
     return out;
 }
 
