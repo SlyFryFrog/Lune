@@ -7,6 +7,9 @@ export module lune:metal_context;
 
 import :graphics_context;
 import :metal_mappings;
+import :metal_buffer;
+import :texture;
+import :metal_texture;
 
 namespace lune::metal
 {
@@ -84,6 +87,18 @@ namespace lune::metal
 		[[nodiscard]] std::vector<std::shared_ptr<RenderSurface>> surfaces() const
 		{
 			return m_surfaces;
+		}
+
+		[[nodiscard]] Buffer createBuffer(size_t size) const
+		{
+			auto impl = std::make_unique<MetalBufferImpl>(m_device.get(), size);
+			return Buffer(std::move(impl));
+		}
+
+		[[nodiscard]] Texture createTexture(TextureContextCreateInfo createInfo) const
+		{
+			auto impl = std::make_unique<MetalTextureImpl>(m_device.get(), createInfo);
+			return Texture(std::move(impl));
 		}
 	};
 }

@@ -10,6 +10,8 @@ int main()
 {
 	lune::setWorkingDirectory();
 
+	auto& context = lune::metal::MetalContext::instance();
+
 	const lune::WindowCreateInfo windowCreateInfo = {
 		.width = 1280,
 		.height = 720,
@@ -24,12 +26,12 @@ int main()
 
 	lune::metal::Material materialA{pipeline};
 
-	lune::metal::Texture texture({});
+	auto texture = context.createTexture({});
 	texture.load("shaders/img.png");
 
 
 	materialA.setUniform("verts", verticesA)
-	         .setUniform("tex", texture.texture());
+	         .setUniform("tex", texture);
 
 
 	window.show();

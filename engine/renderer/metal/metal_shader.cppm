@@ -149,8 +149,8 @@ namespace lune::metal
 	{
 		const GraphicsPipeline* m_pipeline{};
 
-		std::map<std::string, NS::SharedPtr<MTL::Buffer>> m_uniformBuffers;
-		std::map<std::string, NS::SharedPtr<MTL::Texture>> m_textures;
+		std::map<std::string, MTL::Buffer*> m_uniformBuffers;
+		std::map<std::string, MTL::Texture*> m_textures;
 
 	public:
 		explicit Material(const GraphicsPipeline& pipeline) :
@@ -165,17 +165,18 @@ namespace lune::metal
 			return *this;
 		}
 
+		Material& setUniform(const std::string& name, const Texture& texture);
+		Material& setUniform(const std::string& name, const Buffer& buffer);
+
 		Material& setUniform(const std::string& name, const void* data, size_t size,
 		                     BufferUsage usage = Shared);
-		Material& setUniform(const std::string& name, MTL::Texture* texture);
-		Material& setUniform(const std::string& name, MTL::Buffer* buffer);
-
-		void bind(MTL::RenderCommandEncoder* encoder) const;
 
 		[[nodiscard]] const GraphicsPipeline& pipeline() const
 		{
 			return *m_pipeline;
 		}
+
+		void bind(MTL::RenderCommandEncoder* encoder) const;
 	};
 
 
@@ -186,16 +187,6 @@ namespace lune::metal
 		const RenderSurface* m_surface = nullptr;
 
 	public:
-		[[nodiscard]] MTL::CommandBuffer* commandBuffer() const
-		{
-			return m_commandBuffer.get();
-		}
-
-		[[nodiscard]] MTL::RenderCommandEncoder* encoder() const
-		{
-			return m_encoder.get();
-		}
-
 		RenderPass& bind(const Material& material);
 
 		RenderPass& begin(RenderSurface& surface);

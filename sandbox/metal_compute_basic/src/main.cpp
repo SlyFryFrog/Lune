@@ -40,6 +40,8 @@ int main()
 {
 	lune::setWorkingDirectory();
 
+	auto& context = lune::metal::MetalContext::instance();
+
 	// CPU input data
 	std::vector<float> a(arrayLength), b(arrayLength), outputAdd(arrayLength),
 	                   outputMul(arrayLength);
@@ -49,18 +51,19 @@ int main()
 		b[i] = static_cast<float>(rand()) / RAND_MAX;
 	}
 
+	auto outA = context.createBuffer(arrayLength * sizeof(float));
+	auto outB = context.createBuffer(arrayLength * sizeof(float));
+
 	// Add our buffers to our shader
 	auto shader = lune::metal::ComputeShader("shaders/basic.metal");
 	auto kernelAdd = shader.kernel("add_arrays")
 	                       .setUniform("inputA", a.data(), a.size() * sizeof(float))
 	                       .setUniform("inputB", b.data(), b.size() * sizeof(float))
-	                       .setUniform("outputAdd", outputAdd.data(),
-	                                   outputAdd.size() * sizeof(float));
+	                       .setUniform("outputAdd", outA);
 	auto kernelMul = shader.kernel("multiply_arrays")
 	                       .setUniform("inputA", a.data(), a.size() * sizeof(float))
 	                       .setUniform("inputB", b.data(), b.size() * sizeof(float))
-	                       .setUniform("outputMul", outputMul.data(),
-	                                   outputMul.size() * sizeof(float));
+	                       .setUniform("outputMul", outB);
 
 	// Dispatch GPU
 	lune::Timer timer;
@@ -75,11 +78,8 @@ int main()
 
 	auto duration = timer.delta() * 1000;
 
-	auto outA = kernelAdd.buffer("outputAdd");
-	auto outB = kernelMul.buffer("outputMul");
-
-	memcpy(outputAdd.data(), outA->contents(), arrayLength * sizeof(float));
-	memcpy(outputMul.data(), outB->contents(), arrayLength * sizeof(float));
+	memcpy(outputAdd.data(), outA.data(), arrayLength * sizeof(float));
+	memcpy(outputMul.data(), outB.data(), arrayLength * sizeof(float));
 	std::cout << "GPU add/multiply time: " << duration << " ms\n";
 
 

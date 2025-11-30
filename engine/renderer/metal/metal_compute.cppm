@@ -54,8 +54,8 @@ namespace lune::metal
 
 		std::map<std::string, NS::UInteger> m_bindings{};
 		std::map<std::string, NS::UInteger> m_textureBindings{};
-		std::map<std::string, MTL::Buffer*> m_buffers;
-		std::map<std::string, MTL::Texture*> m_textures;
+		std::map<std::string, MTL::Buffer*> m_mtlBuffers;
+		std::map<std::string, MTL::Texture*> m_mtlTextures;
 
 		KernelReflectionInfo m_reflection{};
 
@@ -71,7 +71,7 @@ namespace lune::metal
 
 		[[nodiscard]] std::map<std::string, MTL::Buffer*>& buffers() noexcept
 		{
-			return m_buffers;
+			return m_mtlBuffers;
 		}
 
 		ComputeKernel& dispatch(size_t threadCount);
@@ -80,21 +80,13 @@ namespace lune::metal
 		ComputeKernel& dispatch(const MTL::Size& threadGroups, const MTL::Size& threadsPerGroup);
 
 		template <typename T>
+		requires (!std::same_as<std::remove_cvref_t<T>, Buffer>)
 		ComputeKernel& setUniform(const std::string& name, T& data,
 		                       BufferUsage usage = BufferUsage::Shared);
+		ComputeKernel& setUniform(const std::string& name, const Buffer& buffer);
+		ComputeKernel& setUniform(const std::string& name, const Texture& texture);
 		ComputeKernel& setUniform(const std::string& name, const void* data, size_t size,
 		                        BufferUsage usage = BufferUsage::Shared);
-
-		ComputeKernel& setUniform(const std::string& name, MTL::Buffer* buffer);
-
-		ComputeKernel& setUniform(const std::string& name, MTL::Texture* texture);
-
-		MTL::Texture* texture(const std::string& name);
-
-		MTL::Buffer* buffer(const std::string& name)
-		{
-			return m_buffers[name];
-		}
 
 		[[nodiscard]] KernelReflectionInfo reflection() const
 		{
@@ -104,7 +96,7 @@ namespace lune::metal
 		void createPipeline(MTL::Library* library);
 		ComputeKernel& waitUntilComplete();
 
-		static void bufferToTexture(const MTL::Buffer* buffer, const MTL::Texture* texture,
+		static void bufferToTexture(const Buffer& buffer, const Texture& texture,
 		                            NS::UInteger bytesPerRow, const MTL::Size& sourceSize,
 		                            bool waitUntilComplete = true);
 
@@ -119,6 +111,7 @@ namespace lune::metal
 
 
 	template <typename T>
+	requires (!std::same_as<std::remove_cvref_t<T>, Buffer>)
 	ComputeKernel& ComputeKernel::setUniform(const std::string& name, T& data,
 	                                      const BufferUsage usage)
 	{
@@ -127,7 +120,7 @@ namespace lune::metal
 		auto temp = device->newBuffer(sizeof(T), toMetal(usage));
 
 		std::memcpy(temp->contents(), &data, sizeof(T));
-		m_buffers[name] = temp;
+		m_mtlBuffers[name] = temp;
 
 		return *this;
 	}
@@ -170,7 +163,4 @@ namespace lune::metal
 	private:
 		void createPipelines();
 	};
-
-
-	void printKernelInfo(const KernelReflectionInfo& info);
 }

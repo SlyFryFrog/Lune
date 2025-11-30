@@ -125,6 +125,18 @@ namespace lune::metal
 		return *this;
 	}
 
+	ComputeKernel& ComputeKernel::setUniform(const std::string& name, const Buffer& buffer)
+	{
+		m_mtlBuffers[name] = toMetal(buffer);
+		return *this;
+	}
+
+	ComputeKernel& ComputeKernel::setUniform(const std::string& name, const Texture& texture)
+	{
+		m_mtlTextures[name] = toMetal(texture);
+		return *this;
+	}
+
 	ComputeKernel& ComputeKernel::setUniform(const std::string& name, const void* data,
 	                                         const size_t size, const BufferUsage usage)
 	{
@@ -133,29 +145,9 @@ namespace lune::metal
 		auto temp = device->newBuffer(size, toMetal(usage));
 
 		std::memcpy(temp->contents(), data, size);
-		m_buffers[name] = temp;
+		m_mtlBuffers[name] = temp;
 
 		return *this;
-	}
-
-	ComputeKernel& ComputeKernel::setUniform(const std::string& name,
-	                                         MTL::Buffer* buffer)
-	{
-		m_buffers[name] = buffer;
-
-		return *this;
-	}
-
-	ComputeKernel& ComputeKernel::setUniform(const std::string& name, MTL::Texture* texture)
-	{
-		m_textures[name] = texture;
-
-		return *this;
-	}
-
-	MTL::Texture* ComputeKernel::texture(const std::string& name)
-	{
-		return m_textures[name];
 	}
 
 	void ComputeKernel::createPipeline(MTL::Library* library)
@@ -220,7 +212,7 @@ namespace lune::metal
 		return *this;
 	}
 
-	void ComputeKernel::bufferToTexture(const MTL::Buffer* buffer, const MTL::Texture* texture,
+	void ComputeKernel::bufferToTexture(const Buffer& buffer, const Texture& texture,
 	                                    const NS::UInteger bytesPerRow,
 	                                    const MTL::Size& sourceSize, const bool waitUntilComplete)
 	{
@@ -228,12 +220,12 @@ namespace lune::metal
 		const auto blit = cmdBuffer->blitCommandEncoder();
 
 		blit->copyFromBuffer(
-			buffer,
+			toMetal(buffer),
 			0,
 			bytesPerRow,
 			0,
 			sourceSize,
-			texture,
+			toMetal(texture),
 			0,
 			0,
 			MTL::Origin{0, 0, 0},
@@ -303,7 +295,7 @@ namespace lune::metal
 
 	void ComputeKernel::bindBuffers(MTL::ComputeCommandEncoder* commandEncoder)
 	{
-		for (auto& [name, buf] : m_buffers)
+		for (auto& [name, buf] : m_mtlBuffers)
 		{
 			const NS::UInteger index = m_bindings[name];
 			commandEncoder->setBuffer(buf, 0, index);
@@ -312,7 +304,7 @@ namespace lune::metal
 
 	void ComputeKernel::bindTextures(MTL::ComputeCommandEncoder* commandEncoder)
 	{
-		for (auto& [name, tex] : m_textures)
+		for (auto& [name, tex] : m_mtlTextures)
 		{
 			const NS::UInteger index = m_textureBindings[name];
 			commandEncoder->setTexture(tex, index);

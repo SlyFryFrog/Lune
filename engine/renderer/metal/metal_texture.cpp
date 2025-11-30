@@ -6,16 +6,13 @@ module lune;
 
 namespace lune::metal
 {
-	Texture::Texture(const TextureContextCreateInfo& createInfo) :
-		m_info(createInfo)
+	MetalTextureImpl::MetalTextureImpl(MTL::Device* device, const TextureContextCreateInfo& createInfo) :
+		ITextureImpl(createInfo)
 	{
-		if (!m_info.device)
-			m_info.device = MetalContext::instance().device();
-
-		create();
+		create(device);
 	}
 
-	void Texture::load(const std::string& file, const int desiredChannelCount)
+	void MetalTextureImpl::load(const std::string& file, const int desiredChannelCount)
 	{
 		stbi_set_flip_vertically_on_load(true);
 		int channelCount;
@@ -33,7 +30,7 @@ namespace lune::metal
 		textureDescriptor->setWidth(m_info.width);
 		textureDescriptor->setHeight(m_info.height);
 
-		m_texture = NS::TransferPtr(m_info.device->newTexture(textureDescriptor));
+		m_texture = NS::TransferPtr(m_texture->device()->newTexture(textureDescriptor));
 
 		const MTL::Region region = MTL::Region(0, 0, 0, m_info.width, m_info.height, 1);
 		const NS::UInteger bytesPerRow = 4 * m_info.width;
@@ -43,7 +40,7 @@ namespace lune::metal
 		stbi_image_free(image);
 	}
 
-	void Texture::create()
+	void MetalTextureImpl::create(MTL::Device* device)
 	{
 		const auto pixelFmt = toMetal(m_info.pixelFormat);
 		MTL::TextureDescriptor* desc = MTL::TextureDescriptor::texture2DDescriptor(
@@ -54,6 +51,6 @@ namespace lune::metal
 			);
 		desc->setUsage(MTL::TextureUsageShaderRead | MTL::TextureUsageShaderWrite);
 
-		m_texture = NS::TransferPtr(m_info.device->newTexture(desc));
+		m_texture = NS::TransferPtr(device->newTexture(desc));
 	}
 }

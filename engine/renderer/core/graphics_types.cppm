@@ -12,6 +12,12 @@ namespace lune
 	};
 
 
+	export enum StorageUsage
+	{
+
+	};
+
+
 	export enum PixelFormat
 	{
 		Undefined = 0,

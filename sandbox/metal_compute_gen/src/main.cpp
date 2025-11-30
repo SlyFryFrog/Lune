@@ -29,13 +29,13 @@ int main()
 	const lune::raii::Window window(winInfo);
 
 	// Create our texture
-	lune::metal::TextureContextCreateInfo textureContextInfo{
+	lune::TextureContextCreateInfo textureContextInfo{
 		.pixelFormat = lune::PixelFormat::RGBA8_UNorm,
 		.width = Width,
 		.height = Height,
 		.mipmapped = false,
 	};
-	lune::metal::Texture texture(textureContextInfo);
+	lune::Texture texture = context.createTexture(textureContextInfo);
 
 	// Generate initial data to be fed into compute shader
 	std::array<uint8_t, Width * Height * 4> pixelData{};
@@ -49,9 +49,9 @@ int main()
 	}
 
 	// Create out buffer and copy data
-	MTL::Buffer* inBuff = context.device()->newBuffer(pixelData.size(), MTL::StorageModeShared);
-	MTL::Buffer* outBuff = context.device()->newBuffer(pixelData.size(), MTL::StorageModeShared);
-	std::memcpy(inBuff->contents(), pixelData.data(), pixelData.size());
+	lune::Buffer inBuff = context.createBuffer(pixelData.size());
+	lune::Buffer outBuff = context.createBuffer(pixelData.size());
+	std::memcpy(inBuff.data(), pixelData.data(), pixelData.size());
 
 	// Compute shader setup
 	auto computeShader = lune::metal::ComputeShader("shaders/life_compute.metal");
@@ -90,18 +90,21 @@ int main()
 		{
 			kernel.setUniform("inBuff", inBuff)
 			      .setUniform("outBuff", outBuff)
-			      .dispatch(Width, Height, 1);
+			      .dispatch(Width, Height, 1)
+			      .waitUntilComplete();
 
-			std::swap(inBuff, outBuff); // Not really necessary, could read/write to single buffer
+			// Since we are copying data on CPU, we need to wait for GPU results
+			// If we instead swap ptrs to buffers we don't need to wait
+			inBuff.update(outBuff.data(), outBuff.size());
 		}
 
 		// Copy buffer data to texture and then draw
-		lune::metal::ComputeKernel::bufferToTexture(inBuff, texture.texture(),
+		lune::metal::ComputeKernel::bufferToTexture(inBuff, texture,
 		                                            Width * 4, // RGBA8
 		                                            {Width, Height, 1});
 
 
-		material.setUniform("tex", texture.texture());
+		material.setUniform("tex", texture);
 
 		pass.begin(window.surface())
 		    .bind(material)

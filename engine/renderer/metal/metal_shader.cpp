@@ -167,14 +167,25 @@ namespace lune::metal
 		return out;
 	}
 
+	Material& Material::setUniform(const std::string& name, const Texture& texture)
+	{
+		m_textures[name] = toMetal(texture);
+		return *this;
+	}
+
+	Material& Material::setUniform(const std::string& name, const Buffer& buffer)
+	{
+		m_uniformBuffers[name] = toMetal(buffer);
+		return *this;
+	}
+
 	Material& Material::setUniform(const std::string& name, const void* data, const size_t size,
 	                               const BufferUsage usage)
 	{
 		if (!m_pipeline)
 			return *this;
 
-		auto buffer = NS::TransferPtr(
-			m_pipeline->device()->newBuffer(size, toMetal(usage)));
+		auto buffer = m_pipeline->device()->newBuffer(size, toMetal(usage));
 		if (!buffer)
 		{
 			std::cerr << "Failed to create uniform buffer for '" << name << "'\n";
@@ -184,24 +195,6 @@ namespace lune::metal
 		// Copy data to the newly created buffer and set as uniform
 		std::memcpy(buffer->contents(), data, size);
 		m_uniformBuffers[name] = buffer;
-		return *this;
-	}
-
-	Material& Material::setUniform(const std::string& name, MTL::Texture* texture)
-	{
-		if (!texture)
-			return *this;
-
-		m_textures[name] = NS::RetainPtr(texture);
-		return *this;
-	}
-
-	Material& Material::setUniform(const std::string& name, MTL::Buffer* buffer)
-	{
-		if (!buffer)
-			return *this;
-
-		m_uniformBuffers[name] = NS::RetainPtr(buffer);
 		return *this;
 	}
 
@@ -218,7 +211,7 @@ namespace lune::metal
 				auto it = m_uniformBuffers.find(arg.name);
 				if (it != m_uniformBuffers.end())
 				{
-					encoder->setVertexBuffer(it->second.get(), 0, arg.index);
+					encoder->setVertexBuffer(it->second, 0, arg.index);
 				}
 			}
 			else if (arg.type == MTL::ArgumentTypeTexture)
@@ -226,7 +219,7 @@ namespace lune::metal
 				auto it = m_textures.find(arg.name);
 				if (it != m_textures.end())
 				{
-					encoder->setVertexTexture(it->second.get(), arg.index);
+					encoder->setVertexTexture(it->second, arg.index);
 				}
 			}
 		}
@@ -238,7 +231,7 @@ namespace lune::metal
 				auto it = m_uniformBuffers.find(arg.name);
 				if (it != m_uniformBuffers.end())
 				{
-					encoder->setFragmentBuffer(it->second.get(), 0, arg.index);
+					encoder->setFragmentBuffer(it->second, 0, arg.index);
 				}
 			}
 			else if (arg.type == MTL::ArgumentTypeTexture)
@@ -246,7 +239,7 @@ namespace lune::metal
 				auto it = m_textures.find(arg.name);
 				if (it != m_textures.end())
 				{
-					encoder->setFragmentTexture(it->second.get(), arg.index);
+					encoder->setFragmentTexture(it->second, arg.index);
 				}
 			}
 		}
@@ -254,7 +247,7 @@ namespace lune::metal
 
 	RenderPass& RenderPass::bind(const Material& material)
 	{
-		const auto pipeline = material.pipeline();
+		const auto& pipeline = material.pipeline();
 		m_encoder->setRenderPipelineState(pipeline.state());
 		m_encoder->setDepthStencilState(pipeline.depthStencilState());
 		m_encoder->setCullMode(pipeline.cullMode());

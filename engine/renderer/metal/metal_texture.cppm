@@ -1,40 +1,44 @@
 module;
 #include <Metal/Metal.hpp>
-#include <stb_image.h>
 export module lune:metal_texture;
 
-import :metal_context;
 import :metal_mappings;
+import :texture;
 
 namespace lune::metal
 {
-	export struct TextureContextCreateInfo
+	class MetalTextureImpl final : public ITextureImpl
 	{
-		MTL::Device* device{};
-		PixelFormat pixelFormat{BGRA8_sRGB};
-		int width{1};
-		int height{1};
-		bool mipmapped = false;
-	};
-
-
-	export class Texture
-	{
-		TextureContextCreateInfo m_info;
 		NS::SharedPtr<MTL::Texture> m_texture;
 
 	public:
-		explicit Texture(const TextureContextCreateInfo& createInfo);
-		~Texture() = default;
+		explicit MetalTextureImpl(MTL::Device* device, const TextureContextCreateInfo& createInfo);
+		~MetalTextureImpl() override = default;
+
+		void load(const std::string& file, int desiredChannelCount) override;
 
 		[[nodiscard]] MTL::Texture* texture() const
 		{
 			return m_texture.get();
 		}
 
-		void load(const std::string& file, int desiredChannelCount = STBI_rgb_alpha);
-
 	private:
-		void create();
+		void create(MTL::Device* device);
 	};
+
+
+	MTL::Texture* toMetal(const Texture& texture)
+	{
+		auto* impl = getImpl(texture);
+
+		// Optimize for speed in release builds
+#ifndef NDEBUG
+		const auto* metalImpl = dynamic_cast<MetalTextureImpl*>(impl);
+		if (!metalImpl)
+			throw std::runtime_error("Texture is not a Metal texture!");
+		return metalImpl->texture();
+#else
+		return static_cast<MetalTextureImpl*>(impl)->texture();
+#endif
+	}
 }
