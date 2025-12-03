@@ -10,7 +10,6 @@ namespace lune
 #else
 		static auto& s_instance = vulkan::VulkanContext::instance();
 #endif
-
 		return s_instance;
 	}
 }

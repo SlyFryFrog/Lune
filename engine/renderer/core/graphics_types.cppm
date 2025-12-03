@@ -60,4 +60,11 @@ namespace lune
 		Fill,
 		Wireframe
 	};
+
+	export enum CullMode
+	{
+		Front,
+		Back,
+		None
+	};
 }

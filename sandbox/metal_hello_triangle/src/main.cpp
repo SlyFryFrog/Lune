@@ -29,12 +29,12 @@ int main()
 	// Define our shader implementation
 	lune::metal::GraphicsShader shader{"shaders/basic.metal"};
 	lune::metal::GraphicsPipeline pipeline{shader};
-	lune::metal::Material material{pipeline};
 	lune::metal::RenderPass pass;
 
+	// Create our material - used to set our uniforms
+	lune::metal::Material material{pipeline};
 	material.setUniform("vertexPositions", vertices)
-		.setUniform("vertexColors", colors);
-
+	        .setUniform("vertexColors", colors);
 
 	// Perform our render loop
 	window.show();

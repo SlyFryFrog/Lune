@@ -104,4 +104,17 @@ namespace lune::metal
 			return MTL::TriangleFillModeFill;
 		}
 	}
+
+	constexpr MTL::CullMode toMetal(const CullMode mode) noexcept
+	{
+		switch (mode)
+		{
+		case CullMode::Front:
+			return MTL::CullModeFront;
+		case CullMode::Back:
+			return MTL::CullModeBack;
+		default:
+			return MTL::CullModeNone;
+		}
+	}
 }

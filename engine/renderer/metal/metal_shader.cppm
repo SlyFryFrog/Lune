@@ -168,6 +168,41 @@ namespace lune::metal
 		Material& setUniform(const std::string& name, const Texture& texture);
 		Material& setUniform(const std::string& name, const Buffer& buffer);
 
+		[[nodiscard]] bool hasUniform(const std::string& name) const
+		{
+			return m_uniformBuffers.contains(name) || m_textures.contains(name);
+		}
+
+		[[nodiscard]] bool hasTexture(const std::string& name) const
+		{
+			return m_textures.contains(name);
+		}
+
+		[[nodiscard]] bool hasBuffer(const std::string& name) const
+		{
+			return m_uniformBuffers.contains(name);
+		}
+
+		Material& clear()
+		{
+			m_uniformBuffers.clear();
+			m_textures.clear();
+			return *this;
+		}
+
+		Material& remove(const std::string& name)
+		{
+			m_textures.erase(name);
+			m_uniformBuffers.erase(name);
+			return *this;
+		}
+
+		Material& setPipeline(const GraphicsPipeline& pipeline)
+		{
+			m_pipeline = &pipeline;
+			return *this;
+		}
+
 		Material& setUniform(const std::string& name, const void* data, size_t size,
 		                     BufferUsage usage = Shared);
 
@@ -194,6 +229,11 @@ namespace lune::metal
 
 		RenderPass& draw(PrimitiveType type, uint startVertex, uint vertexCount);
 		RenderPass& setFillMode(FillMode mode);
+		RenderPass& setCullMode(CullMode mode);
 		RenderPass& waitUntilComplete();
+
+		RenderPass& setViewport(float x, float y, float w, float h, float zmin = 0.0f,
+		                        float zmax = 1.0f);
+		RenderPass& setScissor(uint x, uint y, uint w, uint h);
 	};
 }

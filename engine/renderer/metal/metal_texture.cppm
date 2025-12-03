@@ -4,6 +4,7 @@ export module lune:metal_texture;
 
 import :metal_mappings;
 import :texture;
+import :defs;
 
 namespace lune::metal
 {
@@ -27,7 +28,7 @@ namespace lune::metal
 	};
 
 
-	MTL::Texture* toMetal(const Texture& texture)
+	constexpr MTL::Texture* toMetal(const Texture& texture) noexcept(kNoExcept)
 	{
 		auto* impl = getImpl(texture);
 

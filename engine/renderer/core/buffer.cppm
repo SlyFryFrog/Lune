@@ -16,6 +16,7 @@ namespace lune
 		[[nodiscard]] virtual void* data() const = 0;
 	};
 
+
 	export class Buffer
 	{
 		std::unique_ptr<IBufferImpl> m_impl;

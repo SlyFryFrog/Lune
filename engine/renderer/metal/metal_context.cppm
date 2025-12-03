@@ -89,13 +89,14 @@ namespace lune::metal
 			return m_surfaces;
 		}
 
-		[[nodiscard]] Buffer createBuffer(size_t size) const
+		[[nodiscard]] Buffer createBuffer(const size_t size) const override
 		{
 			auto impl = std::make_unique<MetalBufferImpl>(m_device.get(), size);
 			return Buffer(std::move(impl));
 		}
 
-		[[nodiscard]] Texture createTexture(TextureContextCreateInfo createInfo) const
+		[[nodiscard]] Texture
+		createTexture(const TextureContextCreateInfo& createInfo) const override
 		{
 			auto impl = std::make_unique<MetalTextureImpl>(m_device.get(), createInfo);
 			return Texture(std::move(impl));

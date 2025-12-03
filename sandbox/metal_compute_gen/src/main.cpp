@@ -17,7 +17,7 @@ int main()
 {
 	lune::setWorkingDirectory();
 
-	auto& context = lune::metal::MetalContext::instance();
+	auto& context = lune::GraphicsContext::instance();
 
 	// Create window
 	const lune::WindowCreateInfo winInfo{

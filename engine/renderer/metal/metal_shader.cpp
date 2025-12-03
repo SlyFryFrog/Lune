@@ -317,9 +317,28 @@ namespace lune::metal
 		return *this;
 	}
 
+	RenderPass& RenderPass::setCullMode(const CullMode mode)
+	{
+		m_encoder->setCullMode(toMetal(mode));
+		return *this;
+	}
+
 	RenderPass& RenderPass::waitUntilComplete()
 	{
 		m_commandBuffer->waitUntilCompleted();
+		return *this;
+	}
+
+	RenderPass& RenderPass::setViewport(const float x, const float y, const float w, const float h,
+	                                    const float zmin, const float zmax)
+	{
+		m_encoder->setViewport({x, y, w, h, zmin, zmax});
+		return *this;
+	}
+
+	RenderPass& RenderPass::setScissor(const uint x, const uint y, const uint w, const uint h)
+	{
+		m_encoder->setScissorRect({x, y, w, h});
 		return *this;
 	}
 }
