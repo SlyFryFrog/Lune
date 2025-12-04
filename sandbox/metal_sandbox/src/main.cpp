@@ -1,77 +1,7 @@
+#include <iostream>
 import lune;
-
-struct VertexData
-{
-	lune::Vec4 position;
-	lune::Vec2 color;
-};
-
-
-constexpr lune::Vec2 verticesA[] = {
-	{-1.f, -1.f}, {1.f, -1.f}, {-1.f, 1.f},
-	{-1.f, 1.f}, {1.f, -1.f}, {1.f, 1.f}
-};
-
-constexpr lune::Vec3 verticesB[] = {
-	{-0.5f, -0.5f, 0.0f},
-	{0.5f, -0.5f, 0.0f},
-	{0.0f, 0.5f, 0.0f}
-};
-
-constexpr lune::Vec3 colors[] = {
-	{1.0f, 0.0f, 0.0f}, // Red
-	{0.0f, 1.0f, 0.0f}, // Green
-	{0.0f, 0.0f, 1.0f}  // Blue
-};
-
-constexpr VertexData cubeData[] = {
-	{{-0.5, -0.5, 0.5, 1.0}, {0.0, 0.0}},
-	{{0.5, -0.5, 0.5, 1.0}, {1.0, 0.0}},
-	{{0.5, 0.5, 0.5, 1.0}, {1.0, 1.0}},
-	{{0.5, 0.5, 0.5, 1.0}, {1.0, 1.0}},
-	{{-0.5, 0.5, 0.5, 1.0}, {0.0, 1.0}},
-	{{-0.5, -0.5, 0.5, 1.0}, {0.0, 0.0}},
-
-	// Back face
-	{{0.5, -0.5, -0.5, 1.0}, {0.0, 0.0}},
-	{{-0.5, -0.5, -0.5, 1.0}, {1.0, 0.0}},
-	{{-0.5, 0.5, -0.5, 1.0}, {1.0, 1.0}},
-	{{-0.5, 0.5, -0.5, 1.0}, {1.0, 1.0}},
-	{{0.5, 0.5, -0.5, 1.0}, {0.0, 1.0}},
-	{{0.5, -0.5, -0.5, 1.0}, {0.0, 0.0}},
-
-	// Top face
-	{{-0.5, 0.5, 0.5, 1.0}, {0.0, 0.0}},
-	{{0.5, 0.5, 0.5, 1.0}, {1.0, 0.0}},
-	{{0.5, 0.5, -0.5, 1.0}, {1.0, 1.0}},
-	{{0.5, 0.5, -0.5, 1.0}, {1.0, 1.0}},
-	{{-0.5, 0.5, -0.5, 1.0}, {0.0, 1.0}},
-	{{-0.5, 0.5, 0.5, 1.0}, {0.0, 0.0}},
-
-	// Bottom face
-	{{-0.5, -0.5, -0.5, 1.0}, {0.0, 0.0}},
-	{{0.5, -0.5, -0.5, 1.0}, {1.0, 0.0}},
-	{{0.5, -0.5, 0.5, 1.0}, {1.0, 1.0}},
-	{{0.5, -0.5, 0.5, 1.0}, {1.0, 1.0}},
-	{{-0.5, -0.5, 0.5, 1.0}, {0.0, 1.0}},
-	{{-0.5, -0.5, -0.5, 1.0}, {0.0, 0.0}},
-
-	// Left face
-	{{-0.5, -0.5, -0.5, 1.0}, {0.0, 0.0}},
-	{{-0.5, -0.5, 0.5, 1.0}, {1.0, 0.0}},
-	{{-0.5, 0.5, 0.5, 1.0}, {1.0, 1.0}},
-	{{-0.5, 0.5, 0.5, 1.0}, {1.0, 1.0}},
-	{{-0.5, 0.5, -0.5, 1.0}, {0.0, 1.0}},
-	{{-0.5, -0.5, -0.5, 1.0}, {0.0, 0.0}},
-
-	// Right face
-	{{0.5, -0.5, 0.5, 1.0}, {0.0, 0.0}},
-	{{0.5, -0.5, -0.5, 1.0}, {1.0, 0.0}},
-	{{0.5, 0.5, -0.5, 1.0}, {1.0, 1.0}},
-	{{0.5, 0.5, -0.5, 1.0}, {1.0, 1.0}},
-	{{0.5, 0.5, 0.5, 1.0}, {0.0, 1.0}},
-	{{0.5, -0.5, 0.5, 1.0}, {0.0, 0.0}},
-};
+import sandbox;
+using namespace sandbox;
 
 lune::Timer timer;
 const lune::raii::Window window{{
@@ -92,10 +22,13 @@ int main()
 
 	lune::metal::GraphicsShader shader{"shaders/cube.metal"};
 	lune::metal::GraphicsPipeline pipeline{shader};
-	lune::metal::RenderPass pass{};
+	lune::metal::RenderPass pass{window.surface()};
 
 	lune::metal::Material material{pipeline};
-	material.setUniform("cubeData", cubeData);
+	material.setUniform("cubeData", cubeVertices);
+
+	lune::Buffer indexBuffer = context.createBuffer(sizeof(cubeIndices));
+	indexBuffer.update(cubeIndices, sizeof(cubeIndices));
 
 	window.show();
 	timer.start();
@@ -111,18 +44,18 @@ int main()
 
 			if (lune::InputManager::isPressed(lune::KEY_W))
 			{
-				pass.begin(window.surface())
+				pass.begin()
 				    .bind(material)
 				    .setFillMode(lune::Wireframe)
-				    .setCullMode(lune::None) // Disable optimization
-				    .draw(lune::Triangle, 0, 36)
+				    .setCullMode(lune::None)
+				    .draw(lune::Triangle, 36, indexBuffer) // Optimized indexed draw
 				    .end();
 			}
 			else
 			{
-				pass.begin(window.surface())
+				pass.begin()
 				    .bind(material)
-				    .draw(lune::Triangle, 0, 36)
+				    .draw(lune::Triangle, 36, indexBuffer)
 				    .end();
 			}
 		}
@@ -133,13 +66,12 @@ int main()
 	return 0;
 }
 
-
 void drawLayeredDemo(lune::GraphicsContext& context)
 {
 	// Create our first shader
 	lune::metal::GraphicsShader shader{"shaders/basic.metal"};
 	lune::metal::GraphicsPipeline pipeline{shader};
-	lune::metal::RenderPass pass{};
+	lune::metal::RenderPass pass{window.surface()};
 
 	lune::Texture texture = context.createTexture({});
 	texture.load("shaders/img.png");
@@ -156,7 +88,7 @@ void drawLayeredDemo(lune::GraphicsContext& context)
 	         .setUniform("vertexColors", colors);
 
 	// First drawn is placed on top
-	pass.begin(window.surface())
+	pass.begin()
 	    .bind(material2)
 	    .draw(lune::Triangle, 0, 3)
 	    .bind(materialA)

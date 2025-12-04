@@ -250,29 +250,21 @@ namespace lune::metal
 		const auto& pipeline = material.pipeline();
 		m_encoder->setRenderPipelineState(pipeline.state());
 		m_encoder->setDepthStencilState(pipeline.depthStencilState());
-		m_encoder->setCullMode(pipeline.cullMode());
-		m_encoder->setFrontFacingWinding(pipeline.winding());
+		m_encoder->setCullMode(toMetal(pipeline.cullMode()));
+		m_encoder->setFrontFacingWinding(toMetal(pipeline.winding()));
 
 		material.bind(m_encoder.get());
 		return *this;
 	}
 
-	RenderPass& RenderPass::begin(RenderSurface& surface)
+	RenderPass& RenderPass::begin()
 	{
-		if (!surface.layer())
-		{
-			std::cerr << "RenderPass::begin(): layer is null\n";
-			return *this;
-		}
-
-		const auto* drawable = surface.nextDrawable();
+		const auto* drawable = m_surface.nextDrawable();
 		if (!drawable)
 		{
 			std::cerr << "RenderPass::begin(): drawable is null\n";
 			return *this;
 		}
-
-		m_surface = &surface;
 
 		m_commandBuffer = NS::TransferPtr(
 			MetalContext::instance().commandQueue()->commandBuffer());
@@ -296,7 +288,7 @@ namespace lune::metal
 	{
 		m_encoder->endEncoding();
 
-		const auto* drawable = m_surface->drawable();
+		const auto* drawable = m_surface.drawable();
 
 		m_commandBuffer->presentDrawable(drawable);
 		m_commandBuffer->commit();
@@ -308,6 +300,20 @@ namespace lune::metal
 	                             const uint startVertex, const uint vertexCount)
 	{
 		m_encoder->drawPrimitives(toMetal(type), startVertex, vertexCount);
+		return *this;
+	}
+
+	RenderPass& RenderPass::draw(const PrimitiveType type, const uint indexCount,
+	                             const Buffer& indexBuffer, const uint indexOffset)
+	{
+		m_encoder->drawIndexedPrimitives(
+			toMetal(type),
+			indexCount,
+			MTL::IndexTypeUInt32,
+			toMetal(indexBuffer),
+			indexOffset
+			);
+
 		return *this;
 	}
 

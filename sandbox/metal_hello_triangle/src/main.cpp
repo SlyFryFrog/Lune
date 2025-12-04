@@ -29,7 +29,7 @@ int main()
 	// Define our shader implementation
 	lune::metal::GraphicsShader shader{"shaders/basic.metal"};
 	lune::metal::GraphicsPipeline pipeline{shader};
-	lune::metal::RenderPass pass;
+	lune::metal::RenderPass pass{window.surface()};
 
 	// Create our material - used to set our uniforms
 	lune::metal::Material material{pipeline};
@@ -44,7 +44,7 @@ int main()
 			window.setShouldClose(true);
 
 		// Defines the render pass
-		pass.begin(window.surface())
+		pass.begin()
 		    .bind(material)
 		    .draw(lune::Triangle, 0, 3)
 		    .end();

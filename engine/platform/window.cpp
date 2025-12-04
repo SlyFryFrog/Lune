@@ -51,6 +51,7 @@ namespace lune
 		m_height = info.height;
 		m_title = info.title;
 		m_mode = info.mode;
+		glfwGetFramebufferSize(m_handle, &m_frameBufferWidth, &m_frameBufferHeight);
 
 		// Set callbacks
 		glfwSetWindowUserPointer(m_handle, this);
@@ -78,6 +79,9 @@ namespace lune
 	void Window::_onFrameBufferSizeCallback(GLFWwindow* handle, const int width, const int height)
 	{
 		const auto window = static_cast<Window*>(glfwGetWindowUserPointer(handle));
+
+		window->m_frameBufferWidth = width;
+		window->m_frameBufferHeight = height;
 
 #ifdef USE_METAL
 		window->surface().layer()->setDrawableSize(CGSizeMake(width, height));
@@ -173,11 +177,12 @@ namespace lune
 		const auto nsView = objcCall<id>(nsWindow, "contentView");
 
 		auto& metalCtx = metal::MetalContext::instance();
-		m_surface = std::make_shared<metal::RenderSurface>(NS::TransferPtr(CA::MetalLayer::layer()));
+		m_surface = std::make_shared<
+			metal::RenderSurface>(NS::TransferPtr(CA::MetalLayer::layer()));
 		m_surface->layer()->setDevice(metalCtx.device());
 		m_surface->layer()->setPixelFormat(MTL::PixelFormatBGRA8Unorm);
 		m_surface->layer()->setFramebufferOnly(false);
-		m_surface->layer()->setDrawableSize(CGSizeMake(m_width, m_height));
+		m_surface->layer()->setDrawableSize(CGSizeMake(m_frameBufferWidth, m_frameBufferHeight));
 
 		metalCtx.addSurface(m_surface);
 		objcCall<void>(nsView, "wantsLayer", YES);

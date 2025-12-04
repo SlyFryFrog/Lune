@@ -117,4 +117,16 @@ namespace lune::metal
 			return MTL::CullModeNone;
 		}
 	}
+
+	constexpr MTL::Winding toMetal(const Winding mode) noexcept
+	{
+		switch (mode)
+		{
+		case Winding::Clockwise:
+			return MTL::WindingClockwise;
+		case Winding::CounterClockwise:
+		default:
+			return MTL::WindingCounterClockwise;
+		}
+	}
 }

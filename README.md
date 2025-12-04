@@ -52,7 +52,7 @@ much control as possible while still improving usability.
 ```c++
 import lune;
 
-constexpr lune::Vec3 vertices[] = {
+constexpr lune::Vec3 verticesB[] = {
 	{-0.5f, -0.5f, 0.0f},
 	{0.5f, -0.5f, 0.0f},
 	{0.0f, 0.5f, 0.0f}
@@ -81,12 +81,12 @@ int main()
 	// Define our shader implementation
 	lune::metal::GraphicsShader shader{"shaders/basic.metal"};
 	lune::metal::GraphicsPipeline pipeline{shader};
+	lune::metal::RenderPass pass{window.surface()};
+
+	// Create our material - used to set our uniforms
 	lune::metal::Material material{pipeline};
-	lune::metal::RenderPass pass;
-
-	material.setUniform("vertexPositions", vertices)
-		.setUniform("vertexColors", colors);
-
+	material.setUniform("vertexPositions", verticesB)
+	        .setUniform("vertexColors", colors);
 
 	// Perform our render loop
 	window.show();
@@ -96,7 +96,7 @@ int main()
 			window.setShouldClose(true);
 
 		// Defines the render pass
-		pass.begin(window.surface())
+		pass.begin()
 		    .bind(material)
 		    .draw(lune::Triangle, 0, 3)
 		    .end();

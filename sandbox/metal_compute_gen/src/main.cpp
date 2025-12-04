@@ -20,22 +20,20 @@ int main()
 	auto& context = lune::GraphicsContext::instance();
 
 	// Create window
-	const lune::WindowCreateInfo winInfo{
+	const lune::raii::Window window({
 		Width,
 		Height,
 		"Lune – Jeu de la Vie sur GPU",
 		false
-	};
-	const lune::raii::Window window(winInfo);
+	});
 
 	// Create our texture
-	lune::TextureContextCreateInfo textureContextInfo{
+	lune::Texture texture = context.createTexture({
 		.pixelFormat = lune::PixelFormat::RGBA8_UNorm,
 		.width = Width,
 		.height = Height,
 		.mipmapped = false,
-	};
-	lune::Texture texture = context.createTexture(textureContextInfo);
+	});
 
 	// Generate initial data to be fed into compute shader
 	std::array<uint8_t, Width * Height * 4> pixelData{};
@@ -68,7 +66,7 @@ int main()
 	};
 	lune::metal::GraphicsPipeline pipeline{shader};
 	lune::metal::Material material{pipeline};
-	lune::metal::RenderPass pass{};
+	lune::metal::RenderPass pass{window.surface()};
 
 	material.setUniform("verts", quad)
 	        .setUniform("zoom", Zoom);
@@ -106,7 +104,7 @@ int main()
 
 		material.setUniform("tex", texture);
 
-		pass.begin(window.surface())
+		pass.begin()
 		    .bind(material)
 		    .draw(lune::Triangle, 0, 6)
 		    .end();

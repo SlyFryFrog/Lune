@@ -20,8 +20,8 @@ namespace lune::metal
 		bool depthWrite = true;
 
 		MTL::CompareFunction depthCompare = MTL::CompareFunctionLess;
-		MTL::CullMode cullMode = MTL::CullModeBack;
-		MTL::Winding winding = MTL::WindingCounterClockwise;
+		CullMode cullMode = CullMode::Back;
+		Winding winding = Winding::CounterClockwise;
 	};
 
 
@@ -129,12 +129,12 @@ namespace lune::metal
 			return m_depthStencilState.get();
 		}
 
-		[[nodiscard]] MTL::CullMode cullMode() const noexcept
+		[[nodiscard]] CullMode cullMode() const noexcept
 		{
 			return m_desc.cullMode;
 		}
 
-		[[nodiscard]] MTL::Winding winding() const noexcept
+		[[nodiscard]] Winding winding() const noexcept
 		{
 			return m_desc.winding;
 		}
@@ -206,12 +206,12 @@ namespace lune::metal
 		Material& setUniform(const std::string& name, const void* data, size_t size,
 		                     BufferUsage usage = Shared);
 
+		void bind(MTL::RenderCommandEncoder* encoder) const;
+
 		[[nodiscard]] const GraphicsPipeline& pipeline() const
 		{
 			return *m_pipeline;
 		}
-
-		void bind(MTL::RenderCommandEncoder* encoder) const;
 	};
 
 
@@ -219,15 +219,23 @@ namespace lune::metal
 	{
 		NS::SharedPtr<MTL::RenderCommandEncoder> m_encoder{};
 		NS::SharedPtr<MTL::CommandBuffer> m_commandBuffer{};
-		const RenderSurface* m_surface = nullptr;
+		RenderSurface& m_surface;
 
 	public:
+		explicit RenderPass(RenderSurface& surface) :
+			m_surface(surface)
+		{
+		}
+
 		RenderPass& bind(const Material& material);
 
-		RenderPass& begin(RenderSurface& surface);
+		RenderPass& begin();
 		RenderPass& end();
 
 		RenderPass& draw(PrimitiveType type, uint startVertex, uint vertexCount);
+		RenderPass& draw(PrimitiveType type, uint indexCount, const Buffer& indexBuffer,
+		                 uint indexOffset = 0);
+
 		RenderPass& setFillMode(FillMode mode);
 		RenderPass& setCullMode(CullMode mode);
 		RenderPass& waitUntilComplete();

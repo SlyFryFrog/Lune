@@ -67,4 +67,10 @@ namespace lune
 		Back,
 		None
 	};
+
+	export enum Winding
+	{
+		Clockwise,
+		CounterClockwise
+	};
 }

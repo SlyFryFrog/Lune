@@ -47,6 +47,8 @@ namespace lune
 		GLFWwindow* m_handle{};
 		int m_width{};
 		int m_height{};
+		int m_frameBufferWidth{};
+		int m_frameBufferHeight{};
 		std::string m_title{};
 		WindowMode m_mode{};
 
