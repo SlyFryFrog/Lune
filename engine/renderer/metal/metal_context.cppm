@@ -1,47 +1,18 @@
 module;
 #include <Metal/Metal.hpp>
-#include <QuartzCore/QuartzCore.hpp>
 #include <vector>
 #include <memory>
 export module lune:metal_context;
 
 import :graphics_context;
-import :metal_mappings;
-import :metal_buffer;
 import :texture;
+import :metal_buffer;
 import :metal_texture;
+import :metal_mappings;
+import :metal_render_surface;
 
 namespace lune::metal
 {
-	export class RenderSurface
-	{
-		NS::SharedPtr<CA::MetalLayer> m_layer{};
-		NS::SharedPtr<CA::MetalDrawable> m_drawable{};
-
-	public:
-		explicit RenderSurface(const NS::SharedPtr<CA::MetalLayer>& layer) :
-			m_layer(layer)
-		{
-		}
-
-		[[nodiscard]] CA::MetalDrawable* nextDrawable()
-		{
-			m_drawable = NS::TransferPtr(m_layer->nextDrawable());
-			return m_drawable.get();
-		}
-
-		[[nodiscard]] CA::MetalDrawable* drawable() const
-		{
-			return m_drawable.get();
-		}
-
-		[[nodiscard]] CA::MetalLayer* layer() const
-		{
-			return m_layer.get();
-		}
-	};
-
-
 	export class MetalContext final : public GraphicsContext
 	{
 		NS::SharedPtr<MTL::Device> m_device{};

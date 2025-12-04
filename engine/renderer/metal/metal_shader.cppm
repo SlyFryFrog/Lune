@@ -37,7 +37,7 @@ namespace lune::metal
 
 		void createLibrary(const std::string& path, NS::Error** error);
 
-		[[nodiscard]] MTL::Device* device() const
+		[[nodiscard]] MTL::Device* device() const noexcept
 		{
 			return m_device;
 		}
@@ -61,12 +61,12 @@ namespace lune::metal
 		                        const std::string& fsName = "fragmentMain",
 		                        MTL::Device* device = nullptr);
 
-		[[nodiscard]] MTL::Function* vertex() const
+		[[nodiscard]] MTL::Function* vertex() const noexcept
 		{
 			return m_vertex.get();
 		}
 
-		[[nodiscard]] MTL::Function* fragment() const
+		[[nodiscard]] MTL::Function* fragment() const noexcept
 		{
 			return m_fragment.get();
 		}
@@ -99,42 +99,42 @@ namespace lune::metal
 		explicit GraphicsPipeline(const GraphicsShader& shader,
 		                          const GraphicsPipelineDesc& desc = GraphicsPipelineDesc());
 
-		[[nodiscard]] MTL::Device* device() const
+		[[nodiscard]] MTL::Device* device() const noexcept
 		{
 			return m_shader->device();
 		}
 
-		[[nodiscard]] MTL::RenderPipelineState* state() const
+		[[nodiscard]] MTL::RenderPipelineState* state() const noexcept
 		{
 			return m_state.get();
 		}
 
-		[[nodiscard]] const GraphicsShader& shader() const
+		[[nodiscard]] const GraphicsShader& shader() const noexcept
 		{
 			return *m_shader;
 		}
 
-		[[nodiscard]] const std::vector<ArgumentInfo>& vertexArguments() const
+		[[nodiscard]] const std::vector<ArgumentInfo>& vertexArguments() const noexcept
 		{
 			return m_vertexArguments;
 		}
 
-		[[nodiscard]] const std::vector<ArgumentInfo>& fragmentArguments() const
+		[[nodiscard]] const std::vector<ArgumentInfo>& fragmentArguments() const noexcept
 		{
 			return m_fragmentArguments;
 		}
 
-		[[nodiscard]] MTL::DepthStencilState* depthStencilState() const
+		[[nodiscard]] MTL::DepthStencilState* depthStencilState() const noexcept
 		{
 			return m_depthStencilState.get();
 		}
 
-		[[nodiscard]] MTL::CullMode cullMode() const
+		[[nodiscard]] MTL::CullMode cullMode() const noexcept
 		{
 			return m_desc.cullMode;
 		}
 
-		[[nodiscard]] MTL::Winding winding() const
+		[[nodiscard]] MTL::Winding winding() const noexcept
 		{
 			return m_desc.winding;
 		}

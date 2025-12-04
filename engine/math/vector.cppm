@@ -203,17 +203,6 @@ export namespace lune
 			return (*this - o).length();
 		}
 
-		constexpr void normalize() noexcept
-		{
-			const float len = length();
-			if (len > 0.0f)
-			{
-				x /= len;
-				y /= len;
-				z /= len;
-			}
-		}
-
 		[[nodiscard]] constexpr Vec3 normalized() const noexcept
 		{
 			const float len = length();

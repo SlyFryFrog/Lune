@@ -4,7 +4,7 @@ module;
 #ifdef USE_METAL
 #define GLFW_EXPOSE_NATIVE_COCOA
 #include <QuartzCore/QuartzCore.hpp>
-#include <Metal/Metal.hpp>
+#elif defined(USE_VULKAN)
 #endif
 
 #include <GLFW/glfw3native.h>
@@ -169,8 +169,8 @@ namespace lune
 #ifdef USE_METAL
 	void Window::attachMetalToGLFW()
 	{
-		const id nsWindow = glfwGetCocoaWindow(m_handle);
-		const id nsView = objcCall<id>(nsWindow, "contentView");
+		const auto nsWindow = glfwGetCocoaWindow(m_handle);
+		const auto nsView = objcCall<id>(nsWindow, "contentView");
 
 		auto& metalCtx = metal::MetalContext::instance();
 		m_surface = std::make_shared<metal::RenderSurface>(NS::TransferPtr(CA::MetalLayer::layer()));

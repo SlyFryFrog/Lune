@@ -203,7 +203,7 @@ export namespace lune
 			return m[row];
 		}
 
-		[[nodiscard]] constexpr Mat4 transpose(const Mat4& o) const noexcept
+		[[nodiscard]] constexpr Mat4 transpose() const noexcept
 		{
 			return Mat4{
 				m[0][0], m[1][0], m[2][0], m[3][0],
@@ -280,6 +280,53 @@ export namespace lune
 				0.0f, 0.0f, -(far + near) / (far - near), -1.0f,
 				0.0f, 0.0f, -(2.0f * far * near) / (far - near), 0.0f
 			};
+		}
+
+		static constexpr Mat4 lookAt(const Vec3& eye,
+							 const Vec3& center,
+							 const Vec3& up) noexcept
+		{
+			const Vec3 f = (center - eye).normalize();
+			const Vec3 s = f.cross(up).normalize();
+			const Vec3 u = s.cross(f);
+
+			return Mat4{
+				s.x,  u.x, -f.x, 0.0f,
+				s.y,  u.y, -f.y, 0.0f,
+				s.z,  u.z, -f.z, 0.0f,
+				-s.dot(eye), -u.dot(eye), f.dot(eye), 1.0f
+			};
+		}
+
+		static constexpr Mat4 orthographic(float left, float right,
+								   float bottom, float top,
+								   float near, float far) noexcept
+		{
+			return Mat4{
+				2.0f / (right - left), 0.0f, 0.0f, 0.0f,
+				0.0f, 2.0f / (top - bottom), 0.0f, 0.0f,
+				0.0f, 0.0f, -2.0f / (far - near), 0.0f,
+				-(right + left) / (right - left),
+				-(top + bottom) / (top - bottom),
+				-(far + near) / (far - near),
+				1.0f
+			};
+		}
+
+		static constexpr Mat4 transform(const Vec3& translation,
+								const Vec3& rotationEuler,
+								const Vec3& scaleVec) noexcept
+		{
+			Mat4 t = translate(translation.x, translation.y, translation.z);
+
+			Mat4 rx = rotate(rotationEuler.x, Vec3{1,0,0});
+			Mat4 ry = rotate(rotationEuler.y, Vec3{0,1,0});
+			Mat4 rz = rotate(rotationEuler.z, Vec3{0,0,1});
+
+			Mat4 r = rz * ry * rx;
+			Mat4 s = scale(scaleVec.x, scaleVec.y, scaleVec.z);
+
+			return t * r * s;
 		}
 
 #ifdef LUNE_USE_SIMD

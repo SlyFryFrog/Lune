@@ -2,17 +2,12 @@ module;
 #define GLFW_INCLUDE_NONE	// We're not using OpenGL, therefore we disable it
 #include <GLFW/glfw3.h>
 #include <string>
-
-#ifdef USE_METAL
-#include <QuartzCore/CAMetalLayer.hpp>
-#include <Metal/Metal.hpp>
-#endif
 export module lune:window;
 
 import :input_manager;
 
 #ifdef USE_METAL
-import :metal_context;
+import :metal;
 #endif
 
 namespace lune

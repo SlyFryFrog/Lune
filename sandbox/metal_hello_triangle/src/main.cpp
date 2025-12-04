@@ -1,6 +1,6 @@
 import lune;
 
-constexpr lune::Vec3 vertices[] = {
+constexpr lune::Vec3 verticesB[] = {
 	{-0.5f, -0.5f, 0.0f},
 	{0.5f, -0.5f, 0.0f},
 	{0.0f, 0.5f, 0.0f}
@@ -33,7 +33,7 @@ int main()
 
 	// Create our material - used to set our uniforms
 	lune::metal::Material material{pipeline};
-	material.setUniform("vertexPositions", vertices)
+	material.setUniform("vertexPositions", verticesB)
 	        .setUniform("vertexColors", colors);
 
 	// Perform our render loop

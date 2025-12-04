@@ -282,8 +282,8 @@ namespace lune::metal
 		MTL::RenderPassColorAttachmentDescriptor* colorAttachmentDescriptor =
 			renderPassDescriptor->colorAttachments()->object(0);
 		colorAttachmentDescriptor->setTexture(drawable->texture());
-		colorAttachmentDescriptor->setLoadAction(MTL::LoadActionLoad);
-		colorAttachmentDescriptor->setClearColor(MTL::ClearColor(0.0f, 0.0f, 0.0f, 0.0f));
+		colorAttachmentDescriptor->setLoadAction(MTL::LoadActionClear);
+		colorAttachmentDescriptor->setClearColor(MTL::ClearColor(0.0f, 0.0f, 0.0f, 1.0f));
 		colorAttachmentDescriptor->setStoreAction(MTL::StoreActionStore);
 
 		m_encoder = NS::TransferPtr(
