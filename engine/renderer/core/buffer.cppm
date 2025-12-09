@@ -4,7 +4,7 @@ export module lune:buffer;
 
 import :graphics_types;
 
-namespace lune
+namespace lune::gfx
 {
 	struct IBufferImpl
 	{
@@ -24,8 +24,7 @@ namespace lune
 		friend IBufferImpl* getImpl(const Buffer& buffer);
 
 	public:
-		explicit Buffer(std::unique_ptr<IBufferImpl> impl) noexcept :
-			m_impl(std::move(impl))
+		explicit Buffer(std::unique_ptr<IBufferImpl> impl) noexcept : m_impl(std::move(impl))
 		{
 		}
 
@@ -52,4 +51,4 @@ namespace lune
 	{
 		return buffer.m_impl.get();
 	}
-}
+} // namespace lune::gfx

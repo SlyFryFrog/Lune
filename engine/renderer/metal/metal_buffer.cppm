@@ -6,17 +6,17 @@ import :buffer;
 
 namespace lune::metal
 {
-	class MetalBufferImpl final : public IBufferImpl
+	class MetalBufferImpl final : public gfx::IBufferImpl
 	{
 		NS::SharedPtr<MTL::Buffer> m_buffer{};
 		size_t m_size{};
 
 	public:
-		MetalBufferImpl(MTL::Device* device, const size_t size) :
-			m_size(size)
+		MetalBufferImpl(MTL::Device* device, const size_t size) : m_size(size)
 		{
 			// Todo Allow setting the option externally through universal api
-			m_buffer = NS::TransferPtr(device->newBuffer(static_cast<NS::Integer>(size), MTL::StorageModeShared));
+			m_buffer = NS::TransferPtr(
+					device->newBuffer(static_cast<NS::Integer>(size), MTL::StorageModeShared));
 		}
 
 		void update(const void* data, size_t size, const size_t offset) override
@@ -54,13 +54,13 @@ namespace lune::metal
 		}
 	};
 
-	MTL::Buffer* toMetal(const Buffer& buffer)
+	MTL::Buffer* toMetal(const gfx::Buffer& buffer)
 	{
-		auto* impl = getImpl(buffer);
+		const auto impl{getImpl(buffer)};
 
 		// Optimize for speed in release builds
 #ifndef NDEBUG
-		const auto* metalImpl = dynamic_cast<MetalBufferImpl*>(impl);
+		const auto metalImpl{dynamic_cast<MetalBufferImpl*>(impl)};
 		if (!metalImpl)
 			throw std::runtime_error("Buffer is not a Metal buffer!");
 		return metalImpl->buffer();
@@ -68,4 +68,4 @@ namespace lune::metal
 		return static_cast<MetalBufferImpl*>(impl)->buffer();
 #endif
 	}
-}
+} // namespace lune::metal

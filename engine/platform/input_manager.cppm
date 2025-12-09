@@ -15,9 +15,9 @@ namespace lune
 	/**
 	 * @brief Manages input events, key states, and mouse interactions.
 	 *
-	 * The `InputManager` class provides static methods to query the state of keys,
-	 * check for key combinations, and retrieve mouse position and movement.
-	 * It is designed to be used globally and does not require instantiation.
+	 * The `InputManager` class provides static methods to query the state of keys, check for key
+	 * combinations, and retrieve mouse position and movement. It is designed to be used globally
+	 * and does not require instantiation.
 	 */
 	export class InputManager
 	{
@@ -50,7 +50,7 @@ namespace lune
 		 * @param mods Bit field describing which modifier keys were held down.
 		 */
 		static void _processInputCallback(GLFWwindow* window, int key, int scancode, int action,
-		                                  int mods);
+										  int mods);
 
 		/**
 		 * @brief Internally called by GLFW when the mouse moves.
@@ -74,8 +74,9 @@ namespace lune
 		/**
 		 * @brief Processes and updates input states and events.
 		 *
-		 * This method is called internally by the Window class and should NOT be called directly.
-		 * It updates the state of all input events and clears outdated events.
+		 * This method is called internally by the Window class and should NOT
+		 * be called directly. It updates the state of all input events and
+		 * clears outdated events.
 		 */
 		static void _process();
 
@@ -120,7 +121,8 @@ namespace lune
 		 *
 		 * @param keys The ordered list of keys to check.
 		 * @return true If all keys are pressed in the specified order.
-		 * @return false If not all keys are pressed or if an extra key is pressed.
+		 * @return false If not all keys are pressed or if an extra key is
+		 * pressed.
 		 */
 		static bool isOrderedPressed(const std::initializer_list<Key>& keys);
 
@@ -129,27 +131,32 @@ namespace lune
 		 *
 		 * @param keys The ordered list of keys to check.
 		 * @return true If all keys are pressed in the specified order.
-		 * @return false If not all keys are pressed or if an extra key is pressed.
+		 * @return false If not all keys are pressed or if an extra key is
+		 * pressed.
 		 */
 		static bool isOrderedPressed(const std::vector<Key>& keys);
 
 		/**
-		 * @brief Checks if keys were pressed in a specific order in the current frame.
+		 * @brief Checks if keys were pressed in a specific order in the current
+		 * frame.
 		 *
 		 * @param keys The ordered list of keys to check.
-		 * @return true If all keys were pressed in the specified order in the current frame.
-		 * @return false If not all keys were pressed in the current frame or if an extra key was
-		 * pressed.
+		 * @return true If all keys were pressed in the specified order in the
+		 * current frame.
+		 * @return false If not all keys were pressed in the current frame or if
+		 * an extra key was pressed.
 		 */
 		static bool isOrderedJustPressed(const std::initializer_list<Key>& keys);
 
 		/**
-		 * @brief Checks if keys were pressed in a specific order in the current frame.
+		 * @brief Checks if keys were pressed in a specific order in the current
+		 * frame.
 		 *
 		 * @param keys The ordered list of keys to check.
-		 * @return true If all keys were pressed in the specified order in the current frame.
-		 * @return false If not all keys were pressed in the current frame or if an extra key was
-		 * pressed.
+		 * @return true If all keys were pressed in the specified order in the
+		 * current frame.
+		 * @return false If not all keys were pressed in the current frame or if
+		 * an extra key was pressed.
 		 */
 		static bool isOrderedJustPressed(const std::vector<Key>& keys);
 
@@ -163,20 +170,23 @@ namespace lune
 		/**
 		 * @brief Gets the mouse movement delta since the last frame.
 		 *
-		 * @return glm::vec2 The mouse movement delta (x, y) since the last frame.
+		 * @return glm::vec2 The mouse movement delta (x, y) since the last
+		 * frame.
 		 */
 		static glm::vec2 getMouseDelta();
 
 	private:
 		/**
-		 * @brief Clears all elements from the recent queue that are not currently pressed.
+		 * @brief Clears all elements from the recent queue that are not
+		 * currently pressed.
 		 *
 		 * This method is called internally to clean up outdated events.
 		 */
 		static void clearRecentQueue();
 
 		/**
-		 * @brief Processes a new input given from GLFW and updates input-related maps.
+		 * @brief Processes a new input given from GLFW and updates
+		 * input-related maps.
 		 *
 		 * @param key Keycode being pressed.
 		 * @param action Action for the given key.

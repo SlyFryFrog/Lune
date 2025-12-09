@@ -4,16 +4,16 @@ export module lune:metal_texture;
 
 import :metal_mappings;
 import :texture;
-import :defs;
 
 namespace lune::metal
 {
-	class MetalTextureImpl final : public ITextureImpl
+	class MetalTextureImpl final : public gfx::ITextureImpl
 	{
 		NS::SharedPtr<MTL::Texture> m_texture;
 
 	public:
-		explicit MetalTextureImpl(MTL::Device* device, const TextureContextCreateInfo& createInfo);
+		explicit MetalTextureImpl(MTL::Device* device,
+								  const gfx::TextureContextCreateInfo& createInfo);
 		~MetalTextureImpl() override = default;
 
 		void load(const std::string& file, int desiredChannelCount) override;
@@ -28,9 +28,9 @@ namespace lune::metal
 	};
 
 
-	constexpr MTL::Texture* toMetal(const Texture& texture) noexcept(kNoExcept)
+	constexpr MTL::Texture* toMetal(const gfx::Texture& texture)
 	{
-		auto* impl = getImpl(texture);
+		auto* impl = gfx::getImpl(texture);
 
 		// Optimize for speed in release builds
 #ifndef NDEBUG
@@ -42,4 +42,4 @@ namespace lune::metal
 		return static_cast<MetalTextureImpl*>(impl)->texture();
 #endif
 	}
-}
+} // namespace lune::metal

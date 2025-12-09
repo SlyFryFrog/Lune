@@ -6,8 +6,10 @@ import :graphics_types;
 
 namespace lune::metal
 {
-	constexpr MTL::ResourceOptions toMetal(const BufferUsage usage) noexcept
+	constexpr MTL::ResourceOptions toMetal(const gfx::BufferUsage usage) noexcept
 	{
+		using namespace lune::gfx;
+
 		switch (usage)
 		{
 		case BufferUsage::Managed:
@@ -23,9 +25,9 @@ namespace lune::metal
 	}
 
 
-	constexpr MTL::PixelFormat toMetal(const PixelFormat fmt) noexcept
+	constexpr MTL::PixelFormat toMetal(const gfx::PixelFormat fmt) noexcept
 	{
-		using PF = PixelFormat;
+		using PF = gfx::PixelFormat;
 
 		switch (fmt)
 		{
@@ -72,8 +74,10 @@ namespace lune::metal
 	}
 
 
-	constexpr MTL::PrimitiveType toMetal(const PrimitiveType type) noexcept
+	constexpr MTL::PrimitiveType toMetal(const gfx::PrimitiveType type) noexcept
 	{
+		using namespace lune::gfx;
+
 		switch (type)
 		{
 		case PrimitiveType::Point:
@@ -92,8 +96,10 @@ namespace lune::metal
 	}
 
 
-	constexpr MTL::TriangleFillMode toMetal(const FillMode mode) noexcept
+	constexpr MTL::TriangleFillMode toMetal(const gfx::FillMode mode) noexcept
 	{
+		using namespace lune::gfx;
+
 		switch (mode)
 		{
 		case FillMode::Fill:
@@ -105,8 +111,10 @@ namespace lune::metal
 		}
 	}
 
-	constexpr MTL::CullMode toMetal(const CullMode mode) noexcept
+	constexpr MTL::CullMode toMetal(const gfx::CullMode mode) noexcept
 	{
+		using namespace lune::gfx;
+
 		switch (mode)
 		{
 		case CullMode::Front:
@@ -118,8 +126,10 @@ namespace lune::metal
 		}
 	}
 
-	constexpr MTL::Winding toMetal(const Winding mode) noexcept
+	constexpr MTL::Winding toMetal(const gfx::Winding mode) noexcept
 	{
+		using namespace lune::gfx;
+
 		switch (mode)
 		{
 		case Winding::Clockwise:
@@ -129,4 +139,4 @@ namespace lune::metal
 			return MTL::WindingCounterClockwise;
 		}
 	}
-}
+} // namespace lune::metal

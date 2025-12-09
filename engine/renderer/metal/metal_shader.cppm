@@ -1,8 +1,8 @@
 module;
-#include <iostream>
-#include <map>
 #include <Metal/Metal.hpp>
 #include <QuartzCore/QuartzCore.hpp>
+#include <iostream>
+#include <map>
 #include <string>
 export module lune:metal_shader;
 
@@ -13,15 +13,15 @@ namespace lune::metal
 {
 	export struct GraphicsPipelineDesc
 	{
-		PixelFormat colorFormat = PixelFormat::RGBA8_UNorm;
-		PixelFormat depthFormat = PixelFormat::Depth32_Float;
+		gfx::PixelFormat colorFormat = gfx::PixelFormat::RGBA8_UNorm;
+		gfx::PixelFormat depthFormat = gfx::PixelFormat::Depth32_Float;
 
 		bool enableBlending = false;
 		bool depthWrite = true;
 
 		MTL::CompareFunction depthCompare = MTL::CompareFunctionLess;
-		CullMode cullMode = CullMode::Back;
-		Winding winding = Winding::CounterClockwise;
+		gfx::CullMode cullMode = gfx::CullMode::Back;
+		gfx::Winding winding = gfx::Winding::CounterClockwise;
 	};
 
 
@@ -56,10 +56,9 @@ namespace lune::metal
 		std::string m_fragmentMainName;
 
 	public:
-		explicit GraphicsShader(const std::string& path,
-		                        const std::string& vsName = "vertexMain",
-		                        const std::string& fsName = "fragmentMain",
-		                        MTL::Device* device = nullptr);
+		explicit GraphicsShader(const std::string& path, const std::string& vsName = "vertexMain",
+								const std::string& fsName = "fragmentMain",
+								MTL::Device* device = nullptr);
 
 		[[nodiscard]] MTL::Function* vertex() const noexcept
 		{
@@ -97,7 +96,7 @@ namespace lune::metal
 
 	public:
 		explicit GraphicsPipeline(const GraphicsShader& shader,
-		                          const GraphicsPipelineDesc& desc = GraphicsPipelineDesc());
+								  const GraphicsPipelineDesc& desc = GraphicsPipelineDesc());
 
 		[[nodiscard]] MTL::Device* device() const noexcept
 		{
@@ -129,12 +128,12 @@ namespace lune::metal
 			return m_depthStencilState.get();
 		}
 
-		[[nodiscard]] CullMode cullMode() const noexcept
+		[[nodiscard]] gfx::CullMode cullMode() const noexcept
 		{
 			return m_desc.cullMode;
 		}
 
-		[[nodiscard]] Winding winding() const noexcept
+		[[nodiscard]] gfx::Winding winding() const noexcept
 		{
 			return m_desc.winding;
 		}
@@ -153,20 +152,18 @@ namespace lune::metal
 		std::map<std::string, MTL::Texture*> m_textures;
 
 	public:
-		explicit Material(const GraphicsPipeline& pipeline) :
-			m_pipeline(&pipeline)
+		explicit Material(const GraphicsPipeline& pipeline) : m_pipeline(&pipeline)
 		{
 		}
 
-		template <typename T>
-		Material& setUniform(const std::string& name, const T& value)
+		template <typename T> Material& setUniform(const std::string& name, const T& value)
 		{
 			setUniform(name, &value, sizeof(T));
 			return *this;
 		}
 
-		Material& setUniform(const std::string& name, const Texture& texture);
-		Material& setUniform(const std::string& name, const Buffer& buffer);
+		Material& setUniform(const std::string& name, const gfx::Texture& texture);
+		Material& setUniform(const std::string& name, const gfx::Buffer& buffer);
 
 		[[nodiscard]] bool hasUniform(const std::string& name) const
 		{
@@ -204,7 +201,7 @@ namespace lune::metal
 		}
 
 		Material& setUniform(const std::string& name, const void* data, size_t size,
-		                     BufferUsage usage = Shared);
+							 gfx::BufferUsage usage = gfx::Shared);
 
 		void bind(MTL::RenderCommandEncoder* encoder) const;
 
@@ -222,8 +219,7 @@ namespace lune::metal
 		RenderSurface& m_surface;
 
 	public:
-		explicit RenderPass(RenderSurface& surface) :
-			m_surface(surface)
+		explicit RenderPass(RenderSurface& surface) : m_surface(surface)
 		{
 		}
 
@@ -232,16 +228,16 @@ namespace lune::metal
 		RenderPass& begin();
 		RenderPass& end();
 
-		RenderPass& draw(PrimitiveType type, uint startVertex, uint vertexCount);
-		RenderPass& draw(PrimitiveType type, uint indexCount, const Buffer& indexBuffer,
-		                 uint indexOffset = 0);
+		RenderPass& draw(gfx::PrimitiveType type, uint startVertex, uint vertexCount);
+		RenderPass& drawIndexed(gfx::PrimitiveType type, uint indexCount,
+								const gfx::Buffer& indexBuffer, uint indexOffset = 0);
 
-		RenderPass& setFillMode(FillMode mode);
-		RenderPass& setCullMode(CullMode mode);
+		RenderPass& setFillMode(gfx::FillMode mode);
+		RenderPass& setCullMode(gfx::CullMode mode);
 		RenderPass& waitUntilComplete();
 
 		RenderPass& setViewport(float x, float y, float w, float h, float zmin = 0.0f,
-		                        float zmax = 1.0f);
+								float zmax = 1.0f);
 		RenderPass& setScissor(uint x, uint y, uint w, uint h);
 	};
-}
+} // namespace lune::metal

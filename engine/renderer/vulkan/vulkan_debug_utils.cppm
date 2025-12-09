@@ -6,7 +6,7 @@ import vulkan_hpp;
 namespace lune::vulkan
 {
 	export vk::Bool32 debugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT severity,
-	                                vk::DebugUtilsMessageTypeFlagsEXT type,
-	                                const vk::DebugUtilsMessengerCallbackDataEXT* pCallbackData,
-	                                void*);
+									vk::DebugUtilsMessageTypeFlagsEXT type,
+									const vk::DebugUtilsMessengerCallbackDataEXT* pCallbackData,
+									void*);
 }

@@ -1,7 +1,7 @@
 module;
 export module lune:graphics_types;
 
-namespace lune
+namespace lune::gfx
 {
 	export enum BufferUsage
 	{
@@ -14,7 +14,6 @@ namespace lune
 
 	export enum StorageUsage
 	{
-
 	};
 
 
@@ -73,4 +72,4 @@ namespace lune
 		Clockwise,
 		CounterClockwise
 	};
-}
+} // namespace lune::gfx

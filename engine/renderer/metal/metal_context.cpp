@@ -30,4 +30,4 @@ namespace lune::metal
 	{
 		m_commandQueue = NS::TransferPtr(m_device->newCommandQueue());
 	}
-}
+} // namespace lune::metal

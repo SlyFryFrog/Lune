@@ -28,7 +28,7 @@ namespace lune
 
 	void Window::create(const WindowCreateInfo& info)
 	{
-		static bool glfwInitialized = false;
+		static bool glfwInitialized{};
 		if (!glfwInitialized)
 		{
 			if (!glfwInit())
@@ -144,7 +144,7 @@ namespace lune
 		glfwSetWindowTitle(m_handle, title.c_str());
 	}
 
-	std::string Window::getTitle() const
+	std::string Window::getTitle() const noexcept
 	{
 		return m_title;
 	}
@@ -159,7 +159,7 @@ namespace lune
 		// TODO
 	}
 
-	WindowMode Window::getWindowMode() const
+	WindowMode Window::getWindowMode() const noexcept
 	{
 		return m_mode;
 	}
@@ -173,12 +173,12 @@ namespace lune
 #ifdef USE_METAL
 	void Window::attachMetalToGLFW()
 	{
-		const auto nsWindow = glfwGetCocoaWindow(m_handle);
-		const auto nsView = objcCall<id>(nsWindow, "contentView");
+		const auto nsWindow{glfwGetCocoaWindow(m_handle)};
+		const auto nsView{objcCall<id>(nsWindow, "contentView")};
 
-		auto& metalCtx = metal::MetalContext::instance();
-		m_surface = std::make_shared<
-			metal::RenderSurface>(NS::TransferPtr(CA::MetalLayer::layer()));
+		auto& metalCtx{metal::MetalContext::instance()};
+		m_surface =
+				std::make_shared<metal::RenderSurface>(NS::TransferPtr(CA::MetalLayer::layer()));
 		m_surface->layer()->setDevice(metalCtx.device());
 		m_surface->layer()->setPixelFormat(MTL::PixelFormatBGRA8Unorm);
 		m_surface->layer()->setFramebufferOnly(false);
@@ -189,4 +189,4 @@ namespace lune
 		objcCall<void>(nsView, "setLayer:", m_surface->layer());
 	}
 #endif
-}
+} // namespace lune

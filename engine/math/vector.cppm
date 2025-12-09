@@ -1,6 +1,7 @@
 /**
-* @note SIMD-specific implementations are separated into a source/implementation file
- *       to prevent breaking IntelliSense when parsing the module interface.
+ * @note SIMD-specific implementations are separated into a
+ * source/implementation file to prevent breaking IntelliSense when parsing the
+ * module interface.
  */
 
 module;
@@ -23,36 +24,44 @@ export namespace lune
 	{
 		float x, y;
 
-		constexpr Vec2() noexcept :
-			x(0),
-			y(0)
+		constexpr Vec2() noexcept : x(0), y(0)
 		{
 		}
 
-		constexpr Vec2(const float X, const float Y) noexcept :
-			x(X),
-			y(Y)
+		constexpr Vec2(const float X, const float Y) noexcept : x(X), y(Y)
 		{
 		}
 
 		constexpr Vec2 operator+(const Vec2& o) const noexcept
 		{
-			return {x + o.x, y + o.y};
+			return {
+					x + o.x,
+					y + o.y,
+			};
 		}
 
 		constexpr Vec2 operator-(const Vec2& o) const noexcept
 		{
-			return {x - o.x, y - o.y};
+			return {
+					x - o.x,
+					y - o.y,
+			};
 		}
 
 		constexpr Vec2 operator*(const float s) const noexcept
 		{
-			return {x * s, y * s};
+			return {
+					x * s,
+					y * s,
+			};
 		}
 
 		constexpr Vec2 operator/(const float s) const noexcept
 		{
-			return {x / s, y / s};
+			return {
+					x / s,
+					y / s,
+			};
 		}
 
 		[[nodiscard]] constexpr float dot(const Vec2& o) const noexcept
@@ -73,22 +82,31 @@ export namespace lune
 
 		[[nodiscard]] static constexpr Vec2 min(const Vec2& a, const Vec2& b) noexcept
 		{
-			return {std::min(a.x, b.x), std::min(a.y, b.y)};
+			return {
+					std::min(a.x, b.x),
+					std::min(a.y, b.y),
+			};
 		}
 
 		[[nodiscard]] static constexpr Vec2 max(const Vec2& a, const Vec2& b) noexcept
 		{
-			return {std::max(a.x, b.x), std::max(a.y, b.y)};
+			return {
+					std::max(a.x, b.x),
+					std::max(a.y, b.y),
+			};
 		}
 
 		[[nodiscard]] static constexpr Vec2 clamp(const Vec2& v, const Vec2& min,
-		                                          const Vec2& max) noexcept
+												  const Vec2& max) noexcept
 		{
-			return {std::clamp(v.x, min.x, max.x), std::clamp(v.y, min.y, max.y)};
+			return {
+					std::clamp(v.x, min.x, max.x),
+					std::clamp(v.y, min.y, max.y),
+			};
 		}
 
 		[[nodiscard]] static constexpr Vec2 lerp(const Vec2& a, const Vec2& b,
-		                                         const float t) noexcept
+												 const float t) noexcept
 		{
 			return a + (b - a) * t;
 		}
@@ -115,41 +133,51 @@ export namespace lune
 		float x, y, z;
 
 	private:
-		float _pad = 0;	// Padding for 16-byte alignment
+		float _pad = 0; // Padding for 16-byte alignment
 
 	public:
-		constexpr Vec3() noexcept :
-			x(0),
-			y(0),
-			z(0)
+		constexpr Vec3() noexcept : x(0), y(0), z(0)
 		{
 		}
 
-		constexpr Vec3(const float X, const float Y, const float Z) noexcept :
-			x(X),
-			y(Y),
-			z(Z)
+		constexpr Vec3(const float X, const float Y, const float Z) noexcept : x(X), y(Y), z(Z)
 		{
 		}
 
 		constexpr Vec3 operator+(const Vec3& o) const noexcept
 		{
-			return {x + o.x, y + o.y, z + o.z};
+			return {
+					x + o.x,
+					y + o.y,
+					z + o.z,
+			};
 		}
 
 		constexpr Vec3 operator-(const Vec3& o) const noexcept
 		{
-			return {x - o.x, y - o.y, z - o.z};
+			return {
+					x - o.x,
+					y - o.y,
+					z - o.z,
+			};
 		}
 
 		constexpr Vec3 operator*(const float s) const noexcept
 		{
-			return {x * s, y * s, z * s};
+			return {
+					x * s,
+					y * s,
+					z * s,
+			};
 		}
 
 		constexpr Vec3 operator/(const float s) const noexcept
 		{
-			return {x / s, y / s, z / s};
+			return {
+					x / s,
+					y / s,
+					z / s,
+			};
 		}
 
 		[[nodiscard]] constexpr float dot(const Vec3& o) const noexcept
@@ -159,9 +187,11 @@ export namespace lune
 
 		[[nodiscard]] constexpr Vec3 cross(const Vec3& o) const noexcept
 		{
-			return {y * o.z - z * o.y,
-			        z * o.x - x * o.z,
-			        x * o.y - y * o.x};
+			return {
+					y * o.z - z * o.y,
+					z * o.x - x * o.z,
+					x * o.y - y * o.x,
+			};
 		}
 
 		[[nodiscard]] float length() const noexcept
@@ -177,23 +207,34 @@ export namespace lune
 
 		[[nodiscard]] static constexpr Vec3 min(const Vec3& a, const Vec3& b) noexcept
 		{
-			return {std::min(a.x, b.x), std::min(a.y, b.y), std::min(a.z, b.z)};
+			return {
+					std::min(a.x, b.x),
+					std::min(a.y, b.y),
+					std::min(a.z, b.z),
+			};
 		}
 
 		[[nodiscard]] static constexpr Vec3 max(const Vec3& a, const Vec3& b) noexcept
 		{
-			return {std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z)};
+			return {
+					std::max(a.x, b.x),
+					std::max(a.y, b.y),
+					std::max(a.z, b.z),
+			};
 		}
 
 		[[nodiscard]] static constexpr Vec3 clamp(const Vec3& v, const Vec3& min,
-		                                          const Vec3& max) noexcept
+												  const Vec3& max) noexcept
 		{
-			return {std::clamp(v.x, min.x, max.x), std::clamp(v.y, min.y, max.y),
-			        std::clamp(v.z, min.z, max.z)};
+			return {
+					std::clamp(v.x, min.x, max.x),
+					std::clamp(v.y, min.y, max.y),
+					std::clamp(v.z, min.z, max.z),
+			};
 		}
 
 		[[nodiscard]] static constexpr Vec3 lerp(const Vec3& a, const Vec3& b,
-		                                         const float t) noexcept
+												 const float t) noexcept
 		{
 			return a + (b - a) * t;
 		}
@@ -206,9 +247,8 @@ export namespace lune
 		[[nodiscard]] constexpr Vec3 normalized() const noexcept
 		{
 			const float len = length();
-			return (len > 0.0f)
-				? Vec3{x / len, y / len, z / len}
-				: Vec3{0.0f, 0.0f, 0.0f}; // Handle zero vector
+			return (len > 0.0f) ? Vec3{x / len, y / len, z / len}
+								: Vec3{0.0f, 0.0f, 0.0f}; // Handle zero vector
 		}
 
 #ifdef LUNE_USE_SIMD
@@ -227,40 +267,53 @@ export namespace lune
 	{
 		float x, y, z, w;
 
-		constexpr Vec4() noexcept :
-			x(0),
-			y(0),
-			z(0),
-			w(0)
+		constexpr Vec4() noexcept : x(0), y(0), z(0), w(0)
 		{
 		}
 
 		constexpr Vec4(const float X, const float Y, const float Z, const float W) noexcept :
-			x(X),
-			y(Y),
-			z(Z),
-			w(W)
+			x(X), y(Y), z(Z), w(W)
 		{
 		}
 
 		constexpr Vec4 operator+(const Vec4& o) const noexcept
 		{
-			return {x + o.x, y + o.y, z + o.z, w + o.w};
+			return {
+					x + o.x,
+					y + o.y,
+					z + o.z,
+					w + o.w,
+			};
 		}
 
 		constexpr Vec4 operator-(const Vec4& o) const noexcept
 		{
-			return {x - o.x, y - o.y, z - o.z, w - o.w};
+			return {
+					x - o.x,
+					y - o.y,
+					z - o.z,
+					w - o.w,
+			};
 		}
 
 		constexpr Vec4 operator*(const float s) const noexcept
 		{
-			return {x * s, y * s, z * s, w * s};
+			return {
+					x * s,
+					y * s,
+					z * s,
+					w * s,
+			};
 		}
 
 		constexpr Vec4 operator/(const float s) const noexcept
 		{
-			return {x / s, y / s, z / s, w / s};
+			return {
+					x / s,
+					y / s,
+					z / s,
+					w / s,
+			};
 		}
 
 		[[nodiscard]] constexpr float dot(const Vec4& o) const noexcept
@@ -281,23 +334,37 @@ export namespace lune
 
 		[[nodiscard]] static constexpr Vec4 min(const Vec4& a, const Vec4& b) noexcept
 		{
-			return {std::min(a.x, b.x), std::min(a.y, b.y), std::min(a.z, b.z), std::min(a.w, b.w)};
+			return {
+					std::min(a.x, b.x),
+					std::min(a.y, b.y),
+					std::min(a.z, b.z),
+					std::min(a.w, b.w),
+			};
 		}
 
 		[[nodiscard]] static constexpr Vec4 max(const Vec4& a, const Vec4& b) noexcept
 		{
-			return {std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z), std::max(a.w, b.w)};
+			return {
+					std::max(a.x, b.x),
+					std::max(a.y, b.y),
+					std::max(a.z, b.z),
+					std::max(a.w, b.w),
+			};
 		}
 
 		[[nodiscard]] static constexpr Vec4 clamp(const Vec4& v, const Vec4& min,
-		                                          const Vec4& max) noexcept
+												  const Vec4& max) noexcept
 		{
-			return {std::clamp(v.x, min.x, max.x), std::clamp(v.y, min.y, max.y),
-			        std::clamp(v.z, min.z, max.z), std::clamp(v.w, min.w, max.w)};
+			return {
+					std::clamp(v.x, min.x, max.x),
+					std::clamp(v.y, min.y, max.y),
+					std::clamp(v.z, min.z, max.z),
+					std::clamp(v.w, min.w, max.w),
+			};
 		}
 
 		[[nodiscard]] static constexpr Vec4 lerp(const Vec4& a, const Vec4& b,
-		                                         const float t) noexcept
+												 const float t) noexcept
 		{
 			return a + (b - a) * t;
 		}
@@ -317,5 +384,4 @@ export namespace lune
 		constexpr operator glm::vec4() const noexcept;
 #endif
 	};
-}
-
+} // namespace lune

@@ -5,11 +5,11 @@ export module lune:graphics_context;
 import :buffer;
 import :texture;
 
-namespace lune
+namespace lune::gfx
 {
 	export class GraphicsContext
 	{
-	public:
+	  public:
 		GraphicsContext() = default;
 		virtual ~GraphicsContext() = default;
 
@@ -19,7 +19,7 @@ namespace lune
 		static GraphicsContext& instance();
 
 		[[nodiscard]] virtual Buffer createBuffer(size_t size) const = 0;
-		[[nodiscard]] virtual Texture createTexture(
-			const TextureContextCreateInfo& createInfo) const = 0;
+		[[nodiscard]] virtual Texture
+		createTexture(const TextureContextCreateInfo& createInfo) const = 0;
 	};
-}
+} // namespace lune::gfx

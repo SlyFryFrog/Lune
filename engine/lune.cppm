@@ -14,7 +14,6 @@ export import :texture;
 export import :graphics_context;
 export import :graphics_types;
 export import :utils;
-export import :defs;
 
 // Only build with the required backend renderer
 #ifdef USE_METAL

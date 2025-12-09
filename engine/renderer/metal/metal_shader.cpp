@@ -1,7 +1,7 @@
 module;
-#include <iostream>
 #include <Metal/Metal.hpp>
 #include <QuartzCore/QuartzCore.hpp>
+#include <iostream>
 #include <utility>
 module lune;
 
@@ -27,8 +27,8 @@ namespace lune::metal
 				return;
 			}
 
-			const auto nsSource = NS::String::string(shaderSource.value().c_str(),
-			                                         NS::UTF8StringEncoding);
+			const auto nsSource =
+					NS::String::string(shaderSource.value().c_str(), NS::UTF8StringEncoding);
 			m_library = NS::TransferPtr(m_device->newLibrary(nsSource, nullptr, error));
 		}
 		else if (path.ends_with(".metallib")) // Precompiled shader
@@ -39,14 +39,9 @@ namespace lune::metal
 	}
 
 
-	GraphicsShader::GraphicsShader(const std::string& path,
-	                               const std::string& vsName,
-	                               const std::string& fsName,
-	                               MTL::Device* device) :
-		Shader(device),
-		m_path(path),
-		m_vertexMainName(vsName),
-		m_fragmentMainName(fsName)
+	GraphicsShader::GraphicsShader(const std::string& path, const std::string& vsName,
+								   const std::string& fsName, MTL::Device* device) :
+		Shader(device), m_path(path), m_vertexMainName(vsName), m_fragmentMainName(fsName)
 	{
 		create();
 	}
@@ -60,7 +55,7 @@ namespace lune::metal
 		{
 			if (const auto desc = error->localizedDescription())
 				std::cerr << "Failed to create library: " << desc->cString(NS::UTF8StringEncoding)
-					<< "\n";
+						  << "\n";
 			else
 				std::cerr << "Failed to create library: unknown error\n";
 		}
@@ -69,20 +64,17 @@ namespace lune::metal
 			// If library creation succeeded, fetch functions
 			if (m_library)
 			{
-				m_vertex = NS::TransferPtr(
-					m_library->newFunction(
+				m_vertex = NS::TransferPtr(m_library->newFunction(
 						NS::String::string(m_vertexMainName.c_str(), NS::UTF8StringEncoding)));
-				m_fragment = NS::TransferPtr(
-					m_library->newFunction(
+				m_fragment = NS::TransferPtr(m_library->newFunction(
 						NS::String::string(m_fragmentMainName.c_str(), NS::UTF8StringEncoding)));
 			}
 		}
 	}
 
 	GraphicsPipeline::GraphicsPipeline(const GraphicsShader& shader,
-	                                   const GraphicsPipelineDesc& desc) :
-		m_shader(&shader),
-		m_desc(desc)
+									   const GraphicsPipelineDesc& desc) :
+		m_shader(&shader), m_desc(desc)
 	{
 		createPipeline();
 	}
@@ -92,8 +84,8 @@ namespace lune::metal
 		NS::Error* error{};
 		MTL::RenderPipelineReflection* reflection{};
 
-		const NS::SharedPtr<MTL::RenderPipelineDescriptor> descriptor = NS::TransferPtr(
-			MTL::RenderPipelineDescriptor::alloc()->init());
+		const NS::SharedPtr<MTL::RenderPipelineDescriptor> descriptor =
+				NS::TransferPtr(MTL::RenderPipelineDescriptor::alloc()->init());
 
 		descriptor->setVertexFunction(m_shader->vertex());
 		descriptor->setFragmentFunction(m_shader->fragment());
@@ -117,22 +109,18 @@ namespace lune::metal
 		depthDesc->setDepthWriteEnabled(m_desc.depthWrite);
 		depthDesc->setDepthCompareFunction(m_desc.depthCompare);
 		m_depthStencilState =
-			NS::TransferPtr(m_shader->device()->newDepthStencilState(depthDesc.get()));
+				NS::TransferPtr(m_shader->device()->newDepthStencilState(depthDesc.get()));
 
 
 		// Create pipeline state with reflection info (request argument info)
 		m_state = NS::TransferPtr(m_shader->device()->newRenderPipelineState(
-				descriptor.get(),
-				MTL::PipelineOptionArgumentInfo,
-				&reflection,
-				&error)
-			);
+				descriptor.get(), MTL::PipelineOptionArgumentInfo, &reflection, &error));
 
 		if (!m_state)
 		{
 			if (error && error->localizedDescription())
 				std::cerr << "Failed to create pipeline state: "
-					<< error->localizedDescription()->cString(NS::UTF8StringEncoding) << "\n";
+						  << error->localizedDescription()->cString(NS::UTF8StringEncoding) << "\n";
 			else
 				std::cerr << "Failed to create pipeline state: unknown error\n";
 
@@ -157,30 +145,30 @@ namespace lune::metal
 
 			// Add argument to array with all relevant information
 			out.push_back({
-				.name = name,
-				.index = static_cast<uint32_t>(arg->index()),
-				.arrayLength = static_cast<uint32_t>(arg->arrayLength()),
-				.type = arg->type(),
+					.name = name,
+					.index = static_cast<uint32_t>(arg->index()),
+					.arrayLength = static_cast<uint32_t>(arg->arrayLength()),
+					.type = arg->type(),
 			});
 		}
 
 		return out;
 	}
 
-	Material& Material::setUniform(const std::string& name, const Texture& texture)
+	Material& Material::setUniform(const std::string& name, const gfx::Texture& texture)
 	{
 		m_textures[name] = toMetal(texture);
 		return *this;
 	}
 
-	Material& Material::setUniform(const std::string& name, const Buffer& buffer)
+	Material& Material::setUniform(const std::string& name, const gfx::Buffer& buffer)
 	{
 		m_uniformBuffers[name] = toMetal(buffer);
 		return *this;
 	}
 
 	Material& Material::setUniform(const std::string& name, const void* data, const size_t size,
-	                               const BufferUsage usage)
+								   const gfx::BufferUsage usage)
 	{
 		if (!m_pipeline)
 			return *this;
@@ -266,20 +254,19 @@ namespace lune::metal
 			return *this;
 		}
 
-		m_commandBuffer = NS::TransferPtr(
-			MetalContext::instance().commandQueue()->commandBuffer());
+		m_commandBuffer = NS::TransferPtr(MetalContext::instance().commandQueue()->commandBuffer());
 
 		const NS::SharedPtr<MTL::RenderPassDescriptor> renderPassDescriptor =
-			NS::TransferPtr(MTL::RenderPassDescriptor::alloc()->init());
+				NS::TransferPtr(MTL::RenderPassDescriptor::alloc()->init());
 		MTL::RenderPassColorAttachmentDescriptor* colorAttachmentDescriptor =
-			renderPassDescriptor->colorAttachments()->object(0);
+				renderPassDescriptor->colorAttachments()->object(0);
 		colorAttachmentDescriptor->setTexture(drawable->texture());
 		colorAttachmentDescriptor->setLoadAction(MTL::LoadActionClear);
 		colorAttachmentDescriptor->setClearColor(MTL::ClearColor(0.0f, 0.0f, 0.0f, 1.0f));
 		colorAttachmentDescriptor->setStoreAction(MTL::StoreActionStore);
 
-		m_encoder = NS::TransferPtr(
-			m_commandBuffer->renderCommandEncoder(renderPassDescriptor.get()));
+		m_encoder =
+				NS::TransferPtr(m_commandBuffer->renderCommandEncoder(renderPassDescriptor.get()));
 
 		return *this;
 	}
@@ -296,34 +283,29 @@ namespace lune::metal
 		return *this;
 	}
 
-	RenderPass& RenderPass::draw(const PrimitiveType type,
-	                             const uint startVertex, const uint vertexCount)
+	RenderPass& RenderPass::draw(const gfx::PrimitiveType type, const uint startVertex,
+								 const uint vertexCount)
 	{
 		m_encoder->drawPrimitives(toMetal(type), startVertex, vertexCount);
 		return *this;
 	}
 
-	RenderPass& RenderPass::draw(const PrimitiveType type, const uint indexCount,
-	                             const Buffer& indexBuffer, const uint indexOffset)
+	RenderPass& RenderPass::drawIndexed(const gfx::PrimitiveType type, const uint indexCount,
+										const gfx::Buffer& indexBuffer, const uint indexOffset)
 	{
-		m_encoder->drawIndexedPrimitives(
-			toMetal(type),
-			indexCount,
-			MTL::IndexTypeUInt32,
-			toMetal(indexBuffer),
-			indexOffset
-			);
+		m_encoder->drawIndexedPrimitives(toMetal(type), indexCount, MTL::IndexTypeUInt32,
+										 toMetal(indexBuffer), indexOffset);
 
 		return *this;
 	}
 
-	RenderPass& RenderPass::setFillMode(const FillMode mode)
+	RenderPass& RenderPass::setFillMode(const gfx::FillMode mode)
 	{
 		m_encoder->setTriangleFillMode(toMetal(mode));
 		return *this;
 	}
 
-	RenderPass& RenderPass::setCullMode(const CullMode mode)
+	RenderPass& RenderPass::setCullMode(const gfx::CullMode mode)
 	{
 		m_encoder->setCullMode(toMetal(mode));
 		return *this;
@@ -336,7 +318,7 @@ namespace lune::metal
 	}
 
 	RenderPass& RenderPass::setViewport(const float x, const float y, const float w, const float h,
-	                                    const float zmin, const float zmax)
+										const float zmin, const float zmax)
 	{
 		m_encoder->setViewport({x, y, w, h, zmin, zmax});
 		return *this;
@@ -347,4 +329,4 @@ namespace lune::metal
 		m_encoder->setScissorRect({x, y, w, h});
 		return *this;
 	}
-}
+} // namespace lune::metal

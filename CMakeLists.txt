@@ -60,7 +60,6 @@ else ()
     list(REMOVE_ITEM MODULES ${METAL_SOURCES})
 endif ()
 
-
 ######################
 # External libraries #
 ######################
@@ -90,7 +89,9 @@ target_include_directories(${PROJECT_NAME}
         ${CMAKE_CURRENT_SOURCE_DIR}/vendor
 )
 
-
+################################
+# Add math conversions support #
+################################
 if(LUNE_USE_SIMD)
     target_compile_definitions(${PROJECT_NAME} PRIVATE LUNE_USE_SIMD)
 endif()

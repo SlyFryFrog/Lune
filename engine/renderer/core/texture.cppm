@@ -1,11 +1,11 @@
 module;
-#include <string>
 #include <stb_image.h>
+#include <string>
 export module lune:texture;
 
 import :graphics_types;
 
-namespace lune
+namespace lune::gfx
 {
 	/**
 	 * @brief Configuration for texture creation.
@@ -13,9 +13,9 @@ namespace lune
 	export struct TextureContextCreateInfo
 	{
 		PixelFormat pixelFormat{BGRA8_sRGB}; ///< Texture pixel format.
-		int width{1};                        ///< Texture width in pixels.
-		int height{1};                       ///< Texture height in pixels.
-		bool mipmapped = false;              ///< Whether to generate mipmaps.
+		int width{1};						 ///< Texture width in pixels.
+		int height{1};						 ///< Texture height in pixels.
+		bool mipmapped = false;				 ///< Whether to generate mipmaps.
 	};
 
 	/**
@@ -31,8 +31,7 @@ namespace lune
 		 * @brief Constructs a texture implementation.
 		 * @param createInfo Texture configuration.
 		 */
-		explicit ITextureImpl(const TextureContextCreateInfo& createInfo) :
-			m_info(createInfo)
+		explicit ITextureImpl(const TextureContextCreateInfo& createInfo) : m_info(createInfo)
 		{
 		}
 
@@ -63,8 +62,7 @@ namespace lune
 		 *
 		 * @param impl Platform-specific implementation.
 		 */
-		explicit Texture(std::unique_ptr<ITextureImpl> impl) noexcept :
-			m_impl(std::move(impl))
+		explicit Texture(std::unique_ptr<ITextureImpl> impl) noexcept : m_impl(std::move(impl))
 		{
 		}
 
@@ -99,7 +97,7 @@ namespace lune
 
 		/**
 		 * @brief Returns whether the texture uses mipmapping.
-	     */
+		 */
 		[[nodiscard]] bool mipmapped() const
 		{
 			return m_impl->m_info.mipmapped;
@@ -126,4 +124,4 @@ namespace lune
 	{
 		return texture.m_impl.get();
 	}
-}
+} // namespace lune::gfx

@@ -13,4 +13,4 @@ namespace lune
 		auto fn = reinterpret_cast<FnType>(objc_msgSend);
 		return fn(obj, sel, args...);
 	}
-}
+} // namespace lune

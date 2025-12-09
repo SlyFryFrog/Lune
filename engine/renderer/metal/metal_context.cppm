@@ -1,7 +1,7 @@
 module;
 #include <Metal/Metal.hpp>
-#include <vector>
 #include <memory>
+#include <vector>
 export module lune:metal_context;
 
 import :graphics_context;
@@ -13,7 +13,7 @@ import :metal_render_surface;
 
 namespace lune::metal
 {
-	export class MetalContext final : public GraphicsContext
+	export class MetalContext final : public gfx::GraphicsContext
 	{
 		NS::SharedPtr<MTL::Device> m_device{};
 		NS::SharedPtr<MTL::CommandQueue> m_commandQueue{};
@@ -60,17 +60,17 @@ namespace lune::metal
 			return m_surfaces;
 		}
 
-		[[nodiscard]] Buffer createBuffer(const size_t size) const override
+		[[nodiscard]] gfx::Buffer createBuffer(const size_t size) const override
 		{
-			auto impl = std::make_unique<MetalBufferImpl>(m_device.get(), size);
-			return Buffer(std::move(impl));
+			auto impl{std::make_unique<MetalBufferImpl>(m_device.get(), size)};
+			return gfx::Buffer(std::move(impl));
 		}
 
-		[[nodiscard]] Texture
-		createTexture(const TextureContextCreateInfo& createInfo) const override
+		[[nodiscard]] gfx::Texture
+		createTexture(const gfx::TextureContextCreateInfo& createInfo) const override
 		{
-			auto impl = std::make_unique<MetalTextureImpl>(m_device.get(), createInfo);
-			return Texture(std::move(impl));
+			auto impl{std::make_unique<MetalTextureImpl>(m_device.get(), createInfo)};
+			return gfx::Texture(std::move(impl));
 		}
 	};
-}
+} // namespace lune::metal

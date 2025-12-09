@@ -1,34 +1,30 @@
 module;
-#include <iostream>
 #include <Metal/Metal.hpp>
+#include <iostream>
 #include <utility>
 module lune;
 
 namespace lune::metal
 {
 	ComputeKernel::ComputeKernel(MTL::Device* device, const std::string& name) :
-		m_device(device),
-		m_name(name)
+		m_device(device), m_name(name)
 	{
 	}
 
 	ComputeKernel& ComputeKernel::dispatch(const size_t threadCount)
 	{
-		auto* commandBuffer = MetalContext::instance().commandQueue()->commandBuffer();
-		auto* encoder = commandBuffer->computeCommandEncoder();
+		const auto commandBuffer{MetalContext::instance().commandQueue()->commandBuffer()};
+		const auto encoder{commandBuffer->computeCommandEncoder()};
 
 		encoder->setComputePipelineState(m_pipeline.get());
 
 		bindBuffers(encoder);
 		bindTextures(encoder);
 
-		NS::UInteger tgSize = m_pipeline->maxTotalThreadsPerThreadgroup();
-		NS::UInteger groups = (threadCount + tgSize - 1) / tgSize;
+		NS::UInteger tgSize{m_pipeline->maxTotalThreadsPerThreadgroup()};
+		NS::UInteger groups{(threadCount + tgSize - 1) / tgSize};
 
-		encoder->dispatchThreadgroups(
-			{groups, 1, 1},
-			{tgSize, 1, 1}
-			);
+		encoder->dispatchThreadgroups({groups, 1, 1}, {tgSize, 1, 1});
 		encoder->endEncoding();
 		commandBuffer->commit();
 		m_lastCommandBuffer = NS::TransferPtr(commandBuffer);
@@ -38,20 +34,16 @@ namespace lune::metal
 
 	ComputeKernel& ComputeKernel::dispatch(const size_t x, const size_t y, const size_t z)
 	{
-		auto* commandBuffer = MetalContext::instance().commandQueue()->commandBuffer();
-		auto* encoder = commandBuffer->computeCommandEncoder();
+		const auto commandBuffer{MetalContext::instance().commandQueue()->commandBuffer()};
+		const auto encoder{commandBuffer->computeCommandEncoder()};
 
 		encoder->setComputePipelineState(m_pipeline.get());
 
 		bindBuffers(encoder);
 		bindTextures(encoder);
 
-		const MTL::Size threadsPerGroup = {16, 16, 1};
-		const MTL::Size groups = {
-			(x + 15) / 16,
-			(y + 15) / 16,
-			z
-		};
+		const MTL::Size threadsPerGroup{16, 16, 1};
+		const MTL::Size groups{(x + 15) / 16, (y + 15) / 16, z};
 
 		encoder->dispatchThreadgroups(groups, threadsPerGroup);
 		encoder->endEncoding();
@@ -62,30 +54,23 @@ namespace lune::metal
 	}
 
 	ComputeKernel& ComputeKernel::dispatch(const size_t x, const size_t y, const size_t z,
-	                                       std::function<void()> callback)
+										   std::function<void()> callback)
 	{
-		auto* commandBuffer = MetalContext::instance().commandQueue()->commandBuffer();
-		auto* encoder = commandBuffer->computeCommandEncoder();
+		const auto commandBuffer{MetalContext::instance().commandQueue()->commandBuffer()};
+		const auto encoder{commandBuffer->computeCommandEncoder()};
 
 		encoder->setComputePipelineState(m_pipeline.get());
 
 		bindBuffers(encoder);
 		bindTextures(encoder);
 
-		const MTL::Size threadsPerGroup = {16, 16, 1};
-		const MTL::Size groups = {
-			(x + 15) / 16,
-			(y + 15) / 16,
-			z
-		};
+		const MTL::Size threadsPerGroup{16, 16, 1};
+		const MTL::Size groups{(x + 15) / 16, (y + 15) / 16, z};
 
 		encoder->dispatchThreadgroups(groups, threadsPerGroup);
 		encoder->endEncoding();
-		commandBuffer->addCompletedHandler(
-			[callback = std::move(callback)](MTL::CommandBuffer*)
-			{
-				callback();
-			});
+		commandBuffer->addCompletedHandler([callback = std::move(callback)](MTL::CommandBuffer*)
+										   { callback(); });
 		commandBuffer->commit();
 		m_lastCommandBuffer = NS::TransferPtr(commandBuffer);
 
@@ -93,56 +78,50 @@ namespace lune::metal
 	}
 
 	ComputeKernel& ComputeKernel::dispatch(const MTL::Size& threadGroups,
-	                                       const MTL::Size& threadsPerGroup)
+										   const MTL::Size& threadsPerGroup)
 	{
-		// Get a new command buffer
-		const auto commandBuffer = NS::TransferPtr(
-			MetalContext::instance().commandQueue()->commandBuffer());
+		const auto commandBuffer{
+				NS::TransferPtr(MetalContext::instance().commandQueue()->commandBuffer())};
 		if (!commandBuffer)
 			throw std::runtime_error("Failed to create Metal command buffer");
 
-		// Create a compute encoder
-		auto* encoder = commandBuffer->computeCommandEncoder();
+		const auto encoder{commandBuffer->computeCommandEncoder()};
 		if (!encoder)
 			throw std::runtime_error("Failed to create Metal compute command encoder");
 
-		// Set pipeline
 		encoder->setComputePipelineState(m_pipeline.get());
 
 		bindBuffers(encoder);
 		bindTextures(encoder);
 
-		// Dispatch threads
 		encoder->dispatchThreadgroups(threadGroups, threadsPerGroup);
 		encoder->endEncoding();
 
-		// Commit the command buffer (non-blocking)
 		commandBuffer->commit();
 
-		// Store the command buffer in case the user wants to wait
 		m_lastCommandBuffer = commandBuffer;
 
 		return *this;
 	}
 
-	ComputeKernel& ComputeKernel::setUniform(const std::string& name, const Buffer& buffer)
+	ComputeKernel& ComputeKernel::setUniform(const std::string& name, const gfx::Buffer& buffer)
 	{
 		m_mtlBuffers[name] = toMetal(buffer);
 		return *this;
 	}
 
-	ComputeKernel& ComputeKernel::setUniform(const std::string& name, const Texture& texture)
+	ComputeKernel& ComputeKernel::setUniform(const std::string& name, const gfx::Texture& texture)
 	{
 		m_mtlTextures[name] = toMetal(texture);
 		return *this;
 	}
 
 	ComputeKernel& ComputeKernel::setUniform(const std::string& name, const void* data,
-	                                         const size_t size, const BufferUsage usage)
+											 const size_t size, const gfx::BufferUsage usage)
 	{
 		// Allocate a small temp buffer for byte data
-		const auto device = m_pipeline->device();
-		auto temp = device->newBuffer(size, toMetal(usage));
+		const auto device{m_pipeline->device()};
+		auto temp{device->newBuffer(size, toMetal(usage))};
 
 		std::memcpy(temp->contents(), data, size);
 		m_mtlBuffers[name] = temp;
@@ -154,41 +133,32 @@ namespace lune::metal
 	{
 		// Load the kernel function
 		m_function = NS::TransferPtr(
-			library->newFunction(NS::String::string(m_name.c_str(), NS::UTF8StringEncoding))
-			);
+				library->newFunction(NS::String::string(m_name.c_str(), NS::UTF8StringEncoding)));
 
 		// Create pipeline state with reflection
-		NS::Error* error = nullptr;
-		MTL::ComputePipelineReflection* reflection = nullptr;
+		NS::Error* error{};
+		MTL::ComputePipelineReflection* reflection{};
 
 		// Create the pipeline
-		m_pipeline = NS::TransferPtr(
-			m_device->newComputePipelineState(
-				m_function.get(),
-				MTL::PipelineOptionArgumentInfo,
-				&reflection,
-				&error
-				)
-			);
+		m_pipeline = NS::TransferPtr(m_device->newComputePipelineState(
+				m_function.get(), MTL::PipelineOptionArgumentInfo, &reflection, &error));
 		if (error)
 		{
-			std::cerr << "Failed to create pipeline state for kernel "
-				<< m_name << ": "
-				<< error->localizedDescription()->utf8String()
-				<< "\n";
+			std::cerr << "Failed to create pipeline state for kernel " << m_name << ": "
+					  << error->localizedDescription()->utf8String() << "\n";
 			return;
 		}
 
 		m_reflection = createKernelReflectionInfo(m_name, reflection);
 
 		// Automatically populate bufferBindings from reflection
-		const NS::Array* args = reflection->arguments();
+		const NS::Array* args{reflection->arguments()};
 		for (NS::UInteger i = 0; i < args->count(); ++i)
 		{
-			const auto arg = static_cast<MTL::Argument*>(args->object(i));
-			const NS::String* nameObj = arg->name();
-			std::string name = nameObj ? nameObj->utf8String() : "<null>";
-			const NS::UInteger index = arg->index();
+			const auto arg{static_cast<MTL::Argument*>(args->object(i))};
+			const NS::String* nameObj{arg->name()};
+			std::string name{nameObj ? nameObj->utf8String() : "<null>"};
+			const NS::UInteger index{arg->index()};
 
 			switch (arg->type())
 			{
@@ -212,25 +182,15 @@ namespace lune::metal
 		return *this;
 	}
 
-	void ComputeKernel::bufferToTexture(const Buffer& buffer, const Texture& texture,
-	                                    const NS::UInteger bytesPerRow,
-	                                    const MTL::Size& sourceSize, const bool waitUntilComplete)
+	void ComputeKernel::bufferToTexture(const gfx::Buffer& buffer, const gfx::Texture& texture,
+										const NS::UInteger bytesPerRow, const MTL::Size& sourceSize,
+										const bool waitUntilComplete)
 	{
-		const auto cmdBuffer = MetalContext::instance().commandQueue()->commandBuffer();
-		const auto blit = cmdBuffer->blitCommandEncoder();
+		const auto cmdBuffer{MetalContext::instance().commandQueue()->commandBuffer()};
+		const auto blit{cmdBuffer->blitCommandEncoder()};
 
-		blit->copyFromBuffer(
-			toMetal(buffer),
-			0,
-			bytesPerRow,
-			0,
-			sourceSize,
-			toMetal(texture),
-			0,
-			0,
-			MTL::Origin{0, 0, 0},
-			MTL::BlitOptionNone
-			);
+		blit->copyFromBuffer(toMetal(buffer), 0, bytesPerRow, 0, sourceSize, toMetal(texture), 0, 0,
+							 MTL::Origin{0, 0, 0}, MTL::BlitOptionNone);
 
 		blit->endEncoding();
 		cmdBuffer->commit();
@@ -239,14 +199,14 @@ namespace lune::metal
 			cmdBuffer->waitUntilCompleted();
 	}
 
-	KernelReflectionInfo ComputeKernel::createKernelReflectionInfo(
-		const std::string& name,
-		const MTL::ComputePipelineReflection* reflection)
+	KernelReflectionInfo
+	ComputeKernel::createKernelReflectionInfo(const std::string& name,
+											  const MTL::ComputePipelineReflection* reflection)
 	{
 		KernelReflectionInfo info{};
 		info.kernelName = name;
 
-		const NS::Array* args = reflection->arguments();
+		const NS::Array* args{reflection->arguments()};
 		info.arguments.reserve(args->count());
 
 		// Iterate through each argument and add all relevant information struct
@@ -297,7 +257,7 @@ namespace lune::metal
 	{
 		for (auto& [name, buf] : m_mtlBuffers)
 		{
-			const NS::UInteger index = m_bindings[name];
+			const NS::UInteger index{m_bindings[name]};
 			commandEncoder->setBuffer(buf, 0, index);
 		}
 	}
@@ -306,14 +266,13 @@ namespace lune::metal
 	{
 		for (auto& [name, tex] : m_mtlTextures)
 		{
-			const NS::UInteger index = m_textureBindings[name];
+			const NS::UInteger index{m_textureBindings[name]};
 			commandEncoder->setTexture(tex, index);
 		}
 	}
 
 	ComputeShader::ComputeShader(const std::string& path, MTL::Device* device) :
-		Shader(device),
-		m_path(path)
+		Shader(device), m_path(path)
 
 	{
 		createPipelines();
@@ -342,25 +301,25 @@ namespace lune::metal
 
 	void ComputeShader::createPipelines()
 	{
-		NS::Error* error = nullptr;
+		NS::Error* error{};
 		createLibrary(m_path, &error);
 
 		if (error)
 		{
 			if (const auto desc = error->localizedDescription())
 				std::cerr << "Failed to create library: " << desc->cString(NS::UTF8StringEncoding)
-					<< "\n";
+						  << "\n";
 			else
 				std::cerr << "Failed to create library: unknown error\n";
 		}
 
-		const NS::Array* functionNames = m_library->functionNames();
+		const NS::Array* functionNames{m_library->functionNames()};
 
 		for (int i = 0; i < functionNames->count(); ++i)
 		{
-			NS::String* nsName = functionNames->object<NS::String>(i);
-			std::string name = functionNames->object<NS::String>(i)->utf8String();
-			NS::SharedPtr<MTL::Function> function = NS::TransferPtr(m_library->newFunction(nsName));
+			NS::String* nsName{functionNames->object<NS::String>(i)};
+			std::string name{functionNames->object<NS::String>(i)->utf8String()};
+			NS::SharedPtr<MTL::Function> function{NS::TransferPtr(m_library->newFunction(nsName))};
 			if (!function)
 				continue;
 
@@ -371,4 +330,4 @@ namespace lune::metal
 			}
 		}
 	}
-}
+} // namespace lune::metal

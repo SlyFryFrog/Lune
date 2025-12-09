@@ -15,4 +15,4 @@ namespace lune::vulkan
 
 		return vk::False;
 	}
-}
+} // namespace lune::vulkan

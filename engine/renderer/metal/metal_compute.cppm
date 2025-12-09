@@ -1,7 +1,7 @@
 module;
-#include <string>
 #include <Metal/Metal.hpp>
 #include <map>
+#include <string>
 export module lune:metal_compute;
 
 import :metal_shader;
@@ -80,13 +80,13 @@ namespace lune::metal
 		ComputeKernel& dispatch(const MTL::Size& threadGroups, const MTL::Size& threadsPerGroup);
 
 		template <typename T>
-		requires (!std::same_as<std::remove_cvref_t<T>, Buffer>)
+			requires(!std::same_as<std::remove_cvref_t<T>, gfx::Buffer>)
 		ComputeKernel& setUniform(const std::string& name, T& data,
-		                       BufferUsage usage = BufferUsage::Shared);
-		ComputeKernel& setUniform(const std::string& name, const Buffer& buffer);
-		ComputeKernel& setUniform(const std::string& name, const Texture& texture);
+								  gfx::BufferUsage usage = gfx::BufferUsage::Shared);
+		ComputeKernel& setUniform(const std::string& name, const gfx::Buffer& buffer);
+		ComputeKernel& setUniform(const std::string& name, const gfx::Texture& texture);
 		ComputeKernel& setUniform(const std::string& name, const void* data, size_t size,
-		                        BufferUsage usage = BufferUsage::Shared);
+								  gfx::BufferUsage usage = gfx::BufferUsage::Shared);
 
 		[[nodiscard]] KernelReflectionInfo reflection() const
 		{
@@ -96,14 +96,14 @@ namespace lune::metal
 		void createPipeline(MTL::Library* library);
 		ComputeKernel& waitUntilComplete();
 
-		static void bufferToTexture(const Buffer& buffer, const Texture& texture,
-		                            NS::UInteger bytesPerRow, const MTL::Size& sourceSize,
-		                            bool waitUntilComplete = true);
+		static void bufferToTexture(const gfx::Buffer& buffer, const gfx::Texture& texture,
+									NS::UInteger bytesPerRow, const MTL::Size& sourceSize,
+									bool waitUntilComplete = true);
 
 	private:
-		static KernelReflectionInfo createKernelReflectionInfo(const std::string& name,
-		                                                       const MTL::ComputePipelineReflection*
-		                                                       reflection);
+		static KernelReflectionInfo
+		createKernelReflectionInfo(const std::string& name,
+								   const MTL::ComputePipelineReflection* reflection);
 
 		void bindBuffers(MTL::ComputeCommandEncoder* commandEncoder);
 		void bindTextures(MTL::ComputeCommandEncoder* commandEncoder);
@@ -111,13 +111,13 @@ namespace lune::metal
 
 
 	template <typename T>
-	requires (!std::same_as<std::remove_cvref_t<T>, Buffer>)
+		requires(!std::same_as<std::remove_cvref_t<T>, gfx::Buffer>)
 	ComputeKernel& ComputeKernel::setUniform(const std::string& name, T& data,
-	                                      const BufferUsage usage)
+											 const gfx::BufferUsage usage)
 	{
 		// Allocate a small temp buffer for byte data
-		const auto device = m_pipeline->device();
-		auto temp = device->newBuffer(sizeof(T), toMetal(usage));
+		const auto device{m_pipeline->device()};
+		auto temp{device->newBuffer(sizeof(T), toMetal(usage))};
 
 		std::memcpy(temp->contents(), &data, sizeof(T));
 		m_mtlBuffers[name] = temp;
@@ -133,10 +133,12 @@ namespace lune::metal
 
 	public:
 		/**
-		 * @brief Initializes the shader and creates pipelines for all kernels declared in the shader.
+		 * @brief Initializes the shader and creates pipelines for all kernels declared in the
+		 * shader.
 		 *
 		 * @param path Path to the compute shader. (.metal, .metallib, .slang)
-		 * @param device The device (GPU) to use for the shader. When not set, defaults to the current device set in MetalContext.
+		 * @param device The device (GPU) to use for the shader. When not set, defaults to the
+		 * current device set in MetalContext.
 		 */
 		explicit ComputeShader(const std::string& path, MTL::Device* device = nullptr);
 
@@ -163,4 +165,4 @@ namespace lune::metal
 	private:
 		void createPipelines();
 	};
-}
+} // namespace lune::metal

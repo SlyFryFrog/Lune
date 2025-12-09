@@ -1,12 +1,17 @@
----
-Language: Cpp
+# Base style
 BasedOnStyle: LLVM
+Language: Cpp
+Standard: c++20
+
+IndentWidth: 4
+TabWidth: 4
+UseTab: Always
+ColumnLimit: 100
+NamespaceIndentation: All
 AccessModifierOffset: -4
-AlignConsecutiveAssignments: false
-AlignConsecutiveDeclarations: false
-AlignOperands: false
-AlignTrailingComments: true
-AlwaysBreakTemplateDeclarations: Yes
+
+# Braces & init lists
+BreakBeforeBraces: Allman
 BraceWrapping:
   AfterCaseLabel: true
   AfterClass: true
@@ -24,52 +29,42 @@ BraceWrapping:
   SplitEmptyFunction: true
   SplitEmptyRecord: true
   SplitEmptyNamespace: true
-BreakBeforeBraces: Custom
-BreakConstructorInitializers: AfterColon
-BreakConstructorInitializersBeforeComma: false
-ColumnLimit: 100
-ConstructorInitializerAllOnOneLineOrOnePerLine: true
-IncludeCategories:
-  - Regex: '^<.*' # Standard includes
-    Priority: 1
-  - Regex: '^"mylib/.*' # Project library includes
-    Priority: 2
-  - Regex: '^".*' # General includes
-    Priority: 3
-  - Regex: '.*' # Other includes
-    Priority: 4
-IncludeIsMainRegex: '([-_](test|unittest))?$'
-IndentCaseBlocks: true
-IndentWidth: 4
-MacroBlockBegin: ''
-MacroBlockEnd: ''
-MaxEmptyLinesToKeep: 2
-NamespaceIndentation: All
-SpaceInEmptyParentheses: false
-SpacesInAngles: false
-SpacesInConditionalStatement: false
-SpacesInCStyleCastParentheses: false
-SpacesInParentheses: false
-TabWidth: 4
-UseTab: Always
-InsertNewlineAtEOF: true
-InsertBraces: false
-SortIncludes: true
-ReflowComments: true
-PenaltyBreakComment: 60
-PenaltyBreakFirstLessLess: 120
-PenaltyBreakString: 100
-PenaltyBreakAssignment: 80
-PenaltyBreakBeforeFirstCallParameter: 40
-PenaltyExcessCharacter: 150
-PenaltyReturnTypeOnItsOwnLine: 200
-DerivePointerAlignment: false
-PointerAlignment: Left
+
 Cpp11BracedListStyle: true
+
+# Short constructs — always expanded
+AllowShortEnumsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: None
 AllowShortIfStatementsOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
 AllowShortCaseLabelsOnASingleLine: false
+AllowShortCaseExpressionOnASingleLine: false
+AllowAllParametersOfDeclarationOnNextLine: false
+AllowAllArgumentsOnNextLine: false
+BinPackArguments: true
+BinPackParameters: true
+
+# Constructor initializer lists
+BreakConstructorInitializers: AfterColon
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+
+# Function calls & chaining
+PenaltyBreakBeforeFirstCallParameter: 40
+BreakBeforeBinaryOperators: None
+BreakAfterReturnType: None
+ContinuationIndentWidth: 8
+
+# Other formatting
+AlignTrailingComments: true
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+PointerAlignment: Left
+DerivePointerAlignment: false
+SpaceInEmptyParentheses: false
+SpacesInParentheses: false
+InsertNewlineAtEOF: true
+SortIncludes: true
+ReflowComments: Always
+MaxEmptyLinesToKeep: 2
 EmptyLineBeforeAccessModifier: Always
 FixNamespaceComments: true
-...

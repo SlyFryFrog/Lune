@@ -32,12 +32,10 @@ export namespace lune
 			m[0][1] = m[0][2] = m[1][0] = m[1][2] = m[2][0] = m[2][1] = 0;
 		}
 
-		constexpr Mat3(const float m00, const float m01, const float m02,
-		               const float m10, const float m11, const float m12,
-		               const float m20, const float m21, const float m22) noexcept :
-			m{{m00, m01, m02},
-			  {m10, m11, m12},
-			  {m20, m21, m22,}}
+		constexpr Mat3(const float m00, const float m01, const float m02, const float m10,
+					   const float m11, const float m12, const float m20, const float m21,
+					   const float m22) noexcept :
+			m{{m00, m01, m02}, {m10, m11, m12}, {m20, m21, m22}}
 		{
 		}
 
@@ -112,11 +110,9 @@ export namespace lune
 
 		constexpr explicit operator simd_float3x3() const noexcept
 		{
-			return simd_float3x3{
-				simd_make_float3(m[0][0], m[0][1], m[0][2]),
-				simd_make_float3(m[1][0], m[1][1], m[1][2]),
-				simd_make_float3(m[2][0], m[2][1], m[2][2])
-			};
+			return simd_float3x3{simd_make_float3(m[0][0], m[0][1], m[0][2]),
+								 simd_make_float3(m[1][0], m[1][1], m[1][2]),
+								 simd_make_float3(m[2][0], m[2][1], m[2][2])};
 		}
 #endif
 	};
@@ -136,10 +132,10 @@ export namespace lune
 		}
 
 		constexpr Mat4(const float m00, const float m01, const float m02, const float m03,
-		               const float m10, const float m11, const float m12, const float m13,
-		               const float m20, const float m21, const float m22, const float m23,
-		               const float m30, const float m31, const float m32, const float m33
-			) noexcept :
+					   const float m10, const float m11, const float m12, const float m13,
+					   const float m20, const float m21, const float m22, const float m23,
+					   const float m30, const float m31, const float m32, const float m33) noexcept
+			:
 			m{{m00, m01, m02, m03},
 			  {m10, m11, m12, m13},
 			  {m20, m21, m22, m23},
@@ -206,10 +202,8 @@ export namespace lune
 		[[nodiscard]] constexpr Mat4 transpose() const noexcept
 		{
 			return Mat4{
-				m[0][0], m[1][0], m[2][0], m[3][0],
-				m[0][1], m[1][1], m[2][1], m[3][1],
-				m[0][2], m[1][2], m[2][2], m[3][2],
-				m[0][3], m[1][3], m[2][3], m[3][3]
+					m[0][0], m[1][0], m[2][0], m[3][0], m[0][1], m[1][1], m[2][1], m[3][1],
+					m[0][2], m[1][2], m[2][2], m[3][2], m[0][3], m[1][3], m[2][3], m[3][3],
 			};
 		}
 
@@ -224,7 +218,7 @@ export namespace lune
 		}
 
 		[[nodiscard]] static constexpr Mat4 translate(const float x, const float y,
-		                                              const float z) noexcept
+													  const float z) noexcept
 		{
 			Mat4 r = identity();
 			r.m[3][0] = x;
@@ -241,90 +235,104 @@ export namespace lune
 			const Vec3 normAxis = axis.normalize();
 
 			return Mat4{
-				c + normAxis.x * normAxis.x * omc,
-				normAxis.x * normAxis.y * omc - normAxis.z * s,
-				normAxis.x * normAxis.z * omc + normAxis.y * s,
-				0.0f,
+					c + normAxis.x * normAxis.x * omc,
+					normAxis.x * normAxis.y * omc - normAxis.z * s,
+					normAxis.x * normAxis.z * omc + normAxis.y * s,
+					0.0f,
 
-				normAxis.y * normAxis.x * omc + normAxis.z * s,
-				c + normAxis.y * normAxis.y * omc,
-				normAxis.y * normAxis.z * omc - normAxis.x * s,
-				0.0f,
+					normAxis.y * normAxis.x * omc + normAxis.z * s,
+					c + normAxis.y * normAxis.y * omc,
+					normAxis.y * normAxis.z * omc - normAxis.x * s,
+					0.0f,
 
-				normAxis.z * normAxis.x * omc - normAxis.y * s,
-				normAxis.z * normAxis.y * omc + normAxis.x * s,
-				c + normAxis.z * normAxis.z * omc,
-				0.0f,
+					normAxis.z * normAxis.x * omc - normAxis.y * s,
+					normAxis.z * normAxis.y * omc + normAxis.x * s,
+					c + normAxis.z * normAxis.z * omc,
+					0.0f,
 
-				0.0f, 0.0f, 0.0f, 1.0f
+					0.0f,
+					0.0f,
+					0.0f,
+					1.0f,
 			};
 		}
 
 		static constexpr Mat4 scale(const float x, const float y, const float z) noexcept
 		{
-			return Mat4{
-				x, 0.0f, 0.0f, 0.0f,
-				0.0f, y, 0.0f, 0.0f,
-				0.0f, 0.0f, z, 0.0f,
-				0.0f, 0.0f, 0.0f, 1.0f
-			};
+			return Mat4{x,	  0.0f, 0.0f, 0.0f, 0.0f, y,	0.0f, 0.0f,
+						0.0f, 0.0f, z,	  0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
 		}
 
 		static constexpr Mat4 perspective(const float fov, const float aspect, const float near,
-		                                  const float far) noexcept
+										  const float far) noexcept
 		{
 			const float tan_half_fov = std::tan(fov * 0.5f);
 			return Mat4{
-				1.0f / (aspect * tan_half_fov), 0.0f, 0.0f, 0.0f,
-				0.0f, 1.0f / tan_half_fov, 0.0f, 0.0f,
-				0.0f, 0.0f, -(far + near) / (far - near), -1.0f,
-				0.0f, 0.0f, -(2.0f * far * near) / (far - near), 0.0f
+					1.0f / (aspect * tan_half_fov),
+					0.0f,
+					0.0f,
+					0.0f,
+					0.0f,
+					1.0f / tan_half_fov,
+					0.0f,
+					0.0f,
+					0.0f,
+					0.0f,
+					-(far + near) / (far - near),
+					-1.0f,
+					0.0f,
+					0.0f,
+					-(2.0f * far * near) / (far - near),
+					0.0f,
 			};
 		}
 
-		static constexpr Mat4 lookAt(const Vec3& eye,
-							 const Vec3& center,
-							 const Vec3& up) noexcept
+		static constexpr Mat4 lookAt(const Vec3& eye, const Vec3& center, const Vec3& up) noexcept
 		{
 			const Vec3 f = (center - eye).normalize();
 			const Vec3 s = f.cross(up).normalize();
 			const Vec3 u = s.cross(f);
 
 			return Mat4{
-				s.x,  u.x, -f.x, 0.0f,
-				s.y,  u.y, -f.y, 0.0f,
-				s.z,  u.z, -f.z, 0.0f,
-				-s.dot(eye), -u.dot(eye), f.dot(eye), 1.0f
+					s.x, u.x, -f.x, 0.0f, s.y,		   u.y,			-f.y,		0.0f,
+					s.z, u.z, -f.z, 0.0f, -s.dot(eye), -u.dot(eye), f.dot(eye), 1.0f,
 			};
 		}
 
-		static constexpr Mat4 orthographic(float left, float right,
-								   float bottom, float top,
-								   float near, float far) noexcept
+		static constexpr Mat4 orthographic(float left, float right, float bottom, float top,
+										   float near, float far) noexcept
 		{
 			return Mat4{
-				2.0f / (right - left), 0.0f, 0.0f, 0.0f,
-				0.0f, 2.0f / (top - bottom), 0.0f, 0.0f,
-				0.0f, 0.0f, -2.0f / (far - near), 0.0f,
-				-(right + left) / (right - left),
-				-(top + bottom) / (top - bottom),
-				-(far + near) / (far - near),
-				1.0f
+					2.0f / (right - left),
+					0.0f,
+					0.0f,
+					0.0f,
+					0.0f,
+					2.0f / (top - bottom),
+					0.0f,
+					0.0f,
+					0.0f,
+					0.0f,
+					-2.0f / (far - near),
+					0.0f,
+					-(right + left) / (right - left),
+					-(top + bottom) / (top - bottom),
+					-(far + near) / (far - near),
+					1.0f,
 			};
 		}
 
-		static constexpr Mat4 transform(const Vec3& translation,
-								const Vec3& rotationEuler,
-								const Vec3& scaleVec) noexcept
+		static constexpr Mat4 transform(const Vec3& translation, const Vec3& rotationEuler,
+										const Vec3& scaleVec) noexcept
 		{
-			Mat4 t = translate(translation.x, translation.y, translation.z);
+			const Mat4 t = translate(translation.x, translation.y, translation.z);
 
-			Mat4 rx = rotate(rotationEuler.x, Vec3{1,0,0});
-			Mat4 ry = rotate(rotationEuler.y, Vec3{0,1,0});
-			Mat4 rz = rotate(rotationEuler.z, Vec3{0,0,1});
+			const Mat4 rx = rotate(rotationEuler.x, Vec3{1, 0, 0});
+			const Mat4 ry = rotate(rotationEuler.y, Vec3{0, 1, 0});
+			const Mat4 rz = rotate(rotationEuler.z, Vec3{0, 0, 1});
 
-			Mat4 r = rz * ry * rx;
-			Mat4 s = scale(scaleVec.x, scaleVec.y, scaleVec.z);
+			const Mat4 r = rz * ry * rx;
+			const Mat4 s = scale(scaleVec.x, scaleVec.y, scaleVec.z);
 
 			return t * r * s;
 		}
@@ -340,13 +348,11 @@ export namespace lune
 
 		constexpr explicit operator simd_float4x4() const noexcept
 		{
-			return simd_float4x4{
-				simd_make_float4(m[0][0], m[0][1], m[0][2], m[0][3]),
-				simd_make_float4(m[1][0], m[1][1], m[1][2], m[1][3]),
-				simd_make_float4(m[2][0], m[2][1], m[2][2], m[2][3]),
-				simd_make_float4(m[3][0], m[3][1], m[3][2], m[3][3])
-			};
+			return simd_float4x4{simd_make_float4(m[0][0], m[0][1], m[0][2], m[0][3]),
+								 simd_make_float4(m[1][0], m[1][1], m[1][2], m[1][3]),
+								 simd_make_float4(m[2][0], m[2][1], m[2][2], m[2][3]),
+								 simd_make_float4(m[3][0], m[3][1], m[3][2], m[3][3])};
 		}
 #endif
 	};
-}
+} // namespace lune

@@ -30,8 +30,8 @@ namespace lune
 			m_firstMouse = false;
 		}
 
-		const double deltaX = xposIn - m_prevMouseX;
-		const double deltaY = m_prevMouseY - yposIn;
+		const double deltaX{xposIn - m_prevMouseX};
+		const double deltaY{m_prevMouseY - yposIn};
 
 		m_prevMouseX = xposIn;
 		m_prevMouseY = yposIn;
@@ -41,8 +41,7 @@ namespace lune
 	}
 
 	void InputManager::_processMouseButtonCallback(GLFWwindow* window, const int key,
-												   const int action,
-												   const int mods)
+												   const int action, const int mods)
 	{
 		processKeyEvent(key, action);
 	}
@@ -57,11 +56,11 @@ namespace lune
 		while (!m_eventQueue.empty())
 		{
 			// Extract event from the eventQueue
-			const std::shared_ptr<InputEvent> event = m_eventQueue.front();
+			const std::shared_ptr event{m_eventQueue.front()};
 			m_eventQueue.pop();
 
 			Key key = event->getKey();
-			const InputState state = event->getState();
+			const InputState state{event->getState()};
 
 			// Update the map depending on the event state
 			if (state == JUST_PRESSED)
@@ -114,17 +113,17 @@ namespace lune
 
 	bool InputManager::isOrderedPressed(const std::initializer_list<Key>& keys)
 	{
-		return isOrderedPressed(std::vector<Key>(keys));
+		return isOrderedPressed(std::vector(keys));
 	}
 
 	bool InputManager::isOrderedPressed(const std::vector<Key>& keys)
 	{
-		std::queue<std::shared_ptr<InputEvent>> tempRecentQueue = m_recentQueue;
-		auto it = keys.begin();
+		std::queue tempRecentQueue{m_recentQueue};
+		auto it{keys.begin()};
 
 		while (it != keys.end() && !tempRecentQueue.empty())
 		{
-			std::shared_ptr<InputEvent> currentEvent = tempRecentQueue.front();
+			std::shared_ptr currentEvent{tempRecentQueue.front()};
 			if (currentEvent->getKey() == *it &&
 				(currentEvent->isPressed() || currentEvent->isJustPressed()))
 			{
@@ -157,7 +156,7 @@ namespace lune
 			// Iterate through each Key, InputEvent
 			for (const auto& [key, event] : m_events)
 			{
-				bool inCombo = false;
+				bool inCombo{};
 				for (const Key& comboKey : keys)
 				{
 					if (key == comboKey)
@@ -233,7 +232,7 @@ namespace lune
 			return;
 		}
 
-		const auto libKey = static_cast<Key>(key);
+		const auto libKey{static_cast<Key>(key)};
 		InputState state;
 
 		if (action == GLFW_PRESS && !m_events.contains(libKey))
@@ -245,7 +244,7 @@ namespace lune
 			state = JUST_RELEASED;
 		}
 
-		const auto event = std::make_shared<InputEvent>(libKey, state);
+		const auto event{std::make_shared<InputEvent>(libKey, state)};
 
 		// Add to recent queue if just pressed
 		// Used for handling combinations of keys being pressed

@@ -1,7 +1,7 @@
 module;
 module lune;
 
-namespace lune
+namespace lune::gfx
 {
 	GraphicsContext& GraphicsContext::instance()
 	{
@@ -12,4 +12,4 @@ namespace lune
 #endif
 		return s_instance;
 	}
-}
+} // namespace lune::gfx

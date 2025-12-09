@@ -42,10 +42,10 @@ namespace lune::vulkan
 
 		// Application info
 		constexpr vk::ApplicationInfo appInfo{.pApplicationName = "Hello Triangle",
-		                                      .applicationVersion = vk::makeVersion(1, 0, 0),
-		                                      .pEngineName = "No Engine",
-		                                      .engineVersion = vk::makeVersion(1, 0, 0),
-		                                      .apiVersion = vk::ApiVersion14};
+											  .applicationVersion = vk::makeVersion(1, 0, 0),
+											  .pEngineName = "No Engine",
+											  .engineVersion = vk::makeVersion(1, 0, 0),
+											  .apiVersion = vk::ApiVersion14};
 
 		// Get required extensions (GLFW + validation layers if enabled)
 		auto extensions = getRequiredExtensions();
@@ -55,25 +55,23 @@ namespace lune::vulkan
 		for (const auto& extension : extensions)
 		{
 			if (std::ranges::none_of(extensionProperties,
-			                         [extension](const vk::ExtensionProperties& prop)
-			                         {
-				                         return strcmp(prop.extensionName, extension) == 0;
-			                         }))
+									 [extension](const vk::ExtensionProperties& prop)
+									 { return strcmp(prop.extensionName, extension) == 0; }))
 			{
 				throw std::runtime_error(std::string("Required Vulkan extension not supported: ") +
-					extension);
+										 extension);
 			}
 		}
 
 		// Instance creation
 		vk::InstanceCreateInfo createInfo{
-			.flags = vk::InstanceCreateFlags(),
-			.pApplicationInfo = &appInfo,
-			.enabledLayerCount = static_cast<uint32_t>(
-				enableValidationLayers ? m_validationLayers.size() : 0u),
-			.ppEnabledLayerNames = enableValidationLayers ? m_validationLayers.data() : nullptr,
-			.enabledExtensionCount = static_cast<uint32_t>(extensions.size()),
-			.ppEnabledExtensionNames = extensions.data()};
+				.flags = vk::InstanceCreateFlags(),
+				.pApplicationInfo = &appInfo,
+				.enabledLayerCount = static_cast<uint32_t>(
+						enableValidationLayers ? m_validationLayers.size() : 0u),
+				.ppEnabledLayerNames = enableValidationLayers ? m_validationLayers.data() : nullptr,
+				.enabledExtensionCount = static_cast<uint32_t>(extensions.size()),
+				.ppEnabledExtensionNames = extensions.data()};
 
 #ifdef __APPLE__
 		createInfo.flags |= vk::InstanceCreateFlagBits::eEnumeratePortabilityKHR;
@@ -91,13 +89,13 @@ namespace lune::vulkan
 		}
 
 		constexpr vk::DebugUtilsMessengerCreateInfoEXT debugCreateInfo{
-			.messageSeverity = vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose |
-			vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning |
-			vk::DebugUtilsMessageSeverityFlagBitsEXT::eError,
-			.messageType = vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral |
-			vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation |
-			vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance,
-			.pfnUserCallback = &debugCallback,
+				.messageSeverity = vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose |
+								   vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning |
+								   vk::DebugUtilsMessageSeverityFlagBitsEXT::eError,
+				.messageType = vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral |
+							   vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation |
+							   vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance,
+				.pfnUserCallback = &debugCallback,
 		};
 
 		m_debugMessenger = m_instance.createDebugUtilsMessengerEXT(debugCreateInfo);
@@ -109,9 +107,7 @@ namespace lune::vulkan
 		for (const auto& layerName : m_validationLayers)
 		{
 			if (std::ranges::none_of(layerProperties, [layerName](const vk::LayerProperties& prop)
-			{
-				return strcmp(prop.layerName, layerName) == 0;
-			}))
+									 { return strcmp(prop.layerName, layerName) == 0; }))
 			{
 				return false;
 			}
@@ -169,8 +165,8 @@ namespace lune::vulkan
 
 		if (candidates.rbegin()->first > 0)
 		{
-			m_physicalDevice = std::make_unique<vk::raii::PhysicalDevice>(
-				candidates.rbegin()->second);
+			m_physicalDevice =
+					std::make_unique<vk::raii::PhysicalDevice>(candidates.rbegin()->second);
 		}
 		else
 		{
@@ -184,38 +180,36 @@ namespace lune::vulkan
 			throw std::runtime_error("Physical device not selected!");
 
 		std::vector<vk::QueueFamilyProperties> queueFamilyProperties =
-			m_physicalDevice->getQueueFamilyProperties();
+				m_physicalDevice->getQueueFamilyProperties();
 
 		uint32_t graphicsFamilyIndex = findQueueFamilies(*m_physicalDevice);
 		float queuePriority = 0.0f;
 		vk::DeviceQueueCreateInfo deviceQueueCreateInfo{.queueFamilyIndex = graphicsFamilyIndex,
-		                                                .queueCount = 1,
-		                                                .pQueuePriorities = &queuePriority};
+														.queueCount = 1,
+														.pQueuePriorities = &queuePriority};
 
 		vk::PhysicalDeviceFeatures deviceFeatures;
 		// Create a chain of feature structures
 		vk::StructureChain<vk::PhysicalDeviceFeatures2, vk::PhysicalDeviceVulkan13Features,
-		                   vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>
-			featureChain = {
-				{},                            // vk::PhysicalDeviceFeatures2 (empty for now)
-				{.dynamicRendering = true},    // Enable dynamic rendering from Vulkan 1.3
-				{.extendedDynamicState = true} // Enable extended dynamic state from the extension
-			};
+						   vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>
+				featureChain = {
+						{},							// vk::PhysicalDeviceFeatures2 (empty for now)
+						{.dynamicRendering = true}, // Enable dynamic rendering from Vulkan 1.3
+						{.extendedDynamicState =
+								 true} // Enable extended dynamic state from the extension
+				};
 
-		std::vector<const char*> deviceExtensions = {
-			vk::KHRSwapchainExtensionName,
-			vk::KHRSpirv14ExtensionName,
-			vk::KHRSynchronization2ExtensionName,
-			vk::KHRCreateRenderpass2ExtensionName
-		};
+		std::vector<const char*> deviceExtensions = {vk::KHRSwapchainExtensionName,
+													 vk::KHRSpirv14ExtensionName,
+													 vk::KHRSynchronization2ExtensionName,
+													 vk::KHRCreateRenderpass2ExtensionName};
 
 		vk::DeviceCreateInfo deviceCreateInfo{
-			.pNext = &featureChain.get<vk::PhysicalDeviceFeatures2>(),
-			.queueCreateInfoCount = 1,
-			.pQueueCreateInfos = &deviceQueueCreateInfo,
-			.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size()),
-			.ppEnabledExtensionNames = deviceExtensions.data()
-		};
+				.pNext = &featureChain.get<vk::PhysicalDeviceFeatures2>(),
+				.queueCreateInfoCount = 1,
+				.pQueueCreateInfos = &deviceQueueCreateInfo,
+				.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size()),
+				.ppEnabledExtensionNames = deviceExtensions.data()};
 
 		m_device = vk::raii::Device(*m_physicalDevice, deviceCreateInfo);
 		m_queue = vk::raii::Queue(m_device, graphicsFamilyIndex, 0);
@@ -225,17 +219,15 @@ namespace lune::vulkan
 	{
 		// find the index of the first queue family that supports graphics
 		std::vector<vk::QueueFamilyProperties> queueFamilyProperties =
-			m_physicalDevice->getQueueFamilyProperties();
+				m_physicalDevice->getQueueFamilyProperties();
 
 		// get the first index into queueFamilyProperties which supports graphics
-		auto graphicsQueueFamilyProperty = std::find_if(
-			queueFamilyProperties.begin(), queueFamilyProperties.end(),
-			[](vk::QueueFamilyProperties const& qfp)
-			{
-				return qfp.queueFlags & vk::QueueFlagBits::eGraphics;
-			});
+		auto graphicsQueueFamilyProperty =
+				std::find_if(queueFamilyProperties.begin(), queueFamilyProperties.end(),
+							 [](vk::QueueFamilyProperties const& qfp)
+							 { return qfp.queueFlags & vk::QueueFlagBits::eGraphics; });
 
 		return static_cast<uint32_t>(
-			std::distance(queueFamilyProperties.begin(), graphicsQueueFamilyProperty));
+				std::distance(queueFamilyProperties.begin(), graphicsQueueFamilyProperty));
 	}
-}
+} // namespace lune::vulkan

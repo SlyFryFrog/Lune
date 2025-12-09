@@ -10,15 +10,14 @@ namespace lune::metal
 		NS::SharedPtr<CA::MetalDrawable> m_drawable{};
 
 	public:
-		explicit RenderSurface(const NS::SharedPtr<CA::MetalLayer>& layer) :
-			m_layer(layer)
+		explicit RenderSurface(const NS::SharedPtr<CA::MetalLayer>& layer) : m_layer(layer)
 		{
 		}
 
 		[[nodiscard]] CA::MetalDrawable* nextDrawable()
 		{
-			auto* drawable = m_layer->nextDrawable();
-			if (!drawable)	// Prevent crash
+			const auto drawable{m_layer->nextDrawable()};
+			if (!drawable) // Prevent crash
 			{
 				m_drawable.reset();
 				return nullptr;
@@ -38,4 +37,4 @@ namespace lune::metal
 			return m_layer.get();
 		}
 	};
-}
+} // namespace lune::metal

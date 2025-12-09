@@ -22,5 +22,5 @@ namespace lune
 	/**
 	 * @brief Current working directory where the executable is located. Is determined at runtime.
 	 */
-	export const inline std::string WorkingDirectory = getWorkingDirectory();
-}
+	export const inline std::string WorkingDirectory{getWorkingDirectory()};
+} // namespace lune

@@ -52,7 +52,8 @@ namespace lune
 		[[nodiscard]] double elapsed();
 
 		/**
-		 * @brief Gets the total time elapsed since the timer was started, without updating the timer.
+		 * @brief Gets the total time elapsed since the timer was started, without updating the
+		 * timer.
 		 *
 		 * Unlike `elapsed()`, this method does not modify `m_prevTime`.
 		 * Useful for checking the total elapsed time without affecting future calls.

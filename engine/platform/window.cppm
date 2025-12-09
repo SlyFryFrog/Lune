@@ -1,5 +1,5 @@
 module;
-#define GLFW_INCLUDE_NONE	// We're not using OpenGL, therefore we disable it
+#define GLFW_INCLUDE_NONE // We're not using OpenGL, therefore we disable it
 #include <GLFW/glfw3.h>
 #include <string>
 export module lune:window;
@@ -17,8 +17,8 @@ namespace lune
 	 */
 	export enum WindowMode
 	{
-		FULLSCREEN,         ///< Fullscreen mode.
-		WINDOWED,           ///< Windowed mode.
+		FULLSCREEN,			///< Fullscreen mode.
+		WINDOWED,			///< Windowed mode.
 		WINDOWED_FULLSCREEN ///< Windowed fullscreen (borderless) mode.
 	};
 
@@ -28,10 +28,10 @@ namespace lune
 	 */
 	export struct WindowCreateInfo
 	{
-		int width = 800;                        ///< The width of the window in pixels.
-		int height = 600;                       ///< The height of the window in pixels.
-		std::string title = "Untitled Window";  ///< The title of the window.
-		bool resizable = true;                  ///< Whether the window is resizable.
+		int width = 800;						///< The width of the window in pixels.
+		int height = 600;						///< The height of the window in pixels.
+		std::string title = "Untitled Window";	///< The title of the window.
+		bool resizable = true;					///< Whether the window is resizable.
 		WindowMode mode = WindowMode::WINDOWED; ///< The initial window mode.
 	};
 
@@ -39,8 +39,8 @@ namespace lune
 	/**
 	 * @brief Manages a GLFW window and its associated rendering context.
 	 *
-	 * The `Window` class provides methods for creating, destroying, and interacting
-	 * with a GLFW window. It supports Metal (on macOS) and Vulkan rendering contexts.
+	 * The `Window` class provides methods for creating, destroying, and interacting with a GLFW
+	 * window. It supports Metal (on macOS) and Vulkan rendering contexts.
 	 */
 	export class Window
 	{
@@ -116,7 +116,7 @@ namespace lune
 		 *
 		 * @return std::string The window title.
 		 */
-		[[nodiscard]] std::string getTitle() const;
+		[[nodiscard]] std::string getTitle() const noexcept;
 
 		/**
 		 * @brief Sets whether the window is resizable.
@@ -137,7 +137,7 @@ namespace lune
 		 *
 		 * @return WindowMode The current window mode.
 		 */
-		[[nodiscard]] WindowMode getWindowMode() const;
+		[[nodiscard]] WindowMode getWindowMode() const noexcept;
 
 		/**
 		 * @brief Polls for window events.
@@ -295,5 +295,5 @@ namespace lune
 				return m_rawWindow.surface();
 			}
 		};
-	}
-}
+	} // namespace raii
+} // namespace lune

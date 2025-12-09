@@ -37,4 +37,4 @@ namespace lune::vulkan
 		void createLogicalDevice();
 		[[nodiscard]] uint32_t findQueueFamilies(const vk::raii::PhysicalDevice& device) const;
 	};
-}
+} // namespace lune::vulkan
