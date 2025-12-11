@@ -1,5 +1,6 @@
 #include <array>
 import lune;
+import lune.metal;
 
 constexpr size_t Width{1024};
 constexpr size_t Height{728};
@@ -92,7 +93,7 @@ int main()
 
 			// Since we are copying data on CPU, we need to wait for GPU results
 			// If we instead swap ptrs to buffers we don't need to wait
-			inBuff.update(outBuff.data(), outBuff.size());
+			inBuff.setData(outBuff.data(), outBuff.size());
 		}
 
 		// Copy buffer data to texture and then draw

@@ -1,7 +1,7 @@
 module;
 #include <stb_image.h>
 #include <string>
-export module lune:texture;
+export module lune.gfx:texture;
 
 import :graphics_types;
 
@@ -21,9 +21,9 @@ namespace lune::gfx
 	/**
 	 * @brief Platform-specific texture implementation interface.
 	 *
-	 * @note Not exposed in public API.
+	 * @note Implemented by all supported backends.
 	 */
-	struct ITextureImpl
+	export struct ITextureImpl
 	{
 		TextureContextCreateInfo m_info; ///< Texture configuration.
 
@@ -120,7 +120,7 @@ namespace lune::gfx
 	 * @param texture Texture to retrieve implementation from.
 	 * @return Raw pointer to the platform-specific implementation.
 	 */
-	ITextureImpl* getImpl(const Texture& texture)
+	export ITextureImpl* getImpl(const Texture& texture)
 	{
 		return texture.m_impl.get();
 	}

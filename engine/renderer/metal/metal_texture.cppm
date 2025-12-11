@@ -1,9 +1,9 @@
 module;
 #include <Metal/Metal.hpp>
-export module lune:metal_texture;
+export module lune.metal:metal_texture;
 
 import :metal_mappings;
-import :texture;
+import lune.gfx;
 
 namespace lune::metal
 {
@@ -18,7 +18,7 @@ namespace lune::metal
 
 		void load(const std::string& file, int desiredChannelCount) override;
 
-		[[nodiscard]] MTL::Texture* texture() const
+		[[nodiscard]] MTL::Texture* texture() const noexcept
 		{
 			return m_texture.get();
 		}

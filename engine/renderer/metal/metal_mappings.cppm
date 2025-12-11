@@ -1,8 +1,8 @@
 module;
 #include <Metal/Metal.hpp>
-export module lune:metal_mappings;
+export module lune.metal:metal_mappings;
 
-import :graphics_types;
+import lune.gfx;
 
 namespace lune::metal
 {

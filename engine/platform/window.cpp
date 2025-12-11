@@ -14,7 +14,7 @@ module;
 module lune;
 
 #ifdef USE_METAL
-import :metal;
+import lune.metal;
 #endif
 
 import :input_manager;
@@ -84,7 +84,7 @@ namespace lune
 		window->m_frameBufferHeight = height;
 
 #ifdef USE_METAL
-		window->surface().layer()->setDrawableSize(CGSizeMake(width, height));
+		metal::toMetalRenderSurface(window->surface())->setDrawableSize(width, height);
 #endif
 	}
 
@@ -175,18 +175,18 @@ namespace lune
 	{
 		const auto nsWindow{glfwGetCocoaWindow(m_handle)};
 		const auto nsView{objcCall<id>(nsWindow, "contentView")};
-
 		auto& metalCtx{metal::MetalContext::instance()};
-		m_surface =
-				std::make_shared<metal::RenderSurface>(NS::TransferPtr(CA::MetalLayer::layer()));
-		m_surface->layer()->setDevice(metalCtx.device());
-		m_surface->layer()->setPixelFormat(MTL::PixelFormatBGRA8Unorm);
-		m_surface->layer()->setFramebufferOnly(false);
-		m_surface->layer()->setDrawableSize(CGSizeMake(m_frameBufferWidth, m_frameBufferHeight));
+		m_surface = std::make_shared<gfx::RenderSurface>(
+				std::make_unique<metal::MetalRenderSurfaceImpl>(
+						gfx::RenderSurfaceInfo{
+								.width = m_frameBufferWidth,
+								.height = m_frameBufferHeight,
+						},
+						metalCtx.device()));
 
 		metalCtx.addSurface(m_surface);
 		objcCall<void>(nsView, "wantsLayer", YES);
-		objcCall<void>(nsView, "setLayer:", m_surface->layer());
+		objcCall<void>(nsView, "setLayer:", metal::toMetalRenderSurface(*m_surface)->layer());
 	}
 #endif
 } // namespace lune

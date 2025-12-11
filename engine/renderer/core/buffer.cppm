@@ -1,16 +1,21 @@
 module;
 #include <memory>
-export module lune:buffer;
+export module lune.gfx:buffer;
 
 import :graphics_types;
 
 namespace lune::gfx
 {
-	struct IBufferImpl
+	/**
+	 * @brief Platform-specific buffer implementation interface.
+	 *
+	 * @note Implemented by all supported backends.
+	 */
+	export struct IBufferImpl
 	{
 		virtual ~IBufferImpl() = default;
 
-		virtual void update(const void* data, size_t size, size_t offset) = 0;
+		virtual void setData(const void* data, size_t size, size_t offset) = 0;
 
 		[[nodiscard]] virtual size_t size() const = 0;
 		[[nodiscard]] virtual void* data() const = 0;
@@ -30,9 +35,9 @@ namespace lune::gfx
 
 		~Buffer() = default;
 
-		void update(const void* data, const size_t size, const size_t offset = 0) const
+		void setData(const void* data, const size_t size, const size_t offset = 0) const
 		{
-			m_impl->update(data, size, offset);
+			m_impl->setData(data, size, offset);
 		}
 
 		[[nodiscard]] size_t size() const noexcept
@@ -46,8 +51,15 @@ namespace lune::gfx
 		}
 	};
 
-
-	IBufferImpl* getImpl(const Buffer& buffer)
+	/**
+	 * @brief Gets the platform-specific implementation of a buffer.
+	 *
+	 * @note For internal use by backend code.
+	 *
+	 * @param buffer Buffer to retrieve implementation from.
+	 * @return Raw pointer to the platform-specific implementation.
+	 */
+	export IBufferImpl* getImpl(const Buffer& buffer)
 	{
 		return buffer.m_impl.get();
 	}

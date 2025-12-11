@@ -2,7 +2,7 @@ module;
 #include <Metal/Metal.hpp>
 #include <map>
 #include <string>
-export module lune:metal_compute;
+export module lune.metal:metal_compute;
 
 import :metal_shader;
 import :metal_mappings;

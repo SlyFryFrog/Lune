@@ -6,7 +6,7 @@ module;
 #include <Foundation/Foundation.hpp>
 #include <Metal/Metal.hpp>
 #include <QuartzCore/QuartzCore.hpp>
-export module lune:metal;
+export module lune.metal;
 
 export import :metal_buffer;
 export import :metal_compute;

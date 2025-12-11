@@ -1,4 +1,5 @@
 import lune;
+import lune.metal;
 
 constexpr lune::Vec3 verticesB[]{
 		{-0.5f, -0.5f, 0.0f},

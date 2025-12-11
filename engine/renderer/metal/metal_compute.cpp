@@ -2,7 +2,7 @@ module;
 #include <Metal/Metal.hpp>
 #include <iostream>
 #include <utility>
-module lune;
+module lune.metal;
 
 namespace lune::metal
 {

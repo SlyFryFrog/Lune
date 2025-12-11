@@ -2,14 +2,14 @@ module;
 #include <Metal/Metal.hpp>
 #include <memory>
 #include <vector>
-export module lune:metal_context;
+export module lune.metal:metal_context;
 
-import :graphics_context;
-import :texture;
 import :metal_buffer;
 import :metal_texture;
 import :metal_mappings;
 import :metal_render_surface;
+
+import lune.gfx;
 
 namespace lune::metal
 {
@@ -17,7 +17,7 @@ namespace lune::metal
 	{
 		NS::SharedPtr<MTL::Device> m_device{};
 		NS::SharedPtr<MTL::CommandQueue> m_commandQueue{};
-		std::vector<std::shared_ptr<RenderSurface>> m_surfaces{};
+		std::vector<std::shared_ptr<gfx::RenderSurface>> m_surfaces{};
 
 	private:
 		MetalContext();
@@ -45,17 +45,17 @@ namespace lune::metal
 			return m_commandQueue.get();
 		}
 
-		void addSurface(const std::shared_ptr<RenderSurface>& surface)
+		void addSurface(const std::shared_ptr<gfx::RenderSurface>& surface)
 		{
 			m_surfaces.push_back(surface);
 		}
 
-		void removeSurface(const std::shared_ptr<RenderSurface>& surface)
+		void removeSurface(const std::shared_ptr<gfx::RenderSurface>& surface)
 		{
 			std::erase(m_surfaces, surface);
 		}
 
-		[[nodiscard]] std::vector<std::shared_ptr<RenderSurface>> surfaces() const
+		[[nodiscard]] std::vector<std::shared_ptr<gfx::RenderSurface>> surfaces() const
 		{
 			return m_surfaces;
 		}

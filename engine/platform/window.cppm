@@ -5,10 +5,7 @@ module;
 export module lune:window;
 
 import :input_manager;
-
-#ifdef USE_METAL
-import :metal;
-#endif
+import lune.gfx;
 
 namespace lune
 {
@@ -53,7 +50,7 @@ namespace lune
 		WindowMode m_mode{};
 
 #ifdef USE_METAL
-		std::shared_ptr<metal::RenderSurface> m_surface{};
+		std::shared_ptr<gfx::RenderSurface> m_surface{};
 #endif
 
 	public:
@@ -168,6 +165,11 @@ namespace lune
 			return m_height;
 		}
 
+		[[nodiscard]] gfx::RenderSurface& surface() const
+		{
+			return *m_surface;
+		}
+
 	private:
 		/**
 		 * @brief Callback for framebuffer resize events.
@@ -184,12 +186,7 @@ namespace lune
 		 */
 		void attachMetalToGLFW();
 
-	public:
-		[[nodiscard]] metal::RenderSurface& surface() const
-		{
-			return *m_surface;
-		}
-#elif USE_VULKAN
+		#elif USE_VULKAN
 		/**
 		 * @brief Attaches a Vulkan context to the GLFW window.
 		 */
@@ -290,7 +287,7 @@ namespace lune
 				return m_rawWindow.height();
 			}
 
-			[[nodiscard]] metal::RenderSurface& surface() const
+			[[nodiscard]] gfx::RenderSurface& surface() const
 			{
 				return m_rawWindow.surface();
 			}

@@ -1,6 +1,6 @@
 module;
 #include <cstddef>
-export module lune:graphics_context;
+export module lune.gfx:graphics_context;
 
 import :buffer;
 import :texture;
@@ -9,7 +9,7 @@ namespace lune::gfx
 {
 	export class GraphicsContext
 	{
-	  public:
+	public:
 		GraphicsContext() = default;
 		virtual ~GraphicsContext() = default;
 

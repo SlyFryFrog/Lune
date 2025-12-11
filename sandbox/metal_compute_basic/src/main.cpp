@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 import lune;
+import lune.metal;
 
 constexpr size_t arrayLength{1 << 24};
 constexpr size_t iterations{20};
@@ -38,7 +39,7 @@ int main()
 {
 	lune::setWorkingDirectory();
 
-	auto& context{lune::metal::MetalContext::instance()};
+	auto& context{lune::gfx::GraphicsContext::instance()};
 
 	// CPU input data
 	std::vector<float> a(arrayLength), b(arrayLength), outputAdd(arrayLength),

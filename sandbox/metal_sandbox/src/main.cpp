@@ -1,4 +1,6 @@
 import lune;
+import lune.gfx;
+import lune.metal;
 import sandbox;
 using namespace sandbox;
 
@@ -26,7 +28,7 @@ int main()
 	material.setUniform("cubeData", cubeVertices);
 
 	lune::gfx::Buffer indexBuffer{context.createBuffer(sizeof(cubeIndices))};
-	indexBuffer.update(cubeIndices, sizeof(cubeIndices));
+	indexBuffer.setData(cubeIndices, sizeof(cubeIndices));
 
 	// Create our first shader
 	lune::metal::GraphicsShader shaderA{"shaders/basic.metal"};

@@ -1,7 +1,7 @@
 module;
 #include <objc/message.h>
 #include <objc/runtime.h>
-export module lune:objc_interop;
+export module lune.metal:objc_interop;
 
 namespace lune
 {

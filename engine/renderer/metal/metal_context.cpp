@@ -1,7 +1,7 @@
 module;
 #include <Metal/Metal.hpp>
 #include <iostream>
-module lune;
+module lune.metal;
 
 namespace lune::metal
 {

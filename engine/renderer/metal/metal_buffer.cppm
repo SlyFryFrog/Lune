@@ -1,8 +1,8 @@
 module;
 #include <Metal/Metal.hpp>
-export module lune:metal_buffer;
+export module lune.metal:metal_buffer;
 
-import :buffer;
+import lune.gfx;
 
 namespace lune::metal
 {
@@ -19,7 +19,7 @@ namespace lune::metal
 					device->newBuffer(static_cast<NS::Integer>(size), MTL::StorageModeShared));
 		}
 
-		void update(const void* data, size_t size, const size_t offset) override
+		void setData(const void* data, size_t size, const size_t offset) override
 		{
 			if (!data || size == 0)
 				return;

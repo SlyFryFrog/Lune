@@ -3,7 +3,9 @@ module;
 #include <QuartzCore/QuartzCore.hpp>
 #include <iostream>
 #include <utility>
-module lune;
+module lune.metal;
+
+import lune;
 
 namespace lune::metal
 {
@@ -233,6 +235,10 @@ namespace lune::metal
 		}
 	}
 
+	RenderPass::RenderPass(gfx::RenderSurface& surface) : m_surface(surface)
+	{
+	}
+
 	RenderPass& RenderPass::bind(const Material& material)
 	{
 		const auto& pipeline = material.pipeline();
@@ -247,7 +253,8 @@ namespace lune::metal
 
 	RenderPass& RenderPass::begin()
 	{
-		const auto* drawable = m_surface.nextDrawable();
+		const auto* drawable =
+				static_cast<CA::MetalDrawable*>(toMetalRenderSurface(m_surface)->nextDrawable());
 		if (!drawable)
 		{
 			std::cerr << "RenderPass::begin(): drawable is null\n";
@@ -275,7 +282,8 @@ namespace lune::metal
 	{
 		m_encoder->endEncoding();
 
-		const auto* drawable = m_surface.drawable();
+		const auto drawable =
+				static_cast<CA::MetalDrawable*>(toMetalRenderSurface(m_surface)->currentDrawable());
 
 		m_commandBuffer->presentDrawable(drawable);
 		m_commandBuffer->commit();

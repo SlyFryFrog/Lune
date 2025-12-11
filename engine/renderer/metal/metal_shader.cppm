@@ -4,10 +4,10 @@ module;
 #include <iostream>
 #include <map>
 #include <string>
-export module lune:metal_shader;
+export module lune.metal:metal_shader;
 
-import :graphics_types;
 import :metal_context;
+import lune.gfx;
 
 namespace lune::metal
 {
@@ -216,12 +216,10 @@ namespace lune::metal
 	{
 		NS::SharedPtr<MTL::RenderCommandEncoder> m_encoder{};
 		NS::SharedPtr<MTL::CommandBuffer> m_commandBuffer{};
-		RenderSurface& m_surface;
+		gfx::RenderSurface& m_surface;
 
 	public:
-		explicit RenderPass(RenderSurface& surface) : m_surface(surface)
-		{
-		}
+		explicit RenderPass(gfx::RenderSurface& surface);
 
 		RenderPass& bind(const Material& material);
 

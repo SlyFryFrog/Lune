@@ -1,5 +1,5 @@
 module;
-export module lune:graphics_types;
+export module lune.gfx:graphics_types;
 
 namespace lune::gfx
 {
