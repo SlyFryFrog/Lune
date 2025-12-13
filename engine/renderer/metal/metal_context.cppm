@@ -4,6 +4,7 @@ module;
 export module lune.metal:context;
 
 import :buffer;
+import :compute;
 import :texture;
 import :render_surface;
 import :graphics;
@@ -79,6 +80,12 @@ namespace lune::metal
 		{
 			auto impl{std::make_unique<MetalRenderPassImpl>(surface)};
 			return gfx::RenderPass(std::move(impl));
+		}
+
+		[[nodiscard]] gfx::ComputeShader createComputeShader(const std::string& path) const override
+		{
+			auto impl{std::make_unique<MetalComputeShaderImpl>(m_device.get(), path)};
+			return gfx::ComputeShader(std::move(impl));
 		}
 	};
 } // namespace lune::metal

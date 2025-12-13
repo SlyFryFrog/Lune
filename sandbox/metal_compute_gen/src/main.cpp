@@ -50,12 +50,12 @@ int main()
 	std::memcpy(inBuff.data(), pixelData.data(), pixelData.size());
 
 	// Compute shader setup
-	lune::metal::ComputeShader computeShader{"shaders/life_compute.metal"};
-	auto kernel{computeShader.kernel("computeNextStateBuffer")
-						.setUniform("width", Width)
-						.setUniform("height", Height)
-						.setUniform("cellColor", CellColor)
-						.setUniform("backgroundColor", BackgroundColor)};
+	lune::gfx::ComputeShader computeShader{ctx.createComputeShader("shaders/life_compute.metal")};
+	auto& kernel{computeShader.kernel("computeNextStateBuffer")
+						 .setUniform("width", Width)
+						 .setUniform("height", Height)
+						 .setUniform("cellColor", CellColor)
+						 .setUniform("backgroundColor", BackgroundColor)};
 
 	lune::gfx::Shader shader{ctx.createShader({
 			"shaders/life_visualize.metal",
@@ -97,9 +97,9 @@ int main()
 		}
 
 		// Copy buffer data to texture and then draw
-		lune::metal::ComputeKernel::bufferToTexture(inBuff, texture,
-													Width * 4, // RGBA8
-													{Width, Height, 1});
+		lune::metal::bufferToTexture(inBuff, texture,
+									 Width * 4, // RGBA8
+									 {Width, Height, 1}, true);
 
 		// Update our material used to draw the shader
 		material.setUniform("tex", texture);

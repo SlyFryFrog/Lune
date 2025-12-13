@@ -6,6 +6,7 @@ import :buffer;
 import :texture;
 import :render_surface;
 import :graphics;
+import :compute;
 
 namespace lune::gfx
 {
@@ -29,5 +30,7 @@ namespace lune::gfx
 													  PipelineDesc desc) const = 0;
 		[[nodiscard]] virtual Material createMaterial(const Pipeline& pipeline) const = 0;
 		[[nodiscard]] virtual RenderPass createRenderPass(const RenderSurface& surface) const = 0;
+
+		[[nodiscard]] virtual ComputeShader createComputeShader(const std::string& path) const = 0;
 	};
 } // namespace lune::gfx

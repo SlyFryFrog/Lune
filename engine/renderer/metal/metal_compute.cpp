@@ -6,12 +6,25 @@ module lune.metal;
 
 namespace lune::metal
 {
-	ComputeKernel::ComputeKernel(MTL::Device* device, const std::string& name) :
-		m_device(device), m_name(name)
+	void bufferToTexture(const gfx::Buffer& buffer, const gfx::Texture& texture,
+						 NS::UInteger bytesPerRow, const MTL::Size& sourceSize,
+						 bool waitUntilComplete)
 	{
+		const auto cmdBuffer{MetalContext::instance().commandQueue()->commandBuffer()};
+		const auto blit{cmdBuffer->blitCommandEncoder()};
+
+		blit->copyFromBuffer(toMetalImpl(buffer)->buffer(), 0, bytesPerRow, 0, sourceSize,
+							 toMetalImpl(texture)->texture(), 0, 0, MTL::Origin{0, 0, 0},
+							 MTL::BlitOptionNone);
+
+		blit->endEncoding();
+		cmdBuffer->commit();
+
+		if (waitUntilComplete)
+			cmdBuffer->waitUntilCompleted();
 	}
 
-	ComputeKernel& ComputeKernel::dispatch(const size_t threadCount)
+	void MetalComputeKernelImpl::dispatch(const size_t threadCount)
 	{
 		const auto commandBuffer{MetalContext::instance().commandQueue()->commandBuffer()};
 		const auto encoder{commandBuffer->computeCommandEncoder()};
@@ -28,11 +41,9 @@ namespace lune::metal
 		encoder->endEncoding();
 		commandBuffer->commit();
 		m_lastCommandBuffer = NS::TransferPtr(commandBuffer);
-
-		return *this;
 	}
 
-	ComputeKernel& ComputeKernel::dispatch(const size_t x, const size_t y, const size_t z)
+	void MetalComputeKernelImpl::dispatch(const size_t x, const size_t y, const size_t z)
 	{
 		const auto commandBuffer{MetalContext::instance().commandQueue()->commandBuffer()};
 		const auto encoder{commandBuffer->computeCommandEncoder()};
@@ -49,12 +60,10 @@ namespace lune::metal
 		encoder->endEncoding();
 		commandBuffer->commit();
 		m_lastCommandBuffer = NS::TransferPtr(commandBuffer);
-
-		return *this;
 	}
 
-	ComputeKernel& ComputeKernel::dispatch(const size_t x, const size_t y, const size_t z,
-										   std::function<void()> callback)
+	void MetalComputeKernelImpl::dispatch(const size_t x, const size_t y, const size_t z,
+										  std::function<void()> callback)
 	{
 		const auto commandBuffer{MetalContext::instance().commandQueue()->commandBuffer()};
 		const auto encoder{commandBuffer->computeCommandEncoder()};
@@ -73,63 +82,34 @@ namespace lune::metal
 										   { callback(); });
 		commandBuffer->commit();
 		m_lastCommandBuffer = NS::TransferPtr(commandBuffer);
-
-		return *this;
 	}
 
-	ComputeKernel& ComputeKernel::dispatch(const MTL::Size& threadGroups,
-										   const MTL::Size& threadsPerGroup)
-	{
-		const auto commandBuffer{
-				NS::TransferPtr(MetalContext::instance().commandQueue()->commandBuffer())};
-		if (!commandBuffer)
-			throw std::runtime_error("Failed to create Metal command buffer");
 
-		const auto encoder{commandBuffer->computeCommandEncoder()};
-		if (!encoder)
-			throw std::runtime_error("Failed to create Metal compute command encoder");
-
-		encoder->setComputePipelineState(m_pipeline.get());
-
-		bindBuffers(encoder);
-		bindTextures(encoder);
-
-		encoder->dispatchThreadgroups(threadGroups, threadsPerGroup);
-		encoder->endEncoding();
-
-		commandBuffer->commit();
-
-		m_lastCommandBuffer = commandBuffer;
-
-		return *this;
-	}
-
-	ComputeKernel& ComputeKernel::setUniform(const std::string& name, const gfx::Buffer& buffer)
+	void MetalComputeKernelImpl::setUniform(const std::string& name, const gfx::Buffer& buffer)
 	{
 		m_mtlBuffers[name] = toMetalImpl(buffer)->buffer();
-		return *this;
 	}
 
-	ComputeKernel& ComputeKernel::setUniform(const std::string& name, const gfx::Texture& texture)
+	void MetalComputeKernelImpl::setUniform(const std::string& name, const gfx::Texture& texture)
 	{
 		m_mtlTextures[name] = toMetalImpl(texture)->texture();
-		return *this;
 	}
 
-	ComputeKernel& ComputeKernel::setUniform(const std::string& name, const void* data,
-											 const size_t size, const gfx::BufferUsage usage)
+	void MetalComputeKernelImpl::setUniform(const std::string& name, const void* data, size_t size)
 	{
 		// Allocate a small temp buffer for byte data
-		const auto device{m_pipeline->device()};
-		auto temp{device->newBuffer(size, toMetal(usage))};
+		auto buffer{m_device->newBuffer(size, MTL::ResourceStorageModeShared)};
 
-		std::memcpy(temp->contents(), data, size);
-		m_mtlBuffers[name] = temp;
-
-		return *this;
+		std::memcpy(buffer->contents(), data, size);
+		m_mtlBuffers[name] = buffer;
 	}
 
-	void ComputeKernel::createPipeline(MTL::Library* library)
+	void MetalComputeKernelImpl::waitUntilComplete()
+	{
+		m_lastCommandBuffer->waitUntilCompleted();
+	}
+
+	void MetalComputeKernelImpl::createPipeline(MTL::Library* library)
 	{
 		// Load the kernel function
 		m_function = NS::TransferPtr(
@@ -174,35 +154,8 @@ namespace lune::metal
 		}
 	}
 
-	ComputeKernel& ComputeKernel::waitUntilComplete()
-	{
-		if (m_lastCommandBuffer)
-			m_lastCommandBuffer->waitUntilCompleted();
-
-		return *this;
-	}
-
-	void ComputeKernel::bufferToTexture(const gfx::Buffer& buffer, const gfx::Texture& texture,
-										const NS::UInteger bytesPerRow, const MTL::Size& sourceSize,
-										const bool waitUntilComplete)
-	{
-		const auto cmdBuffer{MetalContext::instance().commandQueue()->commandBuffer()};
-		const auto blit{cmdBuffer->blitCommandEncoder()};
-
-		blit->copyFromBuffer(toMetalImpl(buffer)->buffer(), 0, bytesPerRow, 0, sourceSize,
-							 toMetalImpl(texture)->texture(), 0, 0, MTL::Origin{0, 0, 0},
-							 MTL::BlitOptionNone);
-
-		blit->endEncoding();
-		cmdBuffer->commit();
-
-		if (waitUntilComplete)
-			cmdBuffer->waitUntilCompleted();
-	}
-
-	KernelReflectionInfo
-	ComputeKernel::createKernelReflectionInfo(const std::string& name,
-											  const MTL::ComputePipelineReflection* reflection)
+	KernelReflectionInfo MetalComputeKernelImpl::createKernelReflectionInfo(
+			const std::string& name, const MTL::ComputePipelineReflection* reflection)
 	{
 		KernelReflectionInfo info{};
 		info.kernelName = name;
@@ -234,16 +187,6 @@ namespace lune::metal
 				a.textureDataType = arg->textureDataType();
 				a.isDepthTexture = arg->isDepthTexture();
 				break;
-			case MTL::ArgumentTypeThreadgroupMemory:
-			{
-				KernelReflectionInfo::ThreadgroupMem mem{};
-				mem.index = arg->index();
-				mem.size = arg->threadgroupMemoryDataSize();
-				mem.alignment = arg->threadgroupMemoryAlignment();
-
-				info.threadgroupMemory->push_back(mem);
-				break;
-			}
 			default:
 				break;
 			}
@@ -254,7 +197,7 @@ namespace lune::metal
 		return info;
 	}
 
-	void ComputeKernel::bindBuffers(MTL::ComputeCommandEncoder* commandEncoder)
+	void MetalComputeKernelImpl::bindBuffers(MTL::ComputeCommandEncoder* commandEncoder)
 	{
 		for (auto& [name, buf] : m_mtlBuffers)
 		{
@@ -263,7 +206,7 @@ namespace lune::metal
 		}
 	}
 
-	void ComputeKernel::bindTextures(MTL::ComputeCommandEncoder* commandEncoder)
+	void MetalComputeKernelImpl::bindTextures(MTL::ComputeCommandEncoder* commandEncoder)
 	{
 		for (auto& [name, tex] : m_mtlTextures)
 		{
@@ -272,35 +215,7 @@ namespace lune::metal
 		}
 	}
 
-	ComputeShader::ComputeShader(const std::string& path, MTL::Device* device) :
-		m_device(device ? device : MetalContext::instance().device()), m_path(path)
-
-	{
-		createPipelines();
-	}
-
-	ComputeKernel& ComputeShader::kernel(const std::string& name)
-	{
-		if (!m_kernels.contains(name))
-		{
-			throw std::runtime_error("Error: Kernel with name \"" + name + "\" not found");
-		}
-
-		return *m_kernels[name];
-	}
-
-	std::vector<std::string> ComputeShader::listKernels() const
-	{
-		std::vector<std::string> names;
-		for (const auto& [name, kernel] : m_kernels)
-		{
-			names.push_back(name);
-		}
-
-		return names;
-	}
-
-	void ComputeShader::createPipelines()
+	void MetalComputeShaderImpl::createPipelines()
 	{
 		NS::Error* error{};
 		m_library = NS::TransferPtr(createLibrary(m_path, m_device, &error));
@@ -328,8 +243,10 @@ namespace lune::metal
 
 			if (function->functionType() == MTL::FunctionTypeKernel)
 			{
-				m_kernels[name] = std::make_unique<ComputeKernel>(m_device, name);
-				m_kernels[name]->createPipeline(m_library.get());
+				m_kernels[name] = std::make_unique<gfx::ComputeKernel>(
+						std::make_unique<MetalComputeKernelImpl>(m_device, name));
+				auto& kernel = *m_kernels[name];
+				toMetalImpl(kernel)->createPipeline(m_library.get());
 			}
 		}
 	}

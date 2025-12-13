@@ -5,9 +5,15 @@ module;
 export module lune.metal:compute;
 
 import :mappings;
+import lune.gfx;
 
 namespace lune::metal
 {
+
+	export void bufferToTexture(const gfx::Buffer& buffer, const gfx::Texture& texture,
+						 NS::UInteger bytesPerRow, const MTL::Size& sourceSize,
+						 bool waitUntilComplete);
+
 	export struct KernelReflectionInfo
 	{
 		std::string kernelName;
@@ -32,24 +38,14 @@ namespace lune::metal
 		};
 
 		std::vector<KernelArgumentInfo> arguments;
-
-		struct ThreadgroupMem
-		{
-			uint32_t index;
-			uint32_t size;
-			uint32_t alignment;
-		};
-
-		std::optional<std::vector<ThreadgroupMem>> threadgroupMemory;
 	};
 
-
-	export class ComputeKernel
+	export class MetalComputeKernelImpl : public gfx::IComputeKernelImpl
 	{
 		NS::SharedPtr<MTL::CommandBuffer> m_lastCommandBuffer;
 		NS::SharedPtr<MTL::ComputePipelineState> m_pipeline;
 		NS::SharedPtr<MTL::Function> m_function;
-		MTL::Device* m_device;
+		MTL::Device* m_device{};
 
 		std::map<std::string, NS::UInteger> m_bindings{};
 		std::map<std::string, NS::UInteger> m_textureBindings{};
@@ -58,46 +54,25 @@ namespace lune::metal
 
 		KernelReflectionInfo m_reflection{};
 
-		std::string m_name;
-
 	public:
-		explicit ComputeKernel(MTL::Device* device, const std::string& name);
-
-		[[nodiscard]] const std::string& name() const noexcept
+		MetalComputeKernelImpl(MTL::Device* device, const std::string& name) :
+			m_device(device), IComputeKernelImpl(name)
 		{
-			return m_name;
 		}
 
-		[[nodiscard]] std::map<std::string, MTL::Buffer*>& buffers() noexcept
-		{
-			return m_mtlBuffers;
-		}
+		~MetalComputeKernelImpl() override = default;
 
-		ComputeKernel& dispatch(size_t threadCount);
-		ComputeKernel& dispatch(size_t x, size_t y, size_t z);
-		ComputeKernel& dispatch(size_t x, size_t y, size_t z, std::function<void()> callback);
-		ComputeKernel& dispatch(const MTL::Size& threadGroups, const MTL::Size& threadsPerGroup);
+		void dispatch(size_t threadCount) override;
+		void dispatch(size_t x, size_t y, size_t z) override;
+		void dispatch(size_t x, size_t y, size_t z, std::function<void()> callback) override;
 
-		template <typename T>
-			requires(!std::same_as<std::remove_cvref_t<T>, gfx::Buffer>)
-		ComputeKernel& setUniform(const std::string& name, T& data,
-								  gfx::BufferUsage usage = gfx::BufferUsage::Shared);
-		ComputeKernel& setUniform(const std::string& name, const gfx::Buffer& buffer);
-		ComputeKernel& setUniform(const std::string& name, const gfx::Texture& texture);
-		ComputeKernel& setUniform(const std::string& name, const void* data, size_t size,
-								  gfx::BufferUsage usage = gfx::BufferUsage::Shared);
+		void setUniform(const std::string& name, const gfx::Buffer& buffer) override;
+		void setUniform(const std::string& name, const gfx::Texture& texture) override;
+		void setUniform(const std::string& name, const void* data, size_t size) override;
 
-		[[nodiscard]] KernelReflectionInfo reflection() const
-		{
-			return m_reflection;
-		}
+		void waitUntilComplete() override;
 
 		void createPipeline(MTL::Library* library);
-		ComputeKernel& waitUntilComplete();
-
-		static void bufferToTexture(const gfx::Buffer& buffer, const gfx::Texture& texture,
-									NS::UInteger bytesPerRow, const MTL::Size& sourceSize,
-									bool waitUntilComplete = true);
 
 	private:
 		static KernelReflectionInfo
@@ -109,61 +84,51 @@ namespace lune::metal
 	};
 
 
-	template <typename T>
-		requires(!std::same_as<std::remove_cvref_t<T>, gfx::Buffer>)
-	ComputeKernel& ComputeKernel::setUniform(const std::string& name, T& data,
-											 const gfx::BufferUsage usage)
-	{
-		// Allocate a small temp buffer for byte data
-		const auto device{m_pipeline->device()};
-		auto temp{device->newBuffer(sizeof(T), toMetal(usage))};
-
-		std::memcpy(temp->contents(), &data, sizeof(T));
-		m_mtlBuffers[name] = temp;
-
-		return *this;
-	}
-
-
-	export class ComputeShader
+	export class MetalComputeShaderImpl : public gfx::IComputeShaderImpl
 	{
 		MTL::Device* m_device{};
 		NS::SharedPtr<MTL::Library> m_library{};
-		std::map<std::string, std::unique_ptr<ComputeKernel>> m_kernels{};
-		std::string m_path;
 
 	public:
-		/**
-		 * @brief Initializes the shader and creates pipelines for all kernels declared in the
-		 * shader.
-		 *
-		 * @param path Path to the compute shader. (.metal, .metallib, .slang)
-		 * @param device The device (GPU) to use for the shader. When not set, defaults to the
-		 * current device set in MetalContext.
-		 */
-		explicit ComputeShader(const std::string& path, MTL::Device* device = nullptr);
-
-		/**
-		 * @brief Returns the ComputeKernel with the given name.
-		 *
-		 * @param name Name of the kernel.
-		 * @return Reference to the ComputeKernel instance.
-		 */
-		ComputeKernel& kernel(const std::string& name);
-
-		/**
-		 * @brief Returns a list of all kernel names.
-		 *
-		 * @return Names of all the kernels loaded for the ComputeShader.
-		 */
-		[[nodiscard]] std::vector<std::string> listKernels() const;
-
-		[[nodiscard]] bool hasKernel(const std::string& name) const
+		MetalComputeShaderImpl(MTL::Device* device, const std::string& path) :
+			m_device(device), IComputeShaderImpl(path)
 		{
-			return m_kernels.contains(name);
+			createPipelines();
 		}
+
+		~MetalComputeShaderImpl() override = default;
 
 	private:
 		void createPipelines();
 	};
+
+
+	constexpr MetalComputeKernelImpl* toMetalImpl(const gfx::ComputeKernel& kernel)
+	{
+		const auto impl = kernel.getImpl();
+
+#ifndef NDEBUG
+		const auto metalImpl = dynamic_cast<MetalComputeKernelImpl*>(impl);
+		if (!metalImpl)
+			throw std::runtime_error("Kernel is not a Metal compute kernel!");
+		return metalImpl;
+#else
+		return static_cast<MetalComputeKernelImpl*>(impl);
+#endif
+	}
+
+
+	constexpr MetalComputeShaderImpl* toMetalImpl(const gfx::ComputeShader& shader)
+	{
+		const auto impl = shader.getImpl();
+
+#ifndef NDEBUG
+		const auto metalImpl = dynamic_cast<MetalComputeShaderImpl*>(impl);
+		if (!metalImpl)
+			throw std::runtime_error("Shader is not a Metal compute shader!");
+		return metalImpl;
+#else
+		return static_cast<MetalComputeShaderImpl*>(impl);
+#endif
+	}
 } // namespace lune::metal

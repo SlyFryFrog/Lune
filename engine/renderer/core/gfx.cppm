@@ -6,3 +6,4 @@ export import :types;
 export import :texture;
 export import :render_surface;
 export import :graphics;
+export import :compute;

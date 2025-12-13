@@ -39,7 +39,7 @@ int main()
 {
 	lune::setWorkingDirectory();
 
-	auto& context{lune::gfx::Context::instance()};
+	auto& ctx{lune::gfx::Context::instance()};
 
 	// CPU input data
 	std::vector<float> a(arrayLength), b(arrayLength), outputAdd(arrayLength),
@@ -50,16 +50,16 @@ int main()
 		b[i] = static_cast<float>(rand()) / RAND_MAX;
 	}
 
-	auto outA{context.createBuffer(arrayLength * sizeof(float))};
-	auto outB{context.createBuffer(arrayLength * sizeof(float))};
+	auto outA{ctx.createBuffer(arrayLength * sizeof(float))};
+	auto outB{ctx.createBuffer(arrayLength * sizeof(float))};
 
 	// Add our buffers to our shader
-	auto shader{lune::metal::ComputeShader("shaders/basic.metal")};
-	auto kernelAdd{shader.kernel("add_arrays")
+	auto shader{ctx.createComputeShader("shaders/basic.metal")};
+	auto& kernelAdd{shader.kernel("add_arrays")
 						   .setUniform("inputA", a.data(), a.size() * sizeof(float))
 						   .setUniform("inputB", b.data(), b.size() * sizeof(float))
 						   .setUniform("outputAdd", outA)};
-	auto kernelMul{shader.kernel("multiply_arrays")
+	auto& kernelMul{shader.kernel("multiply_arrays")
 						   .setUniform("inputA", a.data(), a.size() * sizeof(float))
 						   .setUniform("inputB", b.data(), b.size() * sizeof(float))
 						   .setUniform("outputMul", outB)};
