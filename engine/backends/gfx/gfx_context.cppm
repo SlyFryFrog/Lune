@@ -1,7 +1,6 @@
 module;
 #include <memory>
 #include <string>
-
 export module lune.gfx:context;
 
 import :buffer;

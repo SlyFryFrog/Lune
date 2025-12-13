@@ -23,7 +23,7 @@ int main()
 	lune::gfx::RenderPass pass{ctx.createRenderPass(window.surface())};
 
 	lune::gfx::Material material{ctx.createMaterial(pipeline)};
-	material.setUniform("cubeData", cubeVertices, sizeof(cubeVertices));
+	material.setUniform("cubeData", cubeVertices);
 
 	lune::gfx::Buffer indexBuffer{ctx.createBuffer(sizeof(cubeIndices))};
 	indexBuffer.setData(cubeIndices, sizeof(cubeIndices));

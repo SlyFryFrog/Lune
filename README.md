@@ -9,7 +9,6 @@ cleaner code.
 ## Feature Goals
 
 - [x] Platform independent input and window management system (w/ GLFW).
-- [x] Metal Shading Language (MSL) for macOS.
 - [ ] Support for Slang (for cross-platform shaders).
 - [ ] Support for compute and graphic-related shaders:
     - [x] Metal compute shaders.
@@ -17,9 +16,10 @@ cleaner code.
     - [ ] Vulkan compute shaders.
     - [ ] Vulkan vertex and fragment shaders.
 - [ ] Load and render 3D meshes (e.g., OBJ, glTF).
-- [ ] A simple rendering API that works the same way on both Metal and Vulkan.
+- [X] A simple rendering API that works the same way on all implemented backends.
 - [ ] Shader hot-reloading for faster development.
 - [ ] Support for multiple render passes per-frame.
+- [ ] Legacy support for OpenGL (maybe, maybe not).
 
 ## Requirements and Dependencies
 
@@ -44,8 +44,8 @@ cleaner code.
 ### Drawing a triangle with Metal
 
 Much of the setup regarding the renderer and windowing system is abstracted allowing you to focus on creating your
-custom render loops. To define your own render loop, we need to create 4 variables: `GraphicsShader`,
-`GraphicsPipeline`, `Material`, and `Renderpass`. These separate the tasks related to drawing to the screen to still give as
+custom render loops. To define your own render loop, we need to create 4 variables: `Shader`,
+`Pipeline`, `Material`, and `Renderpass`. These separate the tasks related to drawing to the screen to still give as
 much control as possible while still improving usability.
 
 ```c++

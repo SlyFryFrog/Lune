@@ -13,34 +13,16 @@ namespace lune::metal
 								uint32_t bytesPerRow, const uint32_t sourceSize[3],
 								bool waitUntilComplete);
 
-	export struct KernelReflectionInfo
-	{
-		std::string kernelName;
-		MTL::Function* function;
-
-		struct KernelArgumentInfo
-		{
-			std::string name;
-			NS::UInteger index;
-
-			MTL::ArgumentType type;
-			MTL::BindingAccess access;
-
-			MTL::DataType dataType{};
-			size_t dataSize{};
-			size_t alignment{};
-			const MTL::StructType* structType{};
-
-			MTL::TextureType textureType;
-			MTL::DataType textureDataType;
-			bool isDepthTexture;
-		};
-
-		std::vector<KernelArgumentInfo> arguments;
-	};
-
 	export class MetalComputeKernelImpl : public gfx::IComputeKernelImpl
 	{
+		struct ArgumentInfo
+		{
+			std::string name;
+			uint32_t index;
+			uint32_t arrayLength;
+			MTL::ArgumentType type;
+		};
+
 		NS::SharedPtr<MTL::CommandBuffer> m_lastCommandBuffer;
 		NS::SharedPtr<MTL::ComputePipelineState> m_pipeline;
 		NS::SharedPtr<MTL::Function> m_function;
@@ -51,7 +33,7 @@ namespace lune::metal
 		std::map<std::string, MTL::Buffer*> m_mtlBuffers;
 		std::map<std::string, MTL::Texture*> m_mtlTextures;
 
-		KernelReflectionInfo m_reflection{};
+		std::vector<ArgumentInfo> m_computeArguments{};
 
 	public:
 		MetalComputeKernelImpl(MTL::Device* device, const std::string& name) :
@@ -74,9 +56,8 @@ namespace lune::metal
 		void createPipeline(MTL::Library* library);
 
 	private:
-		static KernelReflectionInfo
-		createKernelReflectionInfo(const std::string& name,
-								   const MTL::ComputePipelineReflection* reflection);
+		[[nodiscard]] static std::vector<ArgumentInfo>
+		getComputeArguments(const MTL::ComputePipelineReflection* reflection);
 
 		void bindBuffers(MTL::ComputeCommandEncoder* commandEncoder);
 		void bindTextures(MTL::ComputeCommandEncoder* commandEncoder);

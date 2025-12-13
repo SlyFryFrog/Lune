@@ -2,6 +2,7 @@ module;
 #include <memory>
 #include <string>
 #include <vector>
+#include <memory>
 export module lune.gfx:graphics;
 
 import :render_surface;

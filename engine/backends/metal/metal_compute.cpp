@@ -130,7 +130,7 @@ namespace lune::metal
 			return;
 		}
 
-		m_reflection = createKernelReflectionInfo(m_name, reflection);
+		m_computeArguments = getComputeArguments(reflection);
 
 		// Automatically populate bufferBindings from reflection
 		const NS::Array* args{reflection->arguments()};
@@ -155,47 +155,26 @@ namespace lune::metal
 		}
 	}
 
-	KernelReflectionInfo MetalComputeKernelImpl::createKernelReflectionInfo(
-			const std::string& name, const MTL::ComputePipelineReflection* reflection)
+	std::vector<MetalComputeKernelImpl::ArgumentInfo>
+	MetalComputeKernelImpl::getComputeArguments(const MTL::ComputePipelineReflection* reflection)
 	{
-		KernelReflectionInfo info{};
-		info.kernelName = name;
-
 		const NS::Array* args{reflection->arguments()};
-		info.arguments.reserve(args->count());
+		std::vector<ArgumentInfo> arguments{};
+		arguments.reserve(args->count());
 
 		// Iterate through each argument and add all relevant information struct
 		for (NS::UInteger i = 0; i < args->count(); ++i)
 		{
 			const auto arg = reinterpret_cast<MTL::Argument*>(args->object(i));
-			KernelReflectionInfo::KernelArgumentInfo a{};
+			ArgumentInfo a{};
 
 			a.name = arg->name() ? arg->name()->utf8String() : "";
 			a.index = arg->index();
 			a.type = arg->type();
-			a.access = arg->access();
 
-			switch (arg->type())
-			{
-			case MTL::ArgumentTypeBuffer:
-				a.dataType = arg->bufferDataType();
-				a.dataSize = arg->bufferDataSize();
-				a.alignment = arg->bufferAlignment();
-				a.structType = arg->bufferStructType();
-				break;
-			case MTL::ArgumentTypeTexture:
-				a.textureType = arg->textureType();
-				a.textureDataType = arg->textureDataType();
-				a.isDepthTexture = arg->isDepthTexture();
-				break;
-			default:
-				break;
-			}
-
-			info.arguments.push_back(std::move(a));
+			arguments.push_back(std::move(a));
 		}
-
-		return info;
+		return arguments;
 	}
 
 	void MetalComputeKernelImpl::bindBuffers(MTL::ComputeCommandEncoder* commandEncoder)

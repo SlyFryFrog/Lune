@@ -1,6 +1,7 @@
 module;
 #include <stb_image.h>
 #include <string>
+#include <memory>
 export module lune.gfx:texture;
 
 import :types;
