@@ -84,7 +84,7 @@ namespace lune
 		window->m_frameBufferHeight = height;
 
 #ifdef USE_METAL
-		metal::toMetalRenderSurface(window->surface())->setDrawableSize(width, height);
+		metal::toMetalImpl(window->surface())->setDrawableSize(width, height);
 #endif
 	}
 
@@ -184,9 +184,8 @@ namespace lune
 						},
 						metalCtx.device()));
 
-		metalCtx.addSurface(m_surface);
 		objcCall<void>(nsView, "wantsLayer", YES);
-		objcCall<void>(nsView, "setLayer:", metal::toMetalRenderSurface(*m_surface)->layer());
+		objcCall<void>(nsView, "setLayer:", metal::toMetalImpl(*m_surface)->layer());
 	}
 #endif
 } // namespace lune

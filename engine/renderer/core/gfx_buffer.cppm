@@ -2,7 +2,7 @@ module;
 #include <memory>
 export module lune.gfx:buffer;
 
-import :graphics_types;
+import :types;
 
 namespace lune::gfx
 {

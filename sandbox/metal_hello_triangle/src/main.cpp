@@ -1,5 +1,5 @@
+#include <iostream>
 import lune;
-import lune.metal;
 
 constexpr lune::Vec3 verticesB[]{
 		{-0.5f, -0.5f, 0.0f},
@@ -26,12 +26,13 @@ int main()
 	}};
 
 	// Define our shader implementation
-	lune::metal::GraphicsShader shader{"shaders/basic.metal"};
-	lune::metal::GraphicsPipeline pipeline{shader};
-	lune::metal::RenderPass pass{window.surface()};
+	const lune::gfx::Context& ctx{lune::gfx::Context::instance()};
+	const lune::gfx::Shader shader{ctx.createShader({"shaders/basic.metal"})};
+	const lune::gfx::Pipeline pipeline{ctx.createPipeline(shader, {})};
+	lune::gfx::RenderPass pass{ctx.createRenderPass(window.surface())};
 
 	// Create our material - used to set our uniforms
-	lune::metal::Material material{pipeline};
+	lune::gfx::Material material{ctx.createMaterial(pipeline)};
 	material.setUniform("vertexPositions", verticesB).setUniform("vertexColors", colors);
 
 	// Perform our render loop

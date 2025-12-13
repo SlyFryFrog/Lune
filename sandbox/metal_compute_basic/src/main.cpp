@@ -39,7 +39,7 @@ int main()
 {
 	lune::setWorkingDirectory();
 
-	auto& context{lune::gfx::GraphicsContext::instance()};
+	auto& context{lune::gfx::Context::instance()};
 
 	// CPU input data
 	std::vector<float> a(arrayLength), b(arrayLength), outputAdd(arrayLength),

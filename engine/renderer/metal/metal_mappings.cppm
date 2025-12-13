@@ -1,12 +1,12 @@
 module;
 #include <Metal/Metal.hpp>
-export module lune.metal:metal_mappings;
+export module lune.metal:mappings;
 
 import lune.gfx;
 
 namespace lune::metal
 {
-	constexpr MTL::ResourceOptions toMetal(const gfx::BufferUsage usage) noexcept
+	export constexpr MTL::ResourceOptions toMetal(const gfx::BufferUsage usage) noexcept
 	{
 		using namespace lune::gfx;
 
@@ -25,7 +25,7 @@ namespace lune::metal
 	}
 
 
-	constexpr MTL::PixelFormat toMetal(const gfx::PixelFormat fmt) noexcept
+	export constexpr MTL::PixelFormat toMetal(const gfx::PixelFormat fmt) noexcept
 	{
 		using PF = gfx::PixelFormat;
 
@@ -74,7 +74,7 @@ namespace lune::metal
 	}
 
 
-	constexpr MTL::PrimitiveType toMetal(const gfx::PrimitiveType type) noexcept
+	export constexpr MTL::PrimitiveType toMetal(const gfx::PrimitiveType type) noexcept
 	{
 		using namespace lune::gfx;
 
@@ -96,7 +96,7 @@ namespace lune::metal
 	}
 
 
-	constexpr MTL::TriangleFillMode toMetal(const gfx::FillMode mode) noexcept
+	export constexpr MTL::TriangleFillMode toMetal(const gfx::FillMode mode) noexcept
 	{
 		using namespace lune::gfx;
 
@@ -111,7 +111,7 @@ namespace lune::metal
 		}
 	}
 
-	constexpr MTL::CullMode toMetal(const gfx::CullMode mode) noexcept
+	export constexpr MTL::CullMode toMetal(const gfx::CullMode mode) noexcept
 	{
 		using namespace lune::gfx;
 
@@ -126,7 +126,7 @@ namespace lune::metal
 		}
 	}
 
-	constexpr MTL::Winding toMetal(const gfx::Winding mode) noexcept
+	export constexpr MTL::Winding toMetal(const gfx::Winding mode) noexcept
 	{
 		using namespace lune::gfx;
 

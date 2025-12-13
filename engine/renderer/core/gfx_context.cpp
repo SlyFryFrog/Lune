@@ -5,9 +5,9 @@ import lune.metal;
 
 namespace lune::gfx
 {
-	GraphicsContext& GraphicsContext::instance()
+	Context& Context::instance()
 	{
-		static GraphicsContext* s_instance;
+		static Context* s_instance;
 #ifdef USE_METAL
 		s_instance = &metal::MetalContext::instance();
 #elif defined(USE_VULKAN)

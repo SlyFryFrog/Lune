@@ -1,8 +1,7 @@
 module;
 #include <Metal/Metal.hpp>
-export module lune.metal:metal_texture;
+export module lune.metal:texture;
 
-import :metal_mappings;
 import lune.gfx;
 
 namespace lune::metal
@@ -28,18 +27,17 @@ namespace lune::metal
 	};
 
 
-	constexpr MTL::Texture* toMetal(const gfx::Texture& texture)
+	constexpr MetalTextureImpl* toMetalImpl(const gfx::Texture& texture)
 	{
 		auto* impl = gfx::getImpl(texture);
 
-		// Optimize for speed in release builds
 #ifndef NDEBUG
-		const auto* metalImpl = dynamic_cast<MetalTextureImpl*>(impl);
+		const auto metalImpl = dynamic_cast<MetalTextureImpl*>(impl);
 		if (!metalImpl)
 			throw std::runtime_error("Texture is not a Metal texture!");
-		return metalImpl->texture();
+		return metalImpl;
 #else
-		return static_cast<MetalTextureImpl*>(impl)->texture();
+		return static_cast<MetalTextureImpl*>(impl);
 #endif
 	}
 } // namespace lune::metal

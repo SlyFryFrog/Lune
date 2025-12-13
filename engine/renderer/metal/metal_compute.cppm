@@ -2,10 +2,9 @@ module;
 #include <Metal/Metal.hpp>
 #include <map>
 #include <string>
-export module lune.metal:metal_compute;
+export module lune.metal:compute;
 
-import :metal_shader;
-import :metal_mappings;
+import :mappings;
 
 namespace lune::metal
 {
@@ -126,8 +125,10 @@ namespace lune::metal
 	}
 
 
-	export class ComputeShader final : public Shader
+	export class ComputeShader
 	{
+		MTL::Device* m_device{};
+		NS::SharedPtr<MTL::Library> m_library{};
 		std::map<std::string, std::unique_ptr<ComputeKernel>> m_kernels{};
 		std::string m_path;
 

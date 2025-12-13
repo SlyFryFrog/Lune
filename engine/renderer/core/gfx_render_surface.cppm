@@ -11,7 +11,6 @@ namespace lune::gfx
 	{
 		int width{0};
 		int height{0};
-		bool vsync{true};
 	};
 
 	/**

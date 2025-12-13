@@ -1,23 +1,20 @@
 module;
 #include <Metal/Metal.hpp>
 #include <memory>
-#include <vector>
-export module lune.metal:metal_context;
+export module lune.metal:context;
 
-import :metal_buffer;
-import :metal_texture;
-import :metal_mappings;
-import :metal_render_surface;
-
+import :buffer;
+import :texture;
+import :render_surface;
+import :graphics;
 import lune.gfx;
 
 namespace lune::metal
 {
-	export class MetalContext final : public gfx::GraphicsContext
+	export class MetalContext final : public gfx::Context
 	{
 		NS::SharedPtr<MTL::Device> m_device{};
 		NS::SharedPtr<MTL::CommandQueue> m_commandQueue{};
-		std::vector<std::shared_ptr<gfx::RenderSurface>> m_surfaces{};
 
 	private:
 		MetalContext();
@@ -45,21 +42,6 @@ namespace lune::metal
 			return m_commandQueue.get();
 		}
 
-		void addSurface(const std::shared_ptr<gfx::RenderSurface>& surface)
-		{
-			m_surfaces.push_back(surface);
-		}
-
-		void removeSurface(const std::shared_ptr<gfx::RenderSurface>& surface)
-		{
-			std::erase(m_surfaces, surface);
-		}
-
-		[[nodiscard]] std::vector<std::shared_ptr<gfx::RenderSurface>> surfaces() const
-		{
-			return m_surfaces;
-		}
-
 		[[nodiscard]] gfx::Buffer createBuffer(const size_t size) const override
 		{
 			auto impl{std::make_unique<MetalBufferImpl>(m_device.get(), size)};
@@ -71,6 +53,32 @@ namespace lune::metal
 		{
 			auto impl{std::make_unique<MetalTextureImpl>(m_device.get(), createInfo)};
 			return gfx::Texture(std::move(impl));
+		}
+
+		[[nodiscard]] gfx::Shader createShader(gfx::ShaderDesc desc) const override
+		{
+			auto impl{std::make_unique<MetalShaderImpl>(m_device.get(), desc)};
+			return gfx::Shader(std::move(impl));
+		}
+
+		[[nodiscard]] gfx::Pipeline createPipeline(const gfx::Shader& shader,
+												   gfx::PipelineDesc desc) const override
+		{
+			auto impl = std::make_unique<MetalPipelineImpl>(shader, desc);
+			return gfx::Pipeline(std::move(impl));
+		}
+
+		[[nodiscard]] gfx::Material createMaterial(const gfx::Pipeline& pipeline) const override
+		{
+			auto impl{std::make_unique<MetalMaterialImpl>(pipeline)};
+			return gfx::Material(std::move(impl));
+		}
+
+		[[nodiscard]] gfx::RenderPass
+		createRenderPass(const gfx::RenderSurface& surface) const override
+		{
+			auto impl{std::make_unique<MetalRenderPassImpl>(surface)};
+			return gfx::RenderPass(std::move(impl));
 		}
 	};
 } // namespace lune::metal

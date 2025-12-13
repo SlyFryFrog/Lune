@@ -3,7 +3,7 @@ module;
 #include <string>
 export module lune.gfx:texture;
 
-import :graphics_types;
+import :types;
 
 namespace lune::gfx
 {

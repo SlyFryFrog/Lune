@@ -18,9 +18,4 @@ namespace lune
 	 * This is useful for when you want to use relative pathing.
 	 */
 	export void setWorkingDirectory();
-
-	/**
-	 * @brief Current working directory where the executable is located. Is determined at runtime.
-	 */
-	export const inline std::string WorkingDirectory{getWorkingDirectory()};
 } // namespace lune

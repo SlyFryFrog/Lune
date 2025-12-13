@@ -1,6 +1,6 @@
 module;
 #include <QuartzCore/QuartzCore.hpp>
-export module lune.metal:metal_render_surface;
+export module lune.metal:render_surface;
 
 import lune.gfx;
 
@@ -52,8 +52,17 @@ namespace lune::metal
 		}
 	};
 
-	export MetalRenderSurfaceImpl* toMetalRenderSurface(const gfx::RenderSurface& surface)
+	export MetalRenderSurfaceImpl* toMetalImpl(const gfx::RenderSurface& surface)
 	{
-		return static_cast<MetalRenderSurfaceImpl*>(gfx::getImpl(surface));
+		auto* impl = gfx::getImpl(surface);
+
+#ifndef NDEBUG
+		auto* metalImpl = dynamic_cast<MetalRenderSurfaceImpl*>(impl);
+		if (!metalImpl)
+			throw std::runtime_error("RenderSurface is not a Metal surface!");
+		return metalImpl;
+#else
+		return static_cast<MetalRenderSurfaceImpl*>(impl);
+#endif
 	}
 } // namespace lune::metal

@@ -15,7 +15,7 @@ int main()
 {
 	lune::setWorkingDirectory();
 
-	auto& context{lune::gfx::GraphicsContext::instance()};
+	auto& ctx{lune::gfx::Context::instance()};
 
 	// Create window
 	const lune::raii::Window window({
@@ -26,7 +26,7 @@ int main()
 	});
 
 	// Create our texture
-	lune::gfx::Texture texture{context.createTexture({
+	lune::gfx::Texture texture{ctx.createTexture({
 			.pixelFormat = lune::gfx::PixelFormat::RGBA8_UNorm,
 			.width = Width,
 			.height = Height,
@@ -45,8 +45,8 @@ int main()
 	}
 
 	// Create out buffer and copy data
-	lune::gfx::Buffer inBuff{context.createBuffer(pixelData.size())};
-	lune::gfx::Buffer outBuff{context.createBuffer(pixelData.size())};
+	lune::gfx::Buffer inBuff{ctx.createBuffer(pixelData.size())};
+	lune::gfx::Buffer outBuff{ctx.createBuffer(pixelData.size())};
 	std::memcpy(inBuff.data(), pixelData.data(), pixelData.size());
 
 	// Compute shader setup
@@ -57,14 +57,14 @@ int main()
 						.setUniform("cellColor", CellColor)
 						.setUniform("backgroundColor", BackgroundColor)};
 
-	lune::metal::GraphicsShader shader{
+	lune::gfx::Shader shader{ctx.createShader({
 			"shaders/life_visualize.metal",
 			"vertexMain",
 			"fragmentMain",
-	};
-	lune::metal::GraphicsPipeline pipeline{shader};
-	lune::metal::Material material{pipeline};
-	lune::metal::RenderPass pass{window.surface()};
+	})};
+	lune::gfx::Pipeline pipeline{ctx.createPipeline(shader, {})};
+	lune::gfx::Material material{ctx.createMaterial(pipeline)};
+	lune::gfx::RenderPass pass{ctx.createRenderPass(window.surface())};
 
 	material.setUniform("verts", Quad).setUniform("zoom", Zoom);
 

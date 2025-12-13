@@ -106,13 +106,13 @@ namespace lune::metal
 
 	ComputeKernel& ComputeKernel::setUniform(const std::string& name, const gfx::Buffer& buffer)
 	{
-		m_mtlBuffers[name] = toMetal(buffer);
+		m_mtlBuffers[name] = toMetalImpl(buffer)->buffer();
 		return *this;
 	}
 
 	ComputeKernel& ComputeKernel::setUniform(const std::string& name, const gfx::Texture& texture)
 	{
-		m_mtlTextures[name] = toMetal(texture);
+		m_mtlTextures[name] = toMetalImpl(texture)->texture();
 		return *this;
 	}
 
@@ -189,8 +189,9 @@ namespace lune::metal
 		const auto cmdBuffer{MetalContext::instance().commandQueue()->commandBuffer()};
 		const auto blit{cmdBuffer->blitCommandEncoder()};
 
-		blit->copyFromBuffer(toMetal(buffer), 0, bytesPerRow, 0, sourceSize, toMetal(texture), 0, 0,
-							 MTL::Origin{0, 0, 0}, MTL::BlitOptionNone);
+		blit->copyFromBuffer(toMetalImpl(buffer)->buffer(), 0, bytesPerRow, 0, sourceSize,
+							 toMetalImpl(texture)->texture(), 0, 0, MTL::Origin{0, 0, 0},
+							 MTL::BlitOptionNone);
 
 		blit->endEncoding();
 		cmdBuffer->commit();
@@ -272,7 +273,7 @@ namespace lune::metal
 	}
 
 	ComputeShader::ComputeShader(const std::string& path, MTL::Device* device) :
-		Shader(device), m_path(path)
+		m_device(device ? device : MetalContext::instance().device()), m_path(path)
 
 	{
 		createPipelines();
@@ -302,15 +303,17 @@ namespace lune::metal
 	void ComputeShader::createPipelines()
 	{
 		NS::Error* error{};
-		createLibrary(m_path, &error);
+		m_library = NS::TransferPtr(createLibrary(m_path, m_device, &error));
 
-		if (error)
+		if (error || !m_library)
 		{
 			if (const auto desc = error->localizedDescription())
 				std::cerr << "Failed to create library: " << desc->cString(NS::UTF8StringEncoding)
 						  << "\n";
 			else
 				std::cerr << "Failed to create library: unknown error\n";
+
+			return;
 		}
 
 		const NS::Array* functionNames{m_library->functionNames()};

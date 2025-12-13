@@ -4,7 +4,7 @@ Lune is a work-in-progress game framework for macOS and Linux. It uses Metal on 
 Linux. The library is written in modern C++ and encourages RAII for safer and
 cleaner code.
 
-**Note: XCode can't be used as it currently doesn't support `.cppm` modules, unlike ninja**
+**Note: Xcode/Xmake can't be used as it currently doesn't support `.cppm` modules, unlike ninja**
 
 ## Feature Goals
 
@@ -26,7 +26,7 @@ cleaner code.
 | Tool        | macOS (26.0+)          | Linux (Ubuntu 24.04+)          |
 |-------------|------------------------|--------------------------------|
 | Ninja       | `brew install ninja`   | `sudo apt install ninja-build` |
-| CMake       | `brew install cmake`   | `sudo apt install cmake`       |
+| CMake4.0+   | `brew install cmake`   | `sudo apt install cmake`       |
 | Clang++-20+ | `brew install llvm@20` | `sudo apt install clang-20`    |
 | Metal       | Metal 4                | N/A                            |
 | Vulkan      | Vulkan 1.4             | Vulkan 1.4                     |
@@ -49,6 +49,7 @@ custom render loops. To define your own render loop, we need to create 4 variabl
 much control as possible while still improving usability.
 
 ```c++
+#include <iostream>
 import lune;
 
 constexpr lune::Vec3 verticesB[]{
@@ -76,12 +77,13 @@ int main()
 	}};
 
 	// Define our shader implementation
-	lune::metal::GraphicsShader shader{"shaders/basic.metal"};
-	lune::metal::GraphicsPipeline pipeline{shader};
-	lune::metal::RenderPass pass{window.surface()};
+	const lune::gfx::Context& ctx{lune::gfx::Context::instance()};
+	const lune::gfx::Shader shader{ctx.createShader({"shaders/basic.metal"})};
+	const lune::gfx::Pipeline pipeline{ctx.createPipeline(shader, {})};
+	lune::gfx::RenderPass pass{ctx.createRenderPass(window.surface())};
 
 	// Create our material - used to set our uniforms
-	lune::metal::Material material{pipeline};
+	lune::gfx::Material material{ctx.createMaterial(pipeline)};
 	material.setUniform("vertexPositions", verticesB).setUniform("vertexColors", colors);
 
 	// Perform our render loop
