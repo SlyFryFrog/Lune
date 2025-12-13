@@ -15,7 +15,7 @@ int main()
 {
 	lune::setWorkingDirectory();
 
-	auto& ctx{lune::gfx::Context::instance()};
+	const lune::gfx::Context ctx{};
 
 	// Create window
 	const lune::raii::Window window({
@@ -97,9 +97,10 @@ int main()
 		}
 
 		// Copy buffer data to texture and then draw
+		constexpr uint32_t array[] = {Width, Height, 1};
 		lune::metal::bufferToTexture(inBuff, texture,
 									 Width * 4, // RGBA8
-									 {Width, Height, 1}, true);
+									 array, true);
 
 		// Update our material used to draw the shader
 		material.setUniform("tex", texture);

@@ -54,7 +54,6 @@ namespace lune::gfx
 	export class Texture
 	{
 		std::unique_ptr<ITextureImpl> m_impl; ///< Platform-specific implementation.
-		friend ITextureImpl* getImpl(const Texture& texture);
 
 	public:
 		/**
@@ -67,6 +66,18 @@ namespace lune::gfx
 		}
 
 		~Texture() = default;
+
+		/**
+		 * @brief Gets the platform-specific implementation of a texture.
+		 *
+		 * @note For internal use by backend code.
+		 *
+		 * @return Raw pointer to the platform-specific implementation.
+		 */
+		[[nodiscard]] ITextureImpl* getImpl() const
+		{
+			return m_impl.get();
+		}
 
 		/**
 		 * @brief Loads a texture from a file.
@@ -111,17 +122,4 @@ namespace lune::gfx
 			return m_impl->m_info.pixelFormat;
 		}
 	};
-
-	/**
-	 * @brief Gets the platform-specific implementation of a texture.
-	 *
-	 * @note For internal use by backend code.
-	 *
-	 * @param texture Texture to retrieve implementation from.
-	 * @return Raw pointer to the platform-specific implementation.
-	 */
-	export ITextureImpl* getImpl(const Texture& texture)
-	{
-		return texture.m_impl.get();
-	}
 } // namespace lune::gfx

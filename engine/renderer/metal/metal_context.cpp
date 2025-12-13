@@ -5,19 +5,19 @@ module lune.metal;
 
 namespace lune::metal
 {
-	MetalContext::MetalContext()
+	MetalContextImpl::MetalContextImpl()
 	{
 		createDefaultDevice();
 		createCommandQueue();
 	}
 
-	MetalContext& MetalContext::instance()
+	MetalContextImpl& MetalContextImpl::instance()
 	{
-		static MetalContext s_instance;
+		static MetalContextImpl s_instance;
 		return s_instance;
 	}
 
-	void MetalContext::createDefaultDevice()
+	void MetalContextImpl::createDefaultDevice()
 	{
 		m_device = NS::TransferPtr(MTL::CreateSystemDefaultDevice());
 		if (!m_device)
@@ -26,7 +26,7 @@ namespace lune::metal
 		}
 	}
 
-	void MetalContext::createCommandQueue()
+	void MetalContextImpl::createCommandQueue()
 	{
 		m_commandQueue = NS::TransferPtr(m_device->newCommandQueue());
 	}

@@ -157,10 +157,10 @@ namespace lune::metal
 
 	constexpr MetalShaderImpl* toMetalImpl(const gfx::Shader& shader)
 	{
-		const auto impl = shader.getImpl();
+		const auto impl{shader.getImpl()};
 
 #ifndef NDEBUG
-		const auto metalImpl = dynamic_cast<MetalShaderImpl*>(impl);
+		const auto metalImpl{dynamic_cast<MetalShaderImpl*>(impl)};
 		if (!metalImpl)
 			throw std::runtime_error("Shader is not a Metal shader!");
 		return metalImpl;
@@ -172,10 +172,10 @@ namespace lune::metal
 
 	constexpr MetalMaterialImpl* toMetalImpl(const gfx::Material& material)
 	{
-		const auto impl = material.getImpl();
+		const auto impl{material.getImpl()};
 
 #ifndef NDEBUG
-		const auto metalImpl = dynamic_cast<MetalMaterialImpl*>(impl);
+		const auto metalImpl{dynamic_cast<MetalMaterialImpl*>(impl)};
 		if (!metalImpl)
 			throw std::runtime_error("Material is not a Metal material!");
 		return metalImpl;
@@ -187,10 +187,10 @@ namespace lune::metal
 
 	constexpr MetalPipelineImpl* toMetalImpl(const gfx::Pipeline& pipeline)
 	{
-		const auto impl = pipeline.getImpl();
+		const auto impl{pipeline.getImpl()};
 
 #ifndef NDEBUG
-		const auto metalImpl = dynamic_cast<MetalPipelineImpl*>(impl);
+		const auto metalImpl{dynamic_cast<MetalPipelineImpl*>(impl)};
 		if (!metalImpl)
 			throw std::runtime_error("Pipeline is not a Metal render pipeline!");
 		return metalImpl;
@@ -202,10 +202,10 @@ namespace lune::metal
 
 	constexpr MetalRenderPassImpl* toMetalImpl(const gfx::RenderPass& renderPass)
 	{
-		const auto impl = renderPass.getImpl();
+		const auto impl{renderPass.getImpl()};
 
 #ifndef NDEBUG
-		const auto metalImpl = dynamic_cast<MetalRenderPassImpl*>(impl);
+		const auto metalImpl{dynamic_cast<MetalRenderPassImpl*>(impl)};
 		if (!metalImpl)
 			throw std::runtime_error("RenderPass is not a Metal render pass!");
 		return metalImpl;

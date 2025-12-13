@@ -16,7 +16,7 @@ int main()
 			.resizable = true,
 	}};
 
-	auto& ctx{lune::gfx::Context::instance()};
+	const lune::gfx::Context ctx{};
 
 	lune::gfx::Shader shader{ctx.createShader({"shaders/cube.metal"})};
 	lune::gfx::Pipeline pipeline{ctx.createPipeline(shader, {})};

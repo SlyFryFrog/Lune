@@ -7,13 +7,14 @@ module lune.metal;
 namespace lune::metal
 {
 	void bufferToTexture(const gfx::Buffer& buffer, const gfx::Texture& texture,
-						 NS::UInteger bytesPerRow, const MTL::Size& sourceSize,
-						 bool waitUntilComplete)
+						 uint32_t bytesPerRow, const uint32_t sourceSize[3],
+						 const bool waitUntilComplete)
 	{
-		const auto cmdBuffer{MetalContext::instance().commandQueue()->commandBuffer()};
+		const auto cmdBuffer{MetalContextImpl::instance().commandQueue()->commandBuffer()};
 		const auto blit{cmdBuffer->blitCommandEncoder()};
 
-		blit->copyFromBuffer(toMetalImpl(buffer)->buffer(), 0, bytesPerRow, 0, sourceSize,
+		blit->copyFromBuffer(toMetalImpl(buffer)->buffer(), 0, bytesPerRow, 0,
+							 MTL::Size{sourceSize[0], sourceSize[1], sourceSize[2]},
 							 toMetalImpl(texture)->texture(), 0, 0, MTL::Origin{0, 0, 0},
 							 MTL::BlitOptionNone);
 
@@ -26,7 +27,7 @@ namespace lune::metal
 
 	void MetalComputeKernelImpl::dispatch(const size_t threadCount)
 	{
-		const auto commandBuffer{MetalContext::instance().commandQueue()->commandBuffer()};
+		const auto commandBuffer{MetalContextImpl::instance().commandQueue()->commandBuffer()};
 		const auto encoder{commandBuffer->computeCommandEncoder()};
 
 		encoder->setComputePipelineState(m_pipeline.get());
@@ -45,7 +46,7 @@ namespace lune::metal
 
 	void MetalComputeKernelImpl::dispatch(const size_t x, const size_t y, const size_t z)
 	{
-		const auto commandBuffer{MetalContext::instance().commandQueue()->commandBuffer()};
+		const auto commandBuffer{MetalContextImpl::instance().commandQueue()->commandBuffer()};
 		const auto encoder{commandBuffer->computeCommandEncoder()};
 
 		encoder->setComputePipelineState(m_pipeline.get());
@@ -65,7 +66,7 @@ namespace lune::metal
 	void MetalComputeKernelImpl::dispatch(const size_t x, const size_t y, const size_t z,
 										  std::function<void()> callback)
 	{
-		const auto commandBuffer{MetalContext::instance().commandQueue()->commandBuffer()};
+		const auto commandBuffer{MetalContextImpl::instance().commandQueue()->commandBuffer()};
 		const auto encoder{commandBuffer->computeCommandEncoder()};
 
 		encoder->setComputePipelineState(m_pipeline.get());

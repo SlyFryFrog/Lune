@@ -9,10 +9,9 @@ import lune.gfx;
 
 namespace lune::metal
 {
-
 	export void bufferToTexture(const gfx::Buffer& buffer, const gfx::Texture& texture,
-						 NS::UInteger bytesPerRow, const MTL::Size& sourceSize,
-						 bool waitUntilComplete);
+								uint32_t bytesPerRow, const uint32_t sourceSize[3],
+								bool waitUntilComplete);
 
 	export struct KernelReflectionInfo
 	{
@@ -56,7 +55,7 @@ namespace lune::metal
 
 	public:
 		MetalComputeKernelImpl(MTL::Device* device, const std::string& name) :
-			m_device(device), IComputeKernelImpl(name)
+			IComputeKernelImpl(name), m_device(device)
 		{
 		}
 
@@ -91,7 +90,7 @@ namespace lune::metal
 
 	public:
 		MetalComputeShaderImpl(MTL::Device* device, const std::string& path) :
-			m_device(device), IComputeShaderImpl(path)
+			IComputeShaderImpl(path), m_device(device)
 		{
 			createPipelines();
 		}
@@ -120,10 +119,10 @@ namespace lune::metal
 
 	constexpr MetalComputeShaderImpl* toMetalImpl(const gfx::ComputeShader& shader)
 	{
-		const auto impl = shader.getImpl();
+		const auto impl{shader.getImpl()};
 
 #ifndef NDEBUG
-		const auto metalImpl = dynamic_cast<MetalComputeShaderImpl*>(impl);
+		const auto metalImpl{dynamic_cast<MetalComputeShaderImpl*>(impl)};
 		if (!metalImpl)
 			throw std::runtime_error("Shader is not a Metal compute shader!");
 		return metalImpl;

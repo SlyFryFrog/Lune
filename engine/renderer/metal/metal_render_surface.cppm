@@ -54,10 +54,10 @@ namespace lune::metal
 
 	export MetalRenderSurfaceImpl* toMetalImpl(const gfx::RenderSurface& surface)
 	{
-		auto* impl = gfx::getImpl(surface);
+		const auto impl{surface.getImpl()};
 
 #ifndef NDEBUG
-		auto* metalImpl = dynamic_cast<MetalRenderSurfaceImpl*>(impl);
+		const auto metalImpl{dynamic_cast<MetalRenderSurfaceImpl*>(impl)};
 		if (!metalImpl)
 			throw std::runtime_error("RenderSurface is not a Metal surface!");
 		return metalImpl;

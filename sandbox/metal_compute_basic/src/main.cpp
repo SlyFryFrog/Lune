@@ -2,7 +2,6 @@
 #include <iostream>
 #include <vector>
 import lune;
-import lune.metal;
 
 constexpr size_t arrayLength{1 << 24};
 constexpr size_t iterations{20};
@@ -39,7 +38,7 @@ int main()
 {
 	lune::setWorkingDirectory();
 
-	auto& ctx{lune::gfx::Context::instance()};
+	const lune::gfx::Context ctx{};
 
 	// CPU input data
 	std::vector<float> a(arrayLength), b(arrayLength), outputAdd(arrayLength),
@@ -56,13 +55,13 @@ int main()
 	// Add our buffers to our shader
 	auto shader{ctx.createComputeShader("shaders/basic.metal")};
 	auto& kernelAdd{shader.kernel("add_arrays")
-						   .setUniform("inputA", a.data(), a.size() * sizeof(float))
-						   .setUniform("inputB", b.data(), b.size() * sizeof(float))
-						   .setUniform("outputAdd", outA)};
+							.setUniform("inputA", a.data(), a.size() * sizeof(float))
+							.setUniform("inputB", b.data(), b.size() * sizeof(float))
+							.setUniform("outputAdd", outA)};
 	auto& kernelMul{shader.kernel("multiply_arrays")
-						   .setUniform("inputA", a.data(), a.size() * sizeof(float))
-						   .setUniform("inputB", b.data(), b.size() * sizeof(float))
-						   .setUniform("outputMul", outB)};
+							.setUniform("inputA", a.data(), a.size() * sizeof(float))
+							.setUniform("inputB", b.data(), b.size() * sizeof(float))
+							.setUniform("outputMul", outB)};
 
 	// Dispatch GPU
 	lune::Timer timer;

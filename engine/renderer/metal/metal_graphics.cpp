@@ -76,7 +76,7 @@ namespace lune::metal
 	void MetalMaterialImpl::setUniform(const std::string& name, const void* data, size_t size)
 	{
 		auto buffer =
-				MetalContext::instance().device()->newBuffer(size, MTL::ResourceStorageModeShared);
+				MetalContextImpl::instance().device()->newBuffer(size, MTL::ResourceStorageModeShared);
 		if (!buffer)
 		{
 			std::cerr << "Failed to create uniform buffer for '" << name << "'\n";
@@ -236,7 +236,7 @@ namespace lune::metal
 			return;
 		}
 
-		m_commandBuffer = NS::TransferPtr(MetalContext::instance().commandQueue()->commandBuffer());
+		m_commandBuffer = NS::TransferPtr(MetalContextImpl::instance().commandQueue()->commandBuffer());
 
 		const auto renderPassDescriptor{
 				NS::TransferPtr(MTL::RenderPassDescriptor::alloc()->init())};

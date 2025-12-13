@@ -175,7 +175,7 @@ namespace lune
 	{
 		const auto nsWindow{glfwGetCocoaWindow(m_handle)};
 		const auto nsView{objcCall<id>(nsWindow, "contentView")};
-		auto& metalCtx{metal::MetalContext::instance()};
+		auto& metalCtx{metal::MetalContextImpl::instance()};
 		m_surface = std::make_shared<gfx::RenderSurface>(
 				std::make_unique<metal::MetalRenderSurfaceImpl>(
 						gfx::RenderSurfaceInfo{

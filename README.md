@@ -49,7 +49,6 @@ custom render loops. To define your own render loop, we need to create 4 variabl
 much control as possible while still improving usability.
 
 ```c++
-#include <iostream>
 import lune;
 
 constexpr lune::Vec3 verticesB[]{
@@ -77,7 +76,7 @@ int main()
 	}};
 
 	// Define our shader implementation
-	const lune::gfx::Context& ctx{lune::gfx::Context::instance()};
+	const lune::gfx::Context ctx{};
 	const lune::gfx::Shader shader{ctx.createShader({"shaders/basic.metal"})};
 	const lune::gfx::Pipeline pipeline{ctx.createPipeline(shader, {})};
 	lune::gfx::RenderPass pass{ctx.createRenderPass(window.surface())};

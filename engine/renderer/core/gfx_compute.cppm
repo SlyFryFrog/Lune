@@ -112,9 +112,10 @@ namespace lune::gfx
 		std::string m_path;
 
 	public:
-		IComputeShaderImpl(const std::string& path) : m_path(path)
+		explicit IComputeShaderImpl(const std::string& path) : m_path(path)
 		{
 		}
+
 		virtual ~IComputeShaderImpl() = default;
 
 		[[nodiscard]] const std::string& path() const noexcept

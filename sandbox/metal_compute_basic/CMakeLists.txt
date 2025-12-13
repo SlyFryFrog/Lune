@@ -1,7 +1,5 @@
 project(MetalComputeBasic LANGUAGES CXX)
 
-include(${CMAKE_SOURCE_DIR}/cmake/MetalSetup.cmake)
-
 #################################
 # Set constants for the project #
 #################################
@@ -26,20 +24,15 @@ target_sources(${PROJECT_NAME}
         FILES ${MODULES}
 )
 
-find_package(glfw3 CONFIG REQUIRED)
-
 target_link_libraries(${PROJECT_NAME}
         PRIVATE
         Lune
-        glfw
 )
 
 target_include_directories(${PROJECT_NAME}
         PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/vendor
 )
-
-setup_metal_for_target(${PROJECT_NAME})
 
 if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     foreach (dir shaders)

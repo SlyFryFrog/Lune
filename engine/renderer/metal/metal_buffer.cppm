@@ -39,7 +39,7 @@ namespace lune::metal
 
 	MetalBufferImpl* toMetalImpl(const gfx::Buffer& buffer)
 	{
-		const auto impl{getImpl(buffer)};
+		const auto impl{buffer.getImpl()};
 
 		// Optimize for speed in release builds
 #ifndef NDEBUG

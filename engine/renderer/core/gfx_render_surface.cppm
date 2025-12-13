@@ -43,11 +43,15 @@ namespace lune::gfx
 	export class RenderSurface
 	{
 		std::unique_ptr<IRenderSurfaceImpl> m_impl;
-		friend IRenderSurfaceImpl* getImpl(const RenderSurface& surface);
 
 	public:
 		explicit RenderSurface(std::unique_ptr<IRenderSurfaceImpl> impl) : m_impl(std::move(impl))
 		{
+		}
+
+		[[nodiscard]] IRenderSurfaceImpl* getImpl() const
+		{
+			return m_impl.get();
 		}
 
 		[[nodiscard]] void* currentDrawable() const
@@ -65,9 +69,4 @@ namespace lune::gfx
 			return m_impl->info();
 		}
 	};
-
-	export IRenderSurfaceImpl* getImpl(const RenderSurface& surface)
-	{
-		return surface.m_impl.get();
-	}
 } // namespace lune::gfx

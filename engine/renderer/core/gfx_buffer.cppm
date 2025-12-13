@@ -26,14 +26,24 @@ namespace lune::gfx
 	{
 		std::unique_ptr<IBufferImpl> m_impl;
 
-		friend IBufferImpl* getImpl(const Buffer& buffer);
-
 	public:
 		explicit Buffer(std::unique_ptr<IBufferImpl> impl) noexcept : m_impl(std::move(impl))
 		{
 		}
 
 		~Buffer() = default;
+
+		/**
+		 * @brief Gets the platform-specific implementation of a buffer.
+		 *
+		 * @note For internal use by backend code.
+		 *
+		 * @return Raw pointer to the platform-specific implementation.
+		 */
+		[[nodiscard]] IBufferImpl* getImpl() const
+		{
+			return m_impl.get();
+		}
 
 		void setData(const void* data, const size_t size, const size_t offset = 0) const
 		{
@@ -50,17 +60,4 @@ namespace lune::gfx
 			return m_impl->data();
 		}
 	};
-
-	/**
-	 * @brief Gets the platform-specific implementation of a buffer.
-	 *
-	 * @note For internal use by backend code.
-	 *
-	 * @param buffer Buffer to retrieve implementation from.
-	 * @return Raw pointer to the platform-specific implementation.
-	 */
-	export IBufferImpl* getImpl(const Buffer& buffer)
-	{
-		return buffer.m_impl.get();
-	}
 } // namespace lune::gfx

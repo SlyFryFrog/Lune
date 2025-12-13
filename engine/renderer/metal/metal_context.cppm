@@ -12,23 +12,19 @@ import lune.gfx;
 
 namespace lune::metal
 {
-	export class MetalContext final : public gfx::Context
+	export class MetalContextImpl final : public gfx::IContextImpl
 	{
 		NS::SharedPtr<MTL::Device> m_device{};
 		NS::SharedPtr<MTL::CommandQueue> m_commandQueue{};
 
-	private:
-		MetalContext();
-		~MetalContext() override = default;
-
 	public:
-		MetalContext(const MetalContext&) = delete;
-		MetalContext& operator=(const MetalContext&) = delete;
+		MetalContextImpl();
+		~MetalContextImpl() override = default;
 
 		/**
 		 * @return The singleton for the Metal renderer.
 		 */
-		static MetalContext& instance();
+		static MetalContextImpl& instance();
 
 		void createDefaultDevice();
 		void createCommandQueue();

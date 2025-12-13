@@ -29,10 +29,10 @@ namespace lune::metal
 
 	constexpr MetalTextureImpl* toMetalImpl(const gfx::Texture& texture)
 	{
-		auto* impl = gfx::getImpl(texture);
+		const auto impl{texture.getImpl()};
 
 #ifndef NDEBUG
-		const auto metalImpl = dynamic_cast<MetalTextureImpl*>(impl);
+		const auto metalImpl{dynamic_cast<MetalTextureImpl*>(impl)};
 		if (!metalImpl)
 			throw std::runtime_error("Texture is not a Metal texture!");
 		return metalImpl;

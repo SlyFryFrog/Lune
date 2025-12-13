@@ -48,7 +48,7 @@ namespace lune::metal
 
 	void MetalTextureImpl::create(MTL::Device* device)
 	{
-		const auto pixelFmt = toMetal(m_info.pixelFormat);
+		const auto pixelFmt{toMetal(m_info.pixelFormat)};
 		MTL::TextureDescriptor* desc{MTL::TextureDescriptor::texture2DDescriptor(
 				pixelFmt, m_info.width, m_info.height, m_info.mipmapped)};
 		desc->setUsage(MTL::TextureUsageShaderRead | MTL::TextureUsageShaderWrite);

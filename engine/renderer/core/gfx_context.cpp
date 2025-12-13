@@ -1,20 +1,19 @@
 module;
+#include <memory>
 module lune.gfx;
 
+#ifdef USE_METAL
 import lune.metal;
+#endif
 
 namespace lune::gfx
 {
-	Context& Context::instance()
+	Context::Context()
 	{
-		static Context* s_instance;
+
 #ifdef USE_METAL
-		s_instance = &metal::MetalContext::instance();
+		m_impl = std::make_unique<metal::MetalContextImpl>();
 #elif defined(USE_VULKAN)
-		s_instance = &vulkan::VulkanContext::instance();
-#else
-#error Unsupported backend.
 #endif
-		return *s_instance;
 	}
 } // namespace lune::gfx
