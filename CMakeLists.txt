@@ -44,17 +44,17 @@ file(GLOB_RECURSE MODULES
 # Remove unused backend renderer
 if (USE_METAL)
     file(GLOB VULKAN_SOURCES
-            ${CMAKE_CURRENT_SOURCE_DIR}/engine/renderer/vulkan/*.hpp
-            ${CMAKE_CURRENT_SOURCE_DIR}/engine/renderer/vulkan/*.cpp
-            ${CMAKE_CURRENT_SOURCE_DIR}/engine/renderer/vulkan/*.cppm
+            ${CMAKE_CURRENT_SOURCE_DIR}/engine/backends/vulkan/*.hpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/engine/backends/vulkan/*.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/engine/backends/vulkan/*.cppm
     )
     list(REMOVE_ITEM SOURCES ${VULKAN_SOURCES})
     list(REMOVE_ITEM MODULES ${VULKAN_SOURCES})
 else ()
     file(GLOB METAL_SOURCES
-            ${CMAKE_CURRENT_SOURCE_DIR}/engine/renderer/metal/*.hpp
-            ${CMAKE_CURRENT_SOURCE_DIR}/engine/renderer/metal/*.cpp
-            ${CMAKE_CURRENT_SOURCE_DIR}/engine/renderer/metal/*.cppm
+            ${CMAKE_CURRENT_SOURCE_DIR}/engine/backends/metal/*.hpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/engine/backends/metal/*.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/engine/backends/metal/*.cppm
     )
     list(REMOVE_ITEM SOURCES ${METAL_SOURCES})
     list(REMOVE_ITEM MODULES ${METAL_SOURCES})
